@@ -1,6 +1,7 @@
 node_modules/
 /uploads/
 *.jsonl
+secrets.json
 /docker/config
 .DS_Store
 /thumbnails
