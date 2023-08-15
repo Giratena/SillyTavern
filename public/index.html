@@ -40,6 +40,7 @@
     <script src="scripts/select2.min.js"></script>
     <script src="scripts/seedrandom.min.js"></script>
     <script src="scripts/droll.js"></script>
+    <script src="scripts/localforage.min.js"></script>
     <script type="module" src="scripts/eventemitter.js"></script>
     <script type="module" src="scripts/power-user.js"></script>
     <script type="module" src="scripts/swiped-events.js"></script>
@@ -180,7 +181,7 @@
                                 </div>
                             </div>
                             <div id="textgenerationwebui_api-presets">
-                                <h3><span data-i18n="text gen webio(ooba)preset">Text Gen WebUI (ooba) presets</span>
+                                <h3><span data-i18n="Text Gen WebUI (ooba/Mancer) presets">Text Gen WebUI (ooba/Mancer) presets</span>
                                 </h3>
                                 <div class="preset_buttons">
                                     <select id="settings_preset_textgenerationwebui" data-preset-manager-for="textgenerationwebui">
@@ -193,6 +194,24 @@
                                 </div>
                             </div>
                             <hr>
+                        </div>
+
+                        <div id="ai_module_block_novel" class="width100p">
+                            <div class="range-block">
+                                <div class="range-block-title justifyLeft">
+                                    AI Module
+                                </div>
+                                <div class="toggle-description justifyLeft"
+                                    data-i18n="Changes the style of the generated text.">
+                                    Changes the style of the generated text.
+                                </div>
+                                <select id="nai_prefix">
+                                    <option value="vanilla" data-i18n="No Module">No Module</option>
+                                    <option value="special_instruct" data-i18n="Instruct">Instruct</option>
+                                    <option value="special_proseaugmenter" data-i18n="Prose Augmenter">Prose Augmenter</option>
+                                    <option value="theme_textadventure" data-i18n="Text Adventure">Text Adventure</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div id="common-gen-settings-block" class="width100p">
@@ -427,6 +446,19 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="range-block">
+                                    <div class="range-block-title" data-i18n="Phrase Repetition Penalty">
+                                        Phrase Repetition Penalty
+                                    </div>
+                                    <select id="phrase_rep_pen_novel">
+                                        <option value="off" data-i18n="Off">Off</option>
+                                        <option value="very_light" data-i18n="Very light">Very light</option>
+                                        <option value="light" data-i18n="Light">Light</option>
+                                        <option value="medium" data-i18n="Medium">Medium</option>
+                                        <option value="aggressive" data-i18n="Aggressive">Aggressive</option>
+                                        <option value="very_aggressive" data-i18n="Very aggressive">Very aggressive</option>
+                                    </select>
+                                </div>
                             </div>
                             <div id="range_block_textgenerationwebui">
                                 <div class="range-block">
@@ -435,7 +467,7 @@
                                     </div>
                                     <div class="range-block-range-and-counter">
                                         <div class="range-block-range">
-                                            <input type="range" id="temp_textgenerationwebui" name="volume" min="0.1" max="2.0" step="0.01">
+                                            <input type="range" id="temp_textgenerationwebui" name="volume" min="0.0" max="2.0" step="0.01">
                                         </div>
                                         <div class="range-block-counter">
                                             <div contenteditable="true" data-for="temp_textgenerationwebui" id="temp_counter_textgenerationwebui">
@@ -555,8 +587,9 @@
                                             Will be used as a password for the proxy instead of API key.<br>
                                         </span>
                                     </div>
-                                    <div class="wide100p">
-                                        <input id="openai_proxy_password" type="text" class="text_pole" placeholder="" maxlength="200" />
+                                    <div class="flex-container width100p">
+                                        <input id="openai_proxy_password" type="password" class="text_pole flex1" placeholder="" maxlength="200" />
+                                        <div id="openai_proxy_password_show" title="Peek a password" class="menu_button fa-solid fa-eye-slash fa-fw"></div>
                                     </div>
                                 </div>
                                 <div class="range-block" data-source="openai,claude">
@@ -609,6 +642,10 @@
                                         <input type="number" id="openai_max_tokens" name="openai_max_tokens" class="text_pole" min="50" max="1000">
                                     </div>
                                 </div>
+                                <div data-source="openrouter">
+                                    Max prompt cost: <span id="openrouter_max_prompt_cost">Unknown</span>
+                                </div>
+                                <hr>
                                 <div class="range-block" data-source="openai,claude,windowai,openrouter">
                                     <div class="range-block-title" data-i18n="Temperature">
                                         Temperature
@@ -835,8 +872,7 @@
                                 <div class="range-block">
                                     <div class="range-block-title openai_restorable">
                                         <span data-i18n="Preamble">Preamble</span>
-                                        <div id="nai_preamble_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt"
-                                            class="right_menu_button">
+                                        <div id="nai_preamble_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
                                             <div class="fa-solid fa-clock-rotate-left "></div>
                                         </div>
                                     </div>
@@ -844,10 +880,48 @@
                                         Use style tags to modify the writing style of the output
                                     </div>
                                     <div class="wide100p">
-                                        <textarea id="nai_preamble_textarea" class="text_pole textarea_compact" name="nai_preamble" rows="2"
-                                            placeholder=""></textarea>
+                                        <textarea id="nai_preamble_textarea" class="text_pole textarea_compact" name="nai_preamble" rows="2" placeholder=""></textarea>
                                     </div>
                                 </div>
+                                <div class="range-block">
+                                    <div class="range-block-title justifyLeft">
+                                        <span data-i18n="Banned Tokens">Banned Tokens</span>
+                                    </div>
+                                    <div class="toggle-description justifyLeft" data-i18n="Sequences you don't want to appear in the output. One per line.">
+                                        Sequences you don't want to appear in the output. One per line.
+                                    </div>
+                                    <div class="wide100p">
+                                        <textarea id="nai_banned_tokens" class="text_pole textarea_compact" name="nai_banned_tokens" rows="2" placeholder=""></textarea>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="range-block">
+                                    <div class="range-block-title justifyLeft" data-i18n="CFG Scale">
+                                        CFG Scale
+                                    </div>
+                                    <div class="range-block-range-and-counter">
+                                        <div class="range-block-range">
+                                            <input type="range" id="cfg_scale_novel" name="volume" min="1" max="3" step="0.05">
+                                        </div>
+                                        <div class="range-block-counter">
+                                            <div contenteditable="true" data-for="cfg_scale_novel" id="cfg_scale_counter_novel">
+                                                select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="range-block">
+                                    <div class="range-block-title justifyLeft">
+                                        <span data-i18n="Negative Prompt">Negative Prompt</span>
+                                    </div>
+                                    <div class="wide100p">
+                                        <textarea id="nai_cfg_uc" class="text_pole textarea_compact" name="cfg_uc" rows="2"  data-i18n="[placeholder]Add text here that would make the AI generate things you don't want in your outputs." placeholder="Add text here that would make the AI generate things you don't want in your outputs."></textarea>
+                                    </div>
+                                </div>
+                                <small class="margin-bot-10px" data-i18n="Used if CFG Scale is unset globally, per chat or character">
+                                    Used if CFG Scale is unset globally, per chat or character
+                                </small>
+                                <hr>
                                 <div class="range-block">
                                     <div class="range-block-title" data-i18n="Top P">
                                         Top P
@@ -894,6 +968,51 @@
                                     </div>
                                 </div>
                                 <div class="range-block">
+                                    <div class="range-block-title" data-i18n="Top G">
+                                        Top G
+                                    </div>
+                                    <div class="range-block-range-and-counter">
+                                        <div class="range-block-range">
+                                            <input type="range" id="top_g_novel" name="volume" min="0" max="20" step="1">
+                                        </div>
+                                        <div class="range-block-counter">
+                                            <div contenteditable="true" data-for="top_g_novel" id="top_g_counter_novel">
+                                                select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="range-block">
+                                    <div class="range-block-title" data-i18n="Mirostat Tau">
+                                        Mirostat Tau
+                                    </div>
+                                    <div class="range-block-range-and-counter">
+                                        <div class="range-block-range">
+                                            <input type="range" id="mirostat_tau_novel" name="volume" min="0" max="6" step="0.01">
+                                        </div>
+                                        <div class="range-block-counter">
+                                            <div contenteditable="true" data-for="mirostat_tau_novel" id="mirostat_tau_counter_novel">
+                                                select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="range-block">
+                                    <div class="range-block-title" data-i18n="Mirostat LR">
+                                        Mirostat LR
+                                    </div>
+                                    <div class="range-block-range-and-counter">
+                                        <div class="range-block-range">
+                                            <input type="range" id="mirostat_lr_novel" name="volume" min="0" max="1" step="0.01">
+                                        </div>
+                                        <div class="range-block-counter">
+                                            <div contenteditable="true" data-for="mirostat_lr_novel" id="mirostat_lr_counter_novel">
+                                                select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="range-block">
                                     <div class="range-block-title" data-i18n="Typical P">
                                         Typical P
                                     </div>
@@ -909,42 +1028,12 @@
                                     </div>
                                 </div>
                                 <div class="range-block">
-                                    <div class="range-block-title" data-i18n="CFG Scale">
-                                        CFG Scale
-                                    </div>
-                                    <div class="range-block-range-and-counter">
-                                        <div class="range-block-range">
-                                            <input type="range" id="cfg_scale_novel" name="volume" min="1" max="3" step="0.05">
-                                        </div>
-                                        <div class="range-block-counter">
-                                            <div contenteditable="true" data-for="cfg_scale_novel" id="cfg_scale_counter_novel">
-                                                select
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="range-block">
-                                    <div class="range-block-title" data-i18n="Phrase Repetition Penalty">
-                                        Phrase Repetition Penalty
-                                    </div>
-                                    <div class="range-block-range-and-counter">
-                                        <div class="range-block-range">
-                                            <input type="range" id="phrase_rep_pen_novel" name="volume" min="0" max="5" step="1">
-                                        </div>
-                                        <div class="range-block-counter">
-                                            <div contenteditable="true" data-for="phrase_rep_pen_novel" id="phrase_rep_pen_counter_novel">
-                                                select
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="range-block">
                                     <div class="range-block-title" data-i18n="Min Length">
                                         Min Length
                                     </div>
                                     <div class="range-block-range-and-counter">
                                         <div class="range-block-range">
-                                            <input type="range" id="min_length_novel" name="volume" min="0" max="1024" step="1">
+                                            <input type="range" id="min_length_novel" name="volume" min="1" max="150" step="1">
                                         </div>
                                         <div class="range-block-counter">
                                             <div contenteditable="true" data-for="min_length_novel" id="min_length_counter_novel">
@@ -1099,6 +1188,33 @@
                                     </label>
                                 </div>
                                 <hr>
+                                <div class="range-block">
+                                    <h4 class="range-block-title justifyLeft" data-i18n="CFG Scale">
+                                        CFG Scale
+                                    </h4>
+                                    <div class="range-block-range-and-counter">
+                                        <div class="range-block-range">
+                                            <input type="range" id="guidance_scale_textgenerationwebui" name="volume" min="0.1" max="4" step="0.05">
+                                        </div>
+                                        <div class="range-block-counter">
+                                            <div contenteditable="true" data-for="guidance_scale_textgenerationwebui" id="guidance_scale_counter_textgenerationwebui">
+                                                select
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="range-block">
+                                    <div class="range-block-title justifyLeft">
+                                        <span data-i18n="Negative Prompt">Negative Prompt</span>
+                                    </div>
+                                    <div class="wide100p">
+                                        <textarea id="negative_prompt_textgenerationwebui" class="text_pole textarea_compact" name="negative_prompt" rows="2"  data-i18n="[placeholder]Add text here that would make the AI generate things you don't want in your outputs." placeholder="Add text here that would make the AI generate things you don't want in your outputs."></textarea>
+                                    </div>
+                                </div>
+                                <small class="margin-bot-10px" data-i18n="Used if CFG Scale is unset globally, per chat or character">
+                                    Used if CFG Scale is unset globally, per chat or character
+                                </small>
+                                <hr>
                                 <h4><span data-i18n="Beam search">Beam search</span></h4>
                                 <div class="range-block">
                                     <div class="range-block-title" data-i18n="Number of Beams">
@@ -1211,41 +1327,7 @@
                             <div id="openai_settings">
                                 <div class="">
                                     <div class="range-block">
-                                        <label title="Inserts jailbreak as a last system message" class="checkbox_label widthFreeExpand" data-i18n="[title]Inserts jailbreak as a last system message">
-                                            <input id="jailbreak_system" type="checkbox" />
-                                            <span data-i18n="Send Jailbreak">
-                                                Send Jailbreak
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description justifyLeft">
-                                            <span data-i18n="Inserts jailbreak as a last system message.">Inserts
-                                                jailbreak as a last system message.</span><br>
-                                            <span data-i18n="This tells the AI to ignore its usual content restrictions.">This
-                                                tells the AI to ignore its usual content restrictions.</span>
-                                        </div>
-                                    </div>
-                                    <div class="range-block">
-                                        <label class="checkbox_label  widthFreeExpand" for="nsfw_toggle">
-                                            <input id="nsfw_toggle" type="checkbox" checked>
-                                            <span data-i18n="NSFW Encouraged">
-                                                NSFW Encouraged</span>
-                                        </label>
-                                        <div class="toggle-description justifyLeft" data-i18n="Tell the AI that NSFW is allowed.">
-                                            Tell the AI that NSFW is allowed.
-                                        </div>
-                                    </div>
-                                    <div class="range-block">
-                                        <label title="NSFW block goes first in the resulting prompt" class="checkbox_label widthFreeExpand" data-i18n="[title]NSFW block goes first in the resulting prompt">
-                                            <input id="nsfw_first" type="checkbox" /><span data-i18n="NSFW Prioritized">
-                                                NSFW Prioritized</span>
-                                        </label>
-                                        <div class="toggle-description justifyLeft" data-i18n="NSFW prompt text goes first in the prompt to emphasize its effect.">
-                                            NSFW prompt text goes first in the prompt to emphasize its effect.
-                                        </div>
-                                    </div>
-
-                                    <div class="range-block">
-                                        <label for="stream_toggle" title="Enables OpenAI completion streaming" class="checkbox_label widthFreeExpand" data-i18n="[title]Enables OpenAI completion streaming">
+                                        <label for="stream_toggle" title="Enables OpenAI completion streaming" class="checkbox_label widthFreeExpand">
                                             <input id="stream_toggle" type="checkbox" /><span data-i18n="Streaming">
                                                 Streaming</span>
                                         </label>
@@ -1258,17 +1340,7 @@
                                         </div>
                                     </div>
                                     <div class="range-block">
-                                        <label title="Use OAI knowledge base to enhance definitions for public figures and known fictional characters" data-i18n="[title]Use OAI knowledge base to enhance definitions for public figures and known fictional characters" class="checkbox_label widthFreeExpand">
-                                            <input id="enhance_definitions" type="checkbox" /><span data-i18n="Enhance Definitions">
-                                                Enhance Definitions</span>
-                                        </label>
-                                        <div class="toggle-description justifyLeft" data-i18n="Use OAI knowledge base to enhance definitions for public figures and known fictional characters">
-                                            Use OAI knowledge base to enhance definitions for public figures and known
-                                            fictional characters
-                                        </div>
-                                    </div>
-                                    <div class="range-block">
-                                        <label for="wrap_in_quotes" title="Wrap user messages in quotes before sending" data-i18n="[title]Wrap user messages in quotes before sending" class="checkbox_label widthFreeExpand">
+                                        <label for="wrap_in_quotes" title="Wrap user messages in quotes before sending" class="checkbox_label widthFreeExpand">
                                             <input id="wrap_in_quotes" type="checkbox" /><span data-i18n="Wrap in Quotes">
                                                 Wrap in Quotes</span>
                                         </label>
@@ -1280,131 +1352,163 @@
                                         </div>
                                     </div>
                                     <div class="range-block">
-                                        <div class="range-block-title justifyLeft">
-                                            <span data-i18n="Replace empty message">
-                                                Replace empty message
-                                            </span>
-                                        </div>
+                                        <label for="names_in_completion" title="Add character names" class="checkbox_label widthFreeExpand">
+                                            <input id="names_in_completion" type="checkbox" /><span data-i18n="Add character names">Add character names</span>
+                                        </label>
                                         <div class="toggle-description justifyLeft">
+                                            <span data-i18n="May help the model to understand context. Names must only contain letters or numbers.">Helps the model to associate messages in group chats. Names must only contain letters or numbers without whitespaces.</span>
+                                        </div>
+                                    </div>
+                                    <div class="inline-drawer m-t-1 wide100p">
+                                        <div class="inline-drawer-toggle inline-drawer-header">
+                                            <b data-i18n="Quick Edit">Quick Edit</b>
+                                            <div class="fa-solid fa-circle-chevron-down inline-drawer-icon down"></div>
+                                        </div>
+                                        <div class="inline-drawer-content">
+                                            <div id="quick-edit-container">
+                                                <div class="range-block">
+                                                    <span data-i18n="Select a character to show quick edit options.">Select a character to show quick edit options.</span>
+                                                </div>
+                                            </div>
+                                            <div class="range-block" data-source="claude">
+                                                <span data-i18n="Assistant Prefill">Assistant Prefill</span>
+                                                <textarea id="claude_assistant_prefill" class="text_pole textarea_compact" name="assistant_prefill" rows="3" maxlength="5000" placeholder="Start Claude's answer with..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="inline-drawer wide100p">
+                                        <div class="inline-drawer-toggle inline-drawer-header">
+                                            <b>Utility Prompts</b>
+                                            <div class="fa-solid fa-circle-chevron-down inline-drawer-icon down"></div>
+                                        </div>
+                                        <div class="inline-drawer-content">
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span data-i18n="Impersonation prompt">Impersonation prompt</span>
+                                                    <div id="impersonation_prompt_restore" title="Restore default prompt" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft" data-i18n="Prompt that is used for Impersonation function">
+                                                    Prompt that is used for Impersonation function
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="impersonation_prompt_textarea" class="text_pole textarea_compact" name="impersonation_prompt" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span>World Info format template</span>
+                                                    <div id="wi_format_restore" title="Restore default format" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
+                                                    Wraps activated World Info entries before inserting into the prompt. Use
+                                                    <tt>{0}</tt> to mark a place where the content is inserted.
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="wi_format_textarea" class="text_pole textarea_compact" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block">
+                                                    <div class="range-block-title openai_restorable">
+                                                        <span>NSFW avoidance prompt</span>
+                                                        <div id="nsfw_avoidance_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
+                                                            <div class="fa-solid fa-clock-rotate-left"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="toggle-description justifyLeft"
+                                                         data-i18n="Prompt that is used when the NSFW toggle is O">
+                                                        Prompt that is used when the NSFW toggle is OFF
+                                                    </div>
+                                                    <div class="wide100p">
+                                                        <textarea id="nsfw_avoidance_prompt_textarea" class="text_pole textarea_compact" name="nsfw_prompt" rows="3" placeholder=""></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span>New Chat</span>
+                                                    <div id="newchat_prompt_restore" title="Restore new chat prompt" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
+                                            <span data-i18n="Set at the beginning of the chat history to indicate that a new chat is about to start.">
+                                                Set at the beginning of the chat history to indicate that a new chat is about to start.
+                                            </span>
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="newchat_prompt_textarea" class="text_pole textarea_compact" name="new_chat" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span>New Group Chat</span>
+                                                    <div id="newgroupchat_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore new group chat prompt" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
+                                            <span data-i18n="Set at the beginning of the chat history to indicate that a new group chat is about to start.">
+                                                Set at the beginning of the chat history to indicate that a new group chat is about to start.
+                                            </span>
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="newgroupchat_prompt_textarea" class="text_pole textarea_compact" name="new_group_chat" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span>New Example Chat</span>
+                                                    <div id="newexamplechat_prompt_restore" title="Restore new example chat prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
+                                            <span data-i18n="Set at the beginning of Dialogue examples to indicate that a new example chat is about to start.">
+                                               Set at the beginning of Dialogue examples to indicate that a new example chat is about to start.
+                                            </span>
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="newexamplechat_prompt_textarea" class="text_pole textarea_compact" name="new_example_chat" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title openai_restorable">
+                                                    <span>Continue nudge</span>
+                                                    <div id="continue_nudge_prompt_restore" title="Restore new chat prompt" class="right_menu_button">
+                                                        <div class="fa-solid fa-clock-rotate-left"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
+                                            <span data-i18n="Set at the beginning of the chat history to indicate that a new chat is about to start.">
+                                                Set at the end of the chat history when the continue button is pressed.
+                                            </span>
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="continue_nudge_prompt_textarea" class="text_pole textarea_compact" name="continue_nudge" rows="3" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="range-block m-t-1">
+                                                <div class="range-block-title justifyLeft">
+                                                    Replace empty message
+                                                </div>
+                                                <div class="toggle-description justifyLeft">
                                             <span data-i18n="Send this text instead of nothing when the text box is empty.">
                                                 Send this text instead of nothing when the text box is empty.
                                             </span>
-                                        </div>
-                                        <div class="wide100p">
-                                            <textarea id="send_if_empty_textarea" class="text_pole textarea_compact" name="send_if_empty" rows="1" placeholder=""></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="range-block">
-                                    <div class="range-block-title openai_restorable">
-                                        <span data-i18n="Main prompt">Main prompt</span>
-                                        <div id="main_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                            <div class="fa-solid fa-clock-rotate-left "></div>
-                                        </div>
-                                    </div>
-                                    <div class="prompt_overridden">
-                                        Overridden by the Character Definitions.
-                                    </div>
-                                    <div class="toggle-description justifyLeft" data-i18n="The main prompt used to set the model behavior">
-                                        The main prompt used to set the model behavior
-                                    </div>
-                                    <div class="wide100p">
-                                        <textarea id="main_prompt_textarea" class="text_pole textarea_compact" name="main_prompt" rows="6" placeholder=""></textarea>
-                                    </div>
-                                </div>
-                                <div class="range-block">
-                                    <div class="range-block-title openai_restorable">
-                                        <span data-i18n="NSFW prompt">NSFW prompt</span>
-                                        <div id="nsfw_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                            <div class="fa-solid fa-clock-rotate-left "></div>
-                                        </div>
-                                    </div>
-                                    <div class="toggle-description justifyLeft" data-i18n="Prompt that is used when the NSFW toggle is on">
-                                        Prompt that is used when the NSFW toggle is on
-                                    </div>
-                                    <div class="wide100p">
-                                        <textarea id="nsfw_prompt_textarea" class="text_pole textarea_compact" name="nsfw_prompt" rows="6" placeholder=""></textarea>
-                                    </div>
-                                </div>
-                                <div class="range-block">
-                                    <div class="range-block-title openai_restorable">
-                                        <span data-i18n="NSFW avoidance prompt">NSFW avoidance prompt</span>
-                                        <div id="nsfw_avoidance_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                            <div class="fa-solid fa-clock-rotate-left"></div>
-                                        </div>
-                                    </div>
-                                    <div class="toggle-description justifyLeft">
-                                        <span data-i18n="Prompt that is used when the NSFW toggle is off">
-                                            Prompt that is used when the NSFW toggle is OFF
-                                        </span>
-                                    </div>
-                                    <div class="wide100p">
-                                        <textarea id="nsfw_avoidance_prompt_textarea" class="text_pole textarea_compact" name="nsfw_prompt" rows="2" placeholder=""></textarea>
-                                    </div>
-                                </div>
-                                <div class="range-block">
-                                    <div class="range-block-title openai_restorable">
-                                        <span data-i18n="Jailbreak prompt">Jailbreak prompt</span>
-                                        <div id="jailbreak_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                            <div class="fa-solid fa-clock-rotate-left"></div>
-                                        </div>
-                                    </div>
-                                    <div class="jailbreak_overridden">
-                                        Overridden by the Character Definitions.
-                                    </div>
-                                    <div class="toggle-description justifyLeft" data-i18n="Prompt that is used when the Jailbreak toggle is on">
-                                        Prompt that is used when the Jailbreak toggle is on
-                                    </div>
-                                    <div class="wide100p">
-                                        <textarea id="jailbreak_prompt_textarea" class="text_pole textarea_compact" name="jailbreak_prompt" rows="6" placeholder=""></textarea>
-                                    </div>
-                                </div>
-                                <div class="range-block" data-source="claude">
-                                    <span data-i18n="Assistant Prefill">Assistant Prefill</span>
-                                    <textarea id="claude_assistant_prefill" class="text_pole textarea_compact" name="assistant_prefill" rows="3" maxlength="5000" placeholder="Start Claude's answer with..."></textarea>
-                                </div>
-
-                                <div class="inline-drawer wide100p">
-                                    <div class="inline-drawer-toggle inline-drawer-header margin-bot-10px">
-                                        <span data-i18n="Advanced prompt bits"><b>Advanced prompt bits</b></span>
-                                        <div class="fa-solid fa-circle-chevron-down inline-drawer-icon down"></div>
-                                    </div>
-                                    <div class="inline-drawer-content">
-                                        <div class="range-block">
-                                            <div class="range-block-title openai_restorable">
-                                                <span data-i18n="Impersonation prompt">Impersonation prompt</span>
-                                                <div id="impersonation_prompt_restore" title="Restore default prompt" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                                    <div class="fa-solid fa-clock-rotate-left"></div>
+                                                </div>
+                                                <div class="wide100p">
+                                                    <textarea id="send_if_empty_textarea" class="text_pole textarea_compact" name="send_if_empty" rows="3" placeholder=""></textarea>
                                                 </div>
                                             </div>
-                                            <div class="toggle-description justifyLeft" data-i18n="Prompt that is used for Impersonation function">
-                                                Prompt that is used for Impersonation function
-                                            </div>
-                                            <div class="wide100p">
-                                                <textarea id="impersonation_prompt_textarea" class="text_pole textarea_compact" name="impersonation_prompt" rows="6" placeholder=""></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="range-block">
-                                            <div class="range-block-title openai_restorable">
-                                                <span data-i18n="World Info format template">World Info format template</span>
-                                                <div id="wi_format_restore" title="Restore default format" data-i18n="[title]Restore default prompt" class="right_menu_button">
-                                                    <div class="fa-solid fa-clock-rotate-left"></div>
-                                                </div>
-                                            </div>
-                                            <div class="toggle-description justifyLeft">
-                                                <span data-i18n="Wraps activated World Info entries before inserting into the prompt. Use {0} to mark a place where the content is inserted.">
-                                                    Wraps activated World Info entries before inserting into the prompt. Use <tt>{0}</tt> to mark a place where the content is inserted.
-                                                </span>
-                                            </div>
-                                            <div class="wide100p">
-                                                <textarea id="wi_format_textarea" class="text_pole textarea_compact" rows="3" placeholder=""></textarea>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="range-block" data-source="openai,openrouter">
+                                <div class="range-block m-t-1" data-source="openai,openrouter">
                                     <div class="range-block-title openai_restorable" data-i18n="Logit Bias">
                                         Logit Bias
                                     </div>
@@ -1420,7 +1524,6 @@
                                         <i title="Delete preset" id="openai_logit_bias_delete_preset" class="menu_button fa-solid fa-trash-can" data-i18n="[title]Delete preset"></i>
                                         <input id="openai_logit_bias_import_file" type="file" accept=".json" hidden />
                                     </div>
-
                                     <div class="inline-drawer wide100p">
                                         <div class="inline-drawer-toggle inline-drawer-header">
                                             <b data-i18n="View / Edit bias preset">View / Edit bias preset</b>
@@ -1433,6 +1536,9 @@
                                             <div class="openai_logit_bias_list"></div>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="range-block m-b-1">
+                                    <div id="completion_prompt_manager"></div>
                                 </div>
                             </div>
                         </div>
@@ -1452,7 +1558,7 @@
                         <select id="main_api">
                             <option value="kobold"><span data-i18n="KoboldAI">KoboldAI</span></option>
                             <option value="koboldhorde"><span data-i18n="KoboldAI Horde">KoboldAI Horde</span></option>
-                            <option value="textgenerationwebui"><span data-i18n="Text Gen WebUI (ooba)">Text Gen WebUI (ooba)</span></option>
+                            <option value="textgenerationwebui"><span data-i18n="Text Gen WebUI (ooba/Mancer)">Text Gen WebUI (ooba/Mancer)</span></option>
                             <option value="novel"><span data-i18n="NovelAI">NovelAI</span></option>
                             <option value="openai"><span data-i18n="Chat Completion (OpenAI, Claude, Window/OpenRouter, Scale)">Chat Completion (OpenAI, Claude, Window, OpenRouter, Scale)</span></option>
                         </select>
@@ -1740,6 +1846,7 @@
                                         <option value="claude-v1.3-100k">claude-v1.3-100k</option>
                                         <option value="claude-v1.2">claude-v1.2</option>
                                         <option value="claude-v1.0">claude-v1.0</option>
+                                        <option value="claude-instant-1.2">claude-instant-1.2</option>
                                         <option value="claude-instant-v1.1">claude-instant-v1.1</option>
                                         <option value="claude-instant-v1.1-100k">claude-instant-v1.1-100k</option>
                                         <option value="claude-instant-v1.0">claude-instant-v1.0</option>
@@ -1775,9 +1882,6 @@
                                 <select id="model_openrouter_select">
                                     <option data-i18n="Connect to the API">-- Connect to the API --</option>
                                 </select>
-                                <small>
-                                    Max prompt cost: <span id="openrouter_max_prompt_cost">Unknown</span> <span id="openrouter_max_prompt_cost_currency">USD</span>
-                                </small>
                             </div>
                             <h4 data-i18n="OpenRouter API Key">OpenRouter API Key</h4>
                             <div>
@@ -2141,7 +2245,7 @@
                     <div class="justifyContentSpaceAround wi-settings flex-container gap10px alignitemscenter">
                         <div id="WIMultiSelector" class="flex2 flex alignSelfStart range-block">
                             <div class="range-block-title justifyLeft">
-                                <span data-i18n="Active World(s)"><small>Active World(s)</small></span>
+                                <span data-i18n="Active World(s) for all chats"><small>Active World(s) for all chats</small></span>
                             </div>
                             <div class="range-block-range">
                                 <select id="world_info" multiple>
@@ -2186,7 +2290,7 @@
 
                                 <div class="flex1 gap5px range-block">
                                     <div class="wide10pMinFit">
-                                        <small data-i18n="Token Budget">Context %</small>
+                                        <small data-i18n="Context %">Context %</small>
                                     </div>
                                     <div class="range-block-range-and-counter ">
                                         <div class="range-block-range paddingLeftRight5">
@@ -2197,6 +2301,25 @@
                                                 budget
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex1 gap5px range-block">
+                                    <div class="wide10pMinFit">
+                                        <small data-i18n="Budget Cap">Budget Cap</small>
+                                    </div>
+                                    <div class="range-block-range-and-counter ">
+                                        <div class="range-block-range paddingLeftRight5">
+                                            <input type="range" id="world_info_budget_cap" name="volume" min="0" max="8192" step="256">
+                                        </div>
+                                        <div class="range-block-counter margin0">
+                                            <div contenteditable="true" data-for="world_info_budget_cap" id="world_info_budget_cap_counter">
+                                                0
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="budget_cap_note">
+                                        <small data-i18n="(0 = disabled)">(0 = disabled)</small>
                                     </div>
                                 </div>
                             </div>
@@ -2423,6 +2546,22 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="range-block">
+                                <div class="range-block-title">
+                                    <span data-i18n="Lazy Chat Loading">Lazy Chat Loading</span><br>
+                                    <small># of messages (0 = disabled)</small>
+                                </div>
+                                <div class="range-block-range-and-counter">
+                                    <div class="range-block-range">
+                                        <input id="lazy_load" class="wide100p" type="range" min="0" max="100" step="10" value="0">
+                                        <div class="slider_hint">
+                                            <span>0</span>
+                                            <span>50</span>
+                                            <span>100</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div>
                                 <span data-i18n="Avatar Style">Avatar Style:</span><br>
                                 <label>
@@ -2478,6 +2617,11 @@
                                 <label for="messageTimestampsEnabled" class="checkbox_label">
                                     <input id="messageTimestampsEnabled" type="checkbox" />
                                     <span data-i18n="Chat Timestamps">Chat Timestamps</span>
+                                </label>
+
+                                <label for="messageModelIconEnabled" class="checkbox_label">
+                                    <input id="messageModelIconEnabled" type="checkbox" />
+                                    <span data-i18n="Model Icon">Show Model Icons</span>
                                 </label>
 
                                 <label for="mesIDDisplayEnabled" class="checkbox_label">
@@ -3592,6 +3736,65 @@
             <input class="openai_logit_bias_text text_pole" data-i18n="[placeholder]Type here..." placeholder="type here..." />
             <input class="openai_logit_bias_value text_pole" type="number" min="-100" value="0" max="100" />
             <i class="menu_button fa-solid fa-xmark openai_logit_bias_remove"></i>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="completion_prompt_manager_popup" class="drawer-content" style="display:none;">
+        <div id="completion_prompt_manager_popup_inspect">
+            <h3>Inspect</h3>
+            <div class="completion_prompt_manager_popup_entry">
+                <form class="completion_prompt_manager_popup_entry_form">
+                    <div class="completion_prompt_manager_popup_entry_form_control">
+                        <div class="completion_prompt_manager_popup_header">
+                            <label for="completion_prompt_manager_popup_entry_form_prompt">
+                                <span>Prompt List</span>
+                            </label>
+                            <a id="completion_prompt_manager_popup_close_button" title="close" class="fa-solid fa-close menu_button"></a>
+                        </div>
+                        <div class="text_muted">The list of prompts associated with this marker.</div>
+                        <div id="completion_prompt_manager_popup_entry_form_inspect_list"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="completion_prompt_manager_popup_edit">
+            <h3>Edit</h3>
+            <div class="completion_prompt_manager_popup_entry">
+                <form class="completion_prompt_manager_popup_entry_form">
+                    <div class="completion_prompt_manager_popup_entry_form_control">
+                        <label for="completion_prompt_manager_popup_entry_form_name">
+                            <span>Name</span>
+                        </label>
+                        <div class="text_muted">A name for this prompt.</div>
+                        <input id="completion_prompt_manager_popup_entry_form_name" class="text_pole" type="text" name="name" />
+                    </div>
+                    <div class="completion_prompt_manager_popup_entry_form_control">
+                        <label for="completion_prompt_manager_popup_entry_form_role">
+                            <span>Role</span>
+                        </label>
+                        <div class="text_muted">To whom this message will be attributed.</div>
+                        <select id="completion_prompt_manager_popup_entry_form_role" class="text_pole" name="role">
+                            <option value="system">System</option>
+                            <option value="user">User</option>
+                            <option value="assistant">AI Assistant</option>
+                        </select>
+                    </div>
+                    <div class="completion_prompt_manager_popup_entry_form_control">
+                        <label for="completion_prompt_manager_popup_entry_form_prompt">
+                            <span>Prompt</span>
+                        </label>
+                        <div class="text_muted">The prompt to be sent.</div>
+                        <textarea id="completion_prompt_manager_popup_entry_form_prompt" class="text_pole" name="prompt">
+                    </textarea>
+                    </div>
+                    <div class="completion_prompt_manager_popup_entry_form_footer" >
+                        <a id="completion_prompt_manager_popup_entry_form_close" title="close" class="fa-solid fa-close menu_button"></a>
+                        <a id="completion_prompt_manager_popup_entry_form_reset" title="reset" class="fa-solid fa-undo menu_button"></a>
+                        <a id="completion_prompt_manager_popup_entry_form_save" title="save" class="fa-solid fa-save menu_button" data-pm-prompt=""></a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -3820,7 +4023,7 @@
                         <small>Will be automatically added as the author's note for this character. Will be used in groups, but
                             can't be modified when a group chat is open.</small>
 
-                        <textarea id="extension_floating_chara" class="text_pole" rows="8" maxlength="10000" placeholder="Example:\n[Scenario: wacky adventures; Genre: romantic comedy; Style: verbose, creative]"></textarea>
+                        <textarea id="extension_floating_chara" class="text_pole" rows="8" maxlength="10000" placeholder="Example:&#10;[Scenario: wacky adventures; Genre: romantic comedy; Style: verbose, creative]"></textarea>
                         <div class="extension_token_counter">
                             Tokens: <span id="extension_floating_chara_token_counter">0</span>
                         </div>
@@ -3854,10 +4057,22 @@
                     <div class="inline-drawer-content">
                         <small>Will be automatically added as the Author's Note for all new chats.</small>
 
-                        <textarea id="extension_floating_default" class="text_pole" rows="8" maxlength="10000" placeholder="Example:\n[Scenario: wacky adventures; Genre: romantic comedy; Style: verbose, creative]"></textarea>
+                        <textarea id="extension_floating_default" class="text_pole" rows="8" maxlength="10000" placeholder="Example:&#10;[Scenario: wacky adventures; Genre: romantic comedy; Style: verbose, creative]"></textarea>
                         <div class="extension_token_counter">
                             Tokens: <span id="extension_floating_default_token_counter">0</span>
                         </div>
+                        <div class="floating_prompt_radio_group">
+                            <label>
+                                <input type="radio" name="extension_default_position" value="0" />
+                                After scenario
+                            </label>
+                            <label>
+                                <input type="radio" name="extension_default_position" value="1" />
+                                In-chat @ Depth <input id="extension_default_depth" class="text_pole widthUnset" type="number" min="0" max="99" />
+                            </label>
+                        </div>
+                        <label for="extension_default_interval">Insertion Frequency</label>
+                        <input id="extension_default_interval" class="text_pole widthUnset" type="number" min="0" max="999" /><small> (0 = Disable, 1 = Always)</small>
                     </div>
                 </div>
             </div>
@@ -3912,9 +4127,14 @@
                 <i class="fa-lg fa-solid fa-people-arrows"></i>
                 <span data-i18n="Convert to group">Convert to group</span>
             </a>
+            <hr>
             <a id="option_start_new_chat">
                 <i class="fa-lg fa-solid fa-comments"></i>
                 <span data-i18n="Start new chat">Start new chat</span>
+            </a>
+            <a id="option_close_chat">
+                <i class="fa-lg fa-solid fa-times"></i>
+                <span data-i18n="Close chat">Close chat</span>
             </a>
             <a id="option_select_chat">
                 <i class="fa-lg fa-solid fa-address-book"></i>

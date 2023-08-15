@@ -1,5 +1,7 @@
 @charset "UTF-8";
 
+@import url(css/promptmanager.css);
+
 :root {
     --doc-height: 100%;
     --transparent: rgba(0, 0, 0, 0);
@@ -11,6 +13,7 @@
     --black90a: rgba(0, 0, 0, 0.9);
     --black100: rgba(0, 0, 0, 1);
 
+    --white20a: rgba(255, 255, 255, 0.2);
     --white30a: rgba(255, 255, 255, 0.3);
     --white50a: rgba(255, 255, 255, 0.5);
     --white60a: rgba(255, 255, 255, 0.6);
@@ -186,6 +189,75 @@ table.responsiveTable {
 .fa-regular::before {
     vertical-align: middle;
     text-align: center;
+}
+
+.text_muted {
+    font-size: calc(var(--mainFontSize) - 0.2rem);
+    color: var(--white50a);
+}
+
+.mes_text table {
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+.mes_text td,
+.mes_text th {
+    border: 1px solid;
+    border-collapse: collapse;
+    padding: 0.25em;
+}
+
+.text_warning {
+    color: rgb(220 173 16);
+}
+
+.text_danger {
+    color: var(--fullred);
+}
+
+.m-t-1 {
+    margin-top: 1em;
+}
+
+.m-t-2 {
+    margin-top: 2em;
+}
+
+.m-t-3 {
+    margin-top: 3em;
+}
+
+.m-t-4 {
+    margin-top: 4em;
+}
+
+.m-t-5 {
+    margin-top: 5em;
+}
+
+.m-b-1 {
+    margin-bottom: 1em;
+}
+
+.m-b-2 {
+    margin-bottom: 2em;
+}
+
+.m-b-3 {
+    margin-bottom: 3em;
+}
+
+.m-b-4 {
+    margin-bottom: 4em;
+}
+
+.m-b-5 {
+    margin-bottom: 5em;
+}
+
+.tooltip {
+    cursor: help;
 }
 
 .mes_text p {
@@ -595,6 +667,7 @@ hr {
     margin: 0;
     padding: 0;
     border-top: 1px solid var(--white30a);
+    background: none;
 }
 
 #extensionsMenuButton {
@@ -844,7 +917,8 @@ body.no-timer .mes_timer {
 }
 
 body.no-timestamps .timestamp,
-body.no-mesIDDisplay .mesIDDisplay {
+body.no-mesIDDisplay .mesIDDisplay,
+body.no-modelIcons .icon-svg {
     display: none !important;
 }
 
@@ -1276,7 +1350,7 @@ body.charListGrid #rm_print_characters_block .tags_inline {
     overflow-y: auto;
 }
 
-#floatingPrompt {
+#floatingPrompt, #cfgConfig {
     overflow-y: auto;
     max-width: 90svw;
     max-height: 90svh;
@@ -2245,6 +2319,11 @@ grammarly-extension {
     flex-direction: row;
     align-items: baseline;
     gap: 5px;
+}
+
+.budget_cap_note {
+    flex-basis: 100%;
+    line-height: 0.1;
 }
 
 #world_popup {
@@ -4250,7 +4329,6 @@ input.extension_missing[type="checkbox"] {
     margin: 0;
     left: 0;
     right: auto;
-    padding: 5px;
     border-radius: 10px;
     box-shadow: none;
     overflow: hidden;
@@ -4260,6 +4338,10 @@ input.extension_missing[type="checkbox"] {
 .scrollableInner {
     overflow-x: hidden;
     height: calc(100% - 30px);
+}
+
+.fillLeft .scrollableInner {
+   padding: 0.5em 1em 0.5em 0.5em
 }
 
 .width100p {
@@ -5088,7 +5170,8 @@ body.waifuMode .zoomed_avatar {
 
     #right-nav-panel,
     #left-nav-panel,
-    #floatingPrompt {
+    #floatingPrompt,
+    #cfgConfig {
         height: calc(100vh - 45px);
         height: calc(100svh - 45px);
         min-width: 100% !important;
@@ -5104,7 +5187,8 @@ body.waifuMode .zoomed_avatar {
         backdrop-filter: blur(calc(var(--SmartThemeBlurStrength) * 2));
     }
 
-    #floatingPrompt {
+    #floatingPrompt,
+    #cfgConfig {
         height: min-content;
     }
 
@@ -5331,6 +5415,7 @@ body.waifuMode .zoomed_avatar {
     }
 }
 
+
 /* Customize the Select2 container */
 .select2-container {
     color: var(--SmartThemeBodyColor);
@@ -5464,4 +5549,13 @@ body.waifuMode .zoomed_avatar {
     background-color: var(--SmartThemeBlurTintColor);
     text-align: center;
     line-height: 14px;
+}
+
+.icon-svg {
+    fill: currentColor;
+    /* Takes on the color of the surrounding text */
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    /* To align with adjacent text */
 }

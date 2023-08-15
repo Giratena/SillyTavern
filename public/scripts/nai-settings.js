@@ -4,7 +4,9 @@ import {
     getStoppingStrings,
     getTextTokens
 } from "../script.js";
+import { getCfg } from "./extensions/cfg/util.js";
 import { tokenizers } from "./power-user.js";
+import { getStringHash } from "./utils.js";
 
 export {
     nai_settings,
@@ -14,6 +16,7 @@ export {
 };
 
 const default_preamble = "[ Style: chat, complex, sensory, visceral ]";
+const maximum_output_length = 150;
 
 const nai_settings = {
     temperature: 0.5,
@@ -26,12 +29,16 @@ const nai_settings = {
     top_k: 0,
     top_p: 1,
     top_a: 1,
+    top_g: 0,
     typical_p: 1,
     min_length: 0,
     model_novel: "euterpe-v2",
     preset_settings_novel: "Classic-Euterpe",
     streaming_novel: false,
     nai_preamble: default_preamble,
+    prefix: '',
+    cfg_uc: '',
+    banned_tokens: '',
 };
 
 const nai_tiers = {
@@ -40,6 +47,26 @@ const nai_tiers = {
     2: 'Scroll',
     3: 'Opus',
 };
+
+let novel_data = null;
+let badWordsCache = {};
+
+export function setNovelData(data) {
+    novel_data = data;
+}
+
+export function getKayraMaxContextTokens() {
+    switch (novel_data?.tier) {
+        case 1:
+            return 3072;
+        case 2:
+            return 6144;
+        case 3:
+            return 8192;
+    }
+
+    return null;
+}
 
 function getNovelTier(tier) {
     return nai_tiers[tier] ?? 'no_connection';
@@ -70,6 +97,12 @@ function loadNovelPreset(preset) {
     nai_settings.min_length = preset.min_length;
     nai_settings.cfg_scale = preset.cfg_scale;
     nai_settings.phrase_rep_pen = preset.phrase_rep_pen;
+    nai_settings.top_g = preset.top_g;
+    nai_settings.mirostat_lr = preset.mirostat_lr;
+    nai_settings.mirostat_tau = preset.mirostat_tau;
+    nai_settings.prefix = preset.prefix;
+    nai_settings.cfg_uc = preset.cfg_uc || '';
+    nai_settings.banned_tokens = preset.banned_tokens || '';
     loadNovelSettingsUi(nai_settings);
 }
 
@@ -95,41 +128,15 @@ function loadNovelSettings(settings) {
     nai_settings.min_length = settings.min_length;
     nai_settings.phrase_rep_pen = settings.phrase_rep_pen;
     nai_settings.cfg_scale = settings.cfg_scale;
+    nai_settings.top_g = settings.top_g;
+    nai_settings.mirostat_lr = settings.mirostat_lr;
+    nai_settings.mirostat_tau = settings.mirostat_tau;
     nai_settings.streaming_novel = !!settings.streaming_novel;
+    nai_settings.preamble = settings.preamble || default_preamble;
+    nai_settings.prefix = settings.prefix;
+    nai_settings.cfg_uc = settings.cfg_uc || '';
+    nai_settings.banned_tokens = settings.banned_tokens || '';
     loadNovelSettingsUi(nai_settings);
-}
-
-const phraseRepPenStrings = [
-    null,
-    "very_light",
-    "light",
-    "medium",
-    "aggressive",
-    "very_aggressive"
-]
-
-function getPhraseRepPenString(phraseRepPenCounter) {
-    if (phraseRepPenCounter < 1 || phraseRepPenCounter > 5) {
-        return null;
-    } else {
-        return phraseRepPenStrings[phraseRepPenCounter];
-    }
-}
-
-function getPhraseRepPenCounter(phraseRepPenString) {
-    if (phraseRepPenString === phraseRepPenStrings[1]) {
-        return 1;
-    } else if (phraseRepPenString === phraseRepPenStrings[2]) {
-        return 2;
-    } else if (phraseRepPenString === phraseRepPenStrings[3]) {
-        return 3;
-    } else if (phraseRepPenString === phraseRepPenStrings[4]) {
-        return 4;
-    } else if (phraseRepPenString === phraseRepPenStrings[5]) {
-        return 5;
-    } else {
-        return 0;
-    }
 }
 
 function loadNovelSettingsUi(ui_settings) {
@@ -157,11 +164,19 @@ function loadNovelSettingsUi(ui_settings) {
     $("#typical_p_counter_novel").text(Number(ui_settings.typical_p).toFixed(2));
     $("#cfg_scale_novel").val(ui_settings.cfg_scale);
     $("#cfg_scale_counter_novel").text(Number(ui_settings.cfg_scale).toFixed(2));
-    $("#phrase_rep_pen_novel").val(getPhraseRepPenCounter(ui_settings.phrase_rep_pen));
-    $("#phrase_rep_pen_counter_novel").text(getPhraseRepPenCounter(ui_settings.phrase_rep_pen));
+    $("#phrase_rep_pen_novel").val(ui_settings.phrase_rep_pen || "off");
+    $("#top_g_novel").val(ui_settings.top_g);
+    $("#top_g_counter_novel").text(Number(ui_settings.top_g).toFixed(0));
+    $("#mirostat_lr_novel").val(ui_settings.mirostat_lr);
+    $("#mirostat_lr_counter_novel").text(Number(ui_settings.mirostat_lr).toFixed(2));
+    $("#mirostat_tau_novel").val(ui_settings.mirostat_tau);
+    $("#mirostat_tau_counter_novel").text(Number(ui_settings.mirostat_tau).toFixed(2));
     $("#min_length_novel").val(ui_settings.min_length);
     $("#min_length_counter_novel").text(Number(ui_settings.min_length).toFixed(0));
     $('#nai_preamble_textarea').val(ui_settings.nai_preamble);
+    $('#nai_prefix').val(ui_settings.prefix || "vanilla");
+    $('#nai_cfg_uc').val(ui_settings.cfg_uc || "");
+    $('#nai_banned_tokens').val(ui_settings.banned_tokens || "");
 
     $("#streaming_novel").prop('checked', ui_settings.streaming_novel);
 }
@@ -234,16 +249,28 @@ const sliders = [
         setValue: (val) => { nai_settings.typical_p = Number(val).toFixed(2); },
     },
     {
+        sliderId: "#top_g_novel",
+        counterId: "#top_g_counter_novel",
+        format: (val) => Number(val).toFixed(0),
+        setValue: (val) => { nai_settings.top_g = Number(val).toFixed(0); },
+    },
+    {
+        sliderId: "#mirostat_tau_novel",
+        counterId: "#mirostat_tau_counter_novel",
+        format: (val) => Number(val).toFixed(2),
+        setValue: (val) => { nai_settings.mirostat_tau = Number(val).toFixed(2); },
+    },
+    {
+        sliderId: "#mirostat_lr_novel",
+        counterId: "#mirostat_lr_counter_novel",
+        format: (val) => Number(val).toFixed(2),
+        setValue: (val) => { nai_settings.mirostat_lr = Number(val).toFixed(2); },
+    },
+    {
         sliderId: "#cfg_scale_novel",
         counterId: "#cfg_scale_counter_novel",
         format: (val) => `${val}`,
         setValue: (val) => { nai_settings.cfg_scale = Number(val).toFixed(2); },
-    },
-    {
-        sliderId: "#phrase_rep_pen_novel",
-        counterId: "#phrase_rep_pen_counter_novel",
-        format: (val) => `${val}`,
-        setValue: (val) => { nai_settings.phrase_rep_pen = getPhraseRepPenString(Number(val).toFixed(0)); },
     },
     {
         sliderId: "#min_length_novel",
@@ -251,12 +278,108 @@ const sliders = [
         format: (val) => `${val}`,
         setValue: (val) => { nai_settings.min_length = Number(val).toFixed(0); },
     },
+    {
+        sliderId: "#nai_cfg_uc",
+        counterId: "#nai_cfg_uc_counter",
+        format: (val) => val,
+        setValue: (val) => { nai_settings.cfg_uc = val; },
+    },
+    {
+        sliderId: "#nai_banned_tokens",
+        counterId: "#nai_banned_tokens_counter",
+        format: (val) => val,
+        setValue: (val) => { nai_settings.banned_tokens = val; },
+    }
 ];
 
-export function getNovelGenerationData(finalPromt, this_settings, this_amount_gen, isImpersonate) {
+function getBadWordIds(banned_tokens, tokenizerType) {
+    if (tokenizerType === tokenizers.NONE) {
+        return [];
+    }
+
+    const cacheKey = `${getStringHash(banned_tokens)}-${tokenizerType}`;
+
+    if (cacheKey in badWordsCache && Array.isArray(badWordsCache[cacheKey])) {
+        console.debug(`Bad words ids cache hit for "${banned_tokens}"`, badWordsCache[cacheKey]);
+        return badWordsCache[cacheKey];
+    }
+
+    const result = [];
+    const sequence = banned_tokens.split('\n');
+
+    for (let token of sequence) {
+        const trimmed = token.trim();
+
+        // Skip empty lines
+        if (trimmed.length === 0) {
+            continue;
+        }
+
+        // Verbatim text
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            const tokens = getTextTokens(tokenizerType, trimmed.slice(1, -1));
+            result.push(tokens);
+        }
+
+        // Raw token ids, JSON serialized
+        else if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+                const tokens = JSON.parse(trimmed);
+
+                if (Array.isArray(tokens) && tokens.every(t => Number.isInteger(t))) {
+                    result.push(tokens);
+                } else {
+                    throw new Error('Not an array of integers');
+                }
+            } catch (err) {
+                console.log(`Failed to parse bad word token list: ${trimmed}`, err);
+            }
+        }
+
+        // Apply permutations
+        else {
+            const permutations = getBadWordPermutations(trimmed).map(t => getTextTokens(tokenizerType, t));
+            result.push(...permutations);
+        }
+    }
+
+    // Cache the result
+    console.debug(`Bad words ids for "${banned_tokens}"`, result);
+    badWordsCache[cacheKey] = result;
+
+    return result;
+}
+
+function getBadWordPermutations(text) {
+    const result = [];
+
+    // Original text
+    result.push(text);
+    // Original text + leading space
+    result.push(` ${text}`);
+    // First letter capitalized
+    result.push(text[0].toUpperCase() + text.slice(1));
+    // Ditto + leading space
+    result.push(` ${text[0].toUpperCase() + text.slice(1)}`);
+    // First letter lower cased
+    result.push(text[0].toLowerCase() + text.slice(1));
+    // Ditto + leading space
+    result.push(` ${text[0].toLowerCase() + text.slice(1)}`);
+    // Original all upper cased
+    result.push(text.toUpperCase());
+    // Ditto + leading space
+    result.push(` ${text.toUpperCase()}`);
+    // Original all lower cased
+    result.push(text.toLowerCase());
+    // Ditto + leading space
+    result.push(` ${text.toLowerCase()}`);
+
+    return result;
+}
+
+export function getNovelGenerationData(finalPrompt, this_settings, this_amount_gen, isImpersonate) {
     const clio = nai_settings.model_novel.includes('clio');
     const kayra = nai_settings.model_novel.includes('kayra');
-    const isNewModel = clio || kayra;
 
     const tokenizerType = kayra ? tokenizers.NERD2 : (clio ? tokenizers.NERD : tokenizers.NONE);
     const stopSequences = (tokenizerType !== tokenizers.NONE)
@@ -264,19 +387,19 @@ export function getNovelGenerationData(finalPromt, this_settings, this_amount_ge
             .map(t => getTextTokens(tokenizerType, t))
         : undefined;
 
-    let useInstruct = false;
-    if (isNewModel) {
-        // NovelAI claims they scan backwards 1000 characters (not tokens!) to look for instruct brackets. That's really short.
-        const tail = finalPromt.slice(-1500);
-        useInstruct = tail.includes("}");
-    }
+    const badWordIds = (tokenizerType !== tokenizers.NONE)
+        ? getBadWordIds(nai_settings.banned_tokens, tokenizerType)
+        : undefined;
+
+    const prefix = selectPrefix(nai_settings.prefix, finalPrompt);
+    const cfgSettings = getCfg();
 
     return {
-        "input": finalPromt,
+        "input": finalPrompt,
         "model": nai_settings.model_novel,
         "use_string": true,
         "temperature": parseFloat(nai_settings.temperature),
-        "max_length": this_amount_gen, // this_settings.max_length, // <= why?
+        "max_length": this_amount_gen < maximum_output_length ? this_amount_gen : maximum_output_length,
         "min_length": parseInt(nai_settings.min_length),
         "tail_free_sampling": parseFloat(nai_settings.tail_free_sampling),
         "repetition_penalty": parseFloat(nai_settings.repetition_penalty),
@@ -288,20 +411,39 @@ export function getNovelGenerationData(finalPromt, this_settings, this_amount_ge
         "top_p": parseFloat(nai_settings.top_p),
         "top_k": parseInt(nai_settings.top_k),
         "typical_p": parseFloat(nai_settings.typical_p),
-        "cfg_scale": parseFloat(nai_settings.cfg_scale),
-        "cfg_uc": "",
+        "top_g": parseFloat(nai_settings.top_g),
+        "mirostat_lr": parseFloat(nai_settings.mirostat_lr),
+        "mirostat_tau": parseFloat(nai_settings.mirostat_tau),
+        "cfg_scale": cfgSettings?.guidanceScale ?? parseFloat(nai_settings.cfg_scale),
+        "cfg_uc": cfgSettings?.negativePrompt ?? nai_settings.cfg_uc ??  "",
         "phrase_rep_pen": nai_settings.phrase_rep_pen,
-        //"stop_sequences": {{187}},
         "stop_sequences": stopSequences,
-        //bad_words_ids = {{50256}, {0}, {1}};
+        "bad_words_ids": badWordIds,
         "generate_until_sentence": true,
         "use_cache": false,
         "use_string": true,
         "return_full_text": false,
-        "prefix": useInstruct ? "special_instruct" : (isNewModel ? "special_proseaugmenter" : "vanilla"),
+        "prefix": prefix,
         "order": this_settings.order,
         "streaming": nai_settings.streaming_novel,
     };
+}
+
+// Check if the prefix needs to be overriden to use instruct mode
+function selectPrefix(selected_prefix, finalPromt) {
+    let useInstruct = false;
+    const clio = nai_settings.model_novel.includes('clio');
+    const kayra = nai_settings.model_novel.includes('kayra');
+    const isNewModel = clio || kayra;
+
+    if (isNewModel) {
+        // NovelAI claims they scan backwards 1000 characters (not tokens!) to look for instruct brackets. That's really short.
+        const tail = finalPromt.slice(-1500);
+        useInstruct = tail.includes("}");
+        return useInstruct ? "special_instruct" : selected_prefix;
+    }
+
+    return "vanilla";
 }
 
 export async function generateNovelWithStreaming(generate_data, signal) {
@@ -377,6 +519,16 @@ $(document).ready(function () {
 
     $("#model_novel_select").change(function () {
         nai_settings.model_novel = $("#model_novel_select").find(":selected").val();
+        saveSettingsDebounced();
+    });
+
+    $("#nai_prefix").on('change', function () {
+        nai_settings.prefix = $("#nai_prefix").find(":selected").val();
+        saveSettingsDebounced();
+    });
+
+    $("#phrase_rep_pen_novel").on('change', function () {
+        nai_settings.phrase_rep_pen = $("#phrase_rep_pen_novel").find(":selected").val();
         saveSettingsDebounced();
     });
 });

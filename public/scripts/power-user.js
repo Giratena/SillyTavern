@@ -158,6 +158,7 @@ let power_user = {
     hotswap_enabled: true,
     timer_enabled: true,
     timestamps_enabled: true,
+    timestamp_model_icon: false,
     mesIDDisplay_enabled: false,
     max_context_unlocked: false,
     prefer_character_prompt: true,
@@ -193,6 +194,7 @@ let power_user = {
     custom_stopping_strings_macro: true,
     fuzzy_search: false,
     encode_tags: false,
+    lazy_load: 0,
 };
 
 let themes = [];
@@ -224,6 +226,7 @@ const storage_keys = {
     hotswap_enabled: 'HotswapEnabled',
     timer_enabled: 'TimerEnabled',
     timestamps_enabled: 'TimestampsEnabled',
+    timestamp_model_icon: 'TimestampModelIcon',
     mesIDDisplay_enabled: 'mesIDDisplayEnabled',
 };
 
@@ -300,6 +303,13 @@ function switchTimestamps() {
     power_user.timestamps_enabled = value === null ? true : value == "true";
     $("body").toggleClass("no-timestamps", !power_user.timestamps_enabled);
     $("#messageTimestampsEnabled").prop("checked", power_user.timestamps_enabled);
+}
+
+function switchIcons() {
+    const value = localStorage.getItem(storage_keys.timestamp_model_icon);
+    power_user.timestamp_model_icon = value === null ? true : value == "true";
+    $("body").toggleClass("no-modelIcons", !power_user.timestamp_model_icon);
+    $("#messageModelIconEnabled").prop("checked", power_user.timestamp_model_icon);
 }
 
 function switchMesIDDisplay() {
@@ -566,6 +576,13 @@ async function applyTheme(name) {
             }
         },
         {
+            key: 'timestamp_model_icon',
+            action: async () => {
+                localStorage.setItem(storage_keys.timestamp_model_icon, power_user.timestamp_model_icon);
+                switchIcons();
+            }
+        },
+        {
             key: 'mesIDDisplay_enabled',
             action: async () => {
                 localStorage.setItem(storage_keys.mesIDDisplay_enabled, power_user.mesIDDisplay_enabled);
@@ -624,6 +641,7 @@ noShadows();
 switchHotswap();
 switchTimer();
 switchTimestamps();
+switchIcons();
 switchMesIDDisplay();
 
 function loadPowerUserSettings(settings, data) {
@@ -689,6 +707,7 @@ function loadPowerUserSettings(settings, data) {
     $('#fuzzy_search_checkbox').prop("checked", power_user.fuzzy_search);
     $('#persona_show_notifications').prop("checked", power_user.persona_show_notifications);
     $('#encode_tags').prop("checked", power_user.encode_tags);
+    $('#lazy_load').val(Number(power_user.lazy_load));
 
     $("#console_log_prompts").prop("checked", power_user.console_log_prompts);
     $('#auto_fix_generated_markdown').prop("checked", power_user.auto_fix_generated_markdown);
@@ -732,6 +751,7 @@ function loadPowerUserSettings(settings, data) {
     $("#hotswapEnabled").prop("checked", power_user.hotswap_enabled);
     $("#messageTimerEnabled").prop("checked", power_user.timer_enabled);
     $("#messageTimestampsEnabled").prop("checked", power_user.timestamps_enabled);
+    $("#messageModelIconEnabled").prop("checked", power_user.timestamp_model_icon);
     $("#mesIDDisplayEnabled").prop("checked", power_user.mesIDDisplay_enabled);
     $("#prefer_character_prompt").prop("checked", power_user.prefer_character_prompt);
     $("#prefer_character_jailbreak").prop("checked", power_user.prefer_character_jailbreak);
@@ -934,9 +954,26 @@ export function fuzzySearchCharacters(searchValue) {
     });
 
     const results = fuse.search(searchValue);
-    console.debug('Fuzzy search results for ' + searchValue, results)
+    console.debug('Characters fuzzy search results for ' + searchValue, results);
     const indices = results.map(x => x.refIndex);
     return indices;
+}
+
+export function fuzzySearchGroups(searchValue) {
+    const fuse = new Fuse(groups, {
+        keys: [
+            { name: 'name', weight: 3 },
+            { name: 'members', weight: 1 },
+        ],
+        includeScore: true,
+        ignoreLocation: true,
+        threshold: 0.2,
+    });
+
+    const results = fuse.search(searchValue);
+    console.debug('Groups fuzzy search results for ' + searchValue, results);
+    const ids = results.map(x => String(x.item?.id)).filter(x => x);
+    return ids;
 }
 
 export function formatInstructModeChat(name, mes, isUser, isNarrator, forceAvatar, name1, name2) {
@@ -1081,6 +1118,7 @@ async function saveTheme() {
         chat_width: power_user.chat_width,
         timer_enabled: power_user.timer_enabled,
         timestamps_enabled: power_user.timestamps_enabled,
+        timestamp_model_icon: power_user.timestamp_model_icon,
         mesIDDisplay_enabled: power_user.mesIDDisplay_enabled,
         hotswap_enabled: power_user.hotswap_enabled,
 
@@ -1975,6 +2013,13 @@ $(document).ready(() => {
         power_user.timestamps_enabled = value;
         localStorage.setItem(storage_keys.timestamps_enabled, power_user.timestamps_enabled);
         switchTimestamps();
+    });
+
+    $("#messageModelIconEnabled").on("input", function () {
+        const value = !!$(this).prop('checked');
+        power_user.timestamp_model_icon = value;
+        localStorage.setItem(storage_keys.timestamp_model_icon, power_user.timestamp_model_icon);
+        switchIcons();
     });
 
     $("#mesIDDisplayEnabled").on("input", function () {
