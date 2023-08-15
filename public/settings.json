@@ -1,7 +1,7 @@
 {
     "firstRun": false,
     "username": "Gira",
-    "active_character": "Misty.png",
+    "active_character": "An Innocent Nun.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -443,7 +443,7 @@
     "top_p_openai": 1,
     "top_k_openai": 0,
     "stream_openai": true,
-    "openai_max_context": "6073",
+    "openai_max_context": 6073,
     "openai_max_tokens": 300,
     "wrap_in_quotes": false,
     "names_in_completion": false,
@@ -719,6 +719,55 @@
         },
         {
             "character_id": "12",
+            "order": [
+                {
+                    "identifier": "main",
+                    "enabled": true
+                },
+                {
+                    "identifier": "worldInfoBefore",
+                    "enabled": true
+                },
+                {
+                    "identifier": "charDescription",
+                    "enabled": true
+                },
+                {
+                    "identifier": "charPersonality",
+                    "enabled": true
+                },
+                {
+                    "identifier": "scenario",
+                    "enabled": true
+                },
+                {
+                    "identifier": "enhanceDefinitions",
+                    "enabled": false
+                },
+                {
+                    "identifier": "nsfw",
+                    "enabled": true
+                },
+                {
+                    "identifier": "worldInfoAfter",
+                    "enabled": true
+                },
+                {
+                    "identifier": "dialogueExamples",
+                    "enabled": true
+                },
+                {
+                    "identifier": "chatHistory",
+                    "enabled": true
+                },
+                {
+                    "identifier": "jailbreak",
+                    "enabled": true
+                }
+            ]
+        },
+        {
+            "character_id": "0",
             "order": [
                 {
                     "identifier": "main",
