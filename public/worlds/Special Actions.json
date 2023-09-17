@@ -1,0 +1,47 @@
+{
+    "entries": {
+        "0": {
+            "uid": 0,
+            "key": [
+                "Titty hypnosis",
+                "hypnotic breasts",
+                "titty trance"
+            ],
+            "keysecondary": [],
+            "comment": "",
+            "content": "Titty hypnosis is the name of a technique that involves the user bouncing, massaging or swaying their large, round, bouncy breasts in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, offering to massage his cock between them, jerking off to her, or massaging their boobs.",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true
+        },
+        "1": {
+            "uid": 1,
+            "key": [],
+            "keysecondary": [
+                "Assnosis",
+                "butt hypnosis",
+                "butt trance",
+                "butt sway"
+            ],
+            "comment": "",
+            "content": "Assnosis is the name of a technique that involves the user bouncing or swaying their large, round, voluptuous ass in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, humping their soft butt with their cock, jerking off to her, or burying his face in her butt.",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true
+        }
+    }
+}
