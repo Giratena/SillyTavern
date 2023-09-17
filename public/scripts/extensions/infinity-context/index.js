@@ -1,6 +1,7 @@
-import { saveSettingsDebounced, getCurrentChatId, system_message_types, extension_prompt_types, eventSource, event_types, getRequestHeaders, CHARACTERS_PER_TOKEN_RATIO, substituteParams, max_context, } from "../../../script.js";
+import { saveSettingsDebounced, getCurrentChatId, system_message_types, extension_prompt_types, eventSource, event_types, getRequestHeaders, substituteParams, } from "../../../script.js";
 import { humanizedDateTime } from "../../RossAscends-mods.js";
 import { getApiUrl, extension_settings, getContext, doExtrasFetch } from "../../extensions.js";
+import { CHARACTERS_PER_TOKEN_RATIO } from "../../tokenizers.js";
 import { getFileText, onlyUnique, splitRecursive } from "../../utils.js";
 export { MODULE_NAME };
 
@@ -507,7 +508,6 @@ async function onSelectInjectFile(e) {
             meta: JSON.stringify({
                 name: file.name,
                 is_user: false,
-                is_name: false,
                 is_system: false,
                 send_date: humanizedDateTime(),
                 mes: m,
@@ -597,8 +597,8 @@ function doAutoAdjust(chat, maxContext) {
     console.debug('CHROMADB: Mean message length (tokens): %o', meanMessageLengthTokens);
     // Get number of messages in context
     const contextMessages = Math.max(1, Math.ceil(maxContext / meanMessageLengthTokens));
-    // Round up to nearest 10
-    const contextMessagesRounded = Math.ceil(contextMessages / 10) * 10;
+    // Round up to nearest 5
+    const contextMessagesRounded = Math.ceil(contextMessages / 5) * 5;
     console.debug('CHROMADB: Estimated context messages (rounded): %o', contextMessagesRounded);
     // Messages to keep (proportional, rounded to nearest 5, minimum 5, maximum 500)
     const messagesToKeep = Math.min(defaultSettings.keep_context_max, Math.max(5, Math.floor(contextMessagesRounded * extension_settings.chromadb.keep_context_proportion / 5) * 5));
@@ -685,7 +685,6 @@ window.chromadb_interceptGeneration = async (chat, maxContext) => {
             const charname = context.name2;
             newChat.push(
                 {
-                    is_name: false,
                     is_user: false,
                     mes: `[Use these past chat exchanges to inform ${charname}'s next response:`,
                     name: "system",
@@ -695,7 +694,6 @@ window.chromadb_interceptGeneration = async (chat, maxContext) => {
             newChat.push(...queriedMessages.map(m => m.meta).filter(onlyUnique).map(JSON.parse));
             newChat.push(
                 {
-                    is_name: false,
                     is_user: false,
                     mes: `]\n`,
                     name: "system",
@@ -738,7 +736,7 @@ window.chromadb_interceptGeneration = async (chat, maxContext) => {
             // No memories? No prompt.
             const promptBlob = (tokenApprox == 0) ? "" : wrapperMsg.replace('{{memories}}', allMemoryBlob);
             console.debug("CHROMADB: prompt blob: %o", promptBlob);
-            context.setExtensionPrompt(MODULE_NAME, promptBlob, extension_prompt_types.AFTER_SCENARIO);
+            context.setExtensionPrompt(MODULE_NAME, promptBlob, extension_prompt_types.IN_PROMPT);
         }
         if (selectedStrategy === 'custom') {
             const context = getContext();
@@ -751,7 +749,6 @@ window.chromadb_interceptGeneration = async (chat, maxContext) => {
 
             newChat.push(
                 {
-                    is_name: false,
                     is_user: false,
                     mes: recallStart,
                     name: "system",
@@ -761,7 +758,6 @@ window.chromadb_interceptGeneration = async (chat, maxContext) => {
             newChat.push(...queriedMessages.map(m => m.meta).filter(onlyUnique).map(JSON.parse));
             newChat.push(
                 {
-                    is_name: false,
                     is_user: false,
                     mes: recallEnd + `\n`,
                     name: "system",

@@ -1,7 +1,6 @@
 import {
     characters,
     saveChat,
-    sendSystemMessage,
     system_messages,
     system_message_types,
     this_chid,
@@ -19,6 +18,7 @@ import {
     getGroupPastChats,
     group_activation_strategy,
     groups,
+    openGroupById,
     openGroupChat,
     saveGroupBookmarkChat,
     selected_group,
@@ -280,7 +280,6 @@ async function convertSoloToGroupChat() {
         message.name = character.name;
         message.original_avatar = character.avatar;
         message.force_avatar = getThumbnailUrl('avatar', character.avatar);
-        message.is_name = true;
 
         // Allow regens of a single message in group
         if (typeof message.extra !== 'object') {
@@ -301,13 +300,12 @@ async function convertSoloToGroupChat() {
     }
 
     // Click on the freshly selected group to open it
-    $(`.group_select[grid="${group.id}"]`).click();
+    await openGroupById(group.id);
 
-    await delay(1);
     toastr.success('The chat has been successfully converted!');
 }
 
-$(document).ready(function () {
+jQuery(function () {
     $('#option_new_bookmark').on('click', saveBookmarkMenu);
     $('#option_back_to_main').on('click', backToMainChat);
     $('#option_convert_to_group').on('click', convertSoloToGroupChat);
