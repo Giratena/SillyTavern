@@ -11,13 +11,14 @@
     "shadow_width": 2,
     "font_scale": 0.9,
     "fast_ui_mode": true,
-    "waifuMode": true,
+    "waifuMode": false,
     "avatar_style": 0,
     "chat_display": 2,
     "noShadows": true,
     "chat_width": 60,
     "timer_enabled": true,
     "timestamps_enabled": false,
+    "timestamp_model_icon": "",
     "mesIDDisplay_enabled": false,
     "hotswap_enabled": false
 }
