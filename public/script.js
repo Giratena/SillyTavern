@@ -103,7 +103,8 @@ import {
 
 import {
     createNewBookmark,
-    showBookmarksButtons
+    showBookmarksButtons,
+    createBranch,
 } from "./scripts/bookmarks.js";
 
 import {
@@ -385,7 +386,8 @@ const system_message_types = {
 
 const extension_prompt_types = {
     IN_PROMPT: 0,
-    IN_CHAT: 1
+    IN_CHAT: 1,
+    BEFORE_PROMPT: 2
 };
 
 let system_messages = {};
@@ -634,7 +636,7 @@ let is_send_press = false; //Send generation
 
 let this_del_mes = 0;
 
-//message editing and chat scroll posistion persistence
+//message editing and chat scroll position persistence
 var this_edit_mes_text = "";
 var this_edit_mes_chname = "";
 var this_edit_mes_id;
@@ -1170,16 +1172,6 @@ async function printMessages() {
     for (let i = startIndex; i < chat.length; i++) {
         const item = chat[i];
         addOneMessage(item, { scroll: i === chat.length - 1 });
-    }
-
-    if (power_user.lazy_load > 0) {
-        const height = $('#chat').height();
-        const scrollHeight = $('#chat').prop('scrollHeight');
-
-        // Only hide if oveflowing the scroll
-        if (scrollHeight > height) {
-            $('#chat').children('.mes').slice(0, -power_user.lazy_load).hide();
-        }
     }
 }
 
@@ -1846,7 +1838,7 @@ function getStoppingStrings(isImpersonate) {
         if (group && Array.isArray(group.members)) {
             const names = group.members
                 .map(x => characters.find(y => y.avatar == x))
-                .filter(x => x && x.name !== name2)
+                .filter(x => x && x.name && x.name !== name2)
                 .map(x => `\n${x.name}:`);
             result.push(...names);
         }
@@ -1862,16 +1854,30 @@ function getStoppingStrings(isImpersonate) {
     return result.filter(onlyUnique);
 }
 
-
-// Background prompt generation
-export async function generateQuietPrompt(quiet_prompt) {
+/**
+ * Background generation based on the provided prompt.
+ * @param {string} quiet_prompt Instruction prompt for the AI
+ * @param {boolean} quietToLoud Whether a message should be sent in a foreground (loud) or background (quiet) mode
+ * @returns
+ */
+export async function generateQuietPrompt(quiet_prompt, quietToLoud) {
     return await new Promise(
         async function promptPromise(resolve, reject) {
-            try {
-                await Generate('quiet', { resolve, reject, quiet_prompt, force_name2: true, });
+            if (quietToLoud === true) {
+                try {
+                    await Generate('quiet', { resolve, reject, quiet_prompt, quietToLoud: true, force_name2: true, });
+                }
+                catch {
+                    reject();
+                }
             }
-            catch {
-                reject();
+            else {
+                try {
+                    await Generate('quiet', { resolve, reject, quiet_prompt, quietToLoud: false, force_name2: true, });
+                }
+                catch {
+                    reject();
+                }
             }
         });
 }
@@ -2246,7 +2252,7 @@ class StreamingProcessor {
         throw new Error('Generation function for streaming is not hooked up');
     }
 
-    constructor(type, force_name2) {
+    constructor(type, force_name2, timeStarted) {
         this.result = "";
         this.messageId = -1;
         this.type = type;
@@ -2256,7 +2262,7 @@ class StreamingProcessor {
         this.generator = this.nullStreamingGeneration;
         this.abortController = new AbortController();
         this.firstMessageText = '...';
-        this.timeStarted = new Date();
+        this.timeStarted = timeStarted;
     }
 
     async generate() {
@@ -2289,7 +2295,7 @@ class StreamingProcessor {
     }
 }
 
-async function Generate(type, { automatic_trigger, force_name2, resolve, reject, quiet_prompt, force_chid, signal } = {}, dryRun = false) {
+async function Generate(type, { automatic_trigger, force_name2, resolve, reject, quiet_prompt, quietToLoud, force_chid, signal } = {}, dryRun = false) {
     //console.log('Generate entered');
     setGenerationProgress(0);
     generation_started = new Date();
@@ -2371,9 +2377,11 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
         }
     }
 
+    //#########QUIET PROMPT STUFF##############
+    //this function just gives special care to novel quiet instruction prompts
     if (quiet_prompt) {
         quiet_prompt = substituteParams(quiet_prompt);
-        quiet_prompt = main_api == 'novel' ? adjustNovelInstructionPrompt(quiet_prompt) : quiet_prompt;
+        quiet_prompt = main_api == 'novel' && !quietToLoud ? adjustNovelInstructionPrompt(quiet_prompt) : quiet_prompt;
     }
 
     if (true === dryRun ||
@@ -2403,6 +2411,18 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
         }
 
         const isContinue = type == 'continue';
+
+        // Rewrite the generation timer to account for the time passed for all the continuations.
+        if (isContinue && chat.length) {
+            const prevFinished = chat[chat.length - 1]['gen_finished'];
+            const prevStarted = chat[chat.length - 1]['gen_started'];
+
+            if (prevFinished && prevStarted) {
+                const timePassed = prevFinished - prevStarted;
+                generation_started = new Date(Date.now() - timePassed);
+                chat[chat.length - 1]['gen_started'] = generation_started;
+            }
+        }
 
         if (!dryRun) {
             deactivateSendButtons();
@@ -2548,6 +2568,7 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
         addPersonaDescriptionExtensionPrompt();
         // Call combined AN into Generate
         let allAnchors = getAllExtensionPrompts();
+        const beforeScenarioAnchor = getExtensionPrompt(extension_prompt_types.BEFORE_PROMPT).trimStart();
         const afterScenarioAnchor = getExtensionPrompt(extension_prompt_types.IN_PROMPT);
         let zeroDepthAnchor = getExtensionPrompt(extension_prompt_types.IN_CHAT, 0, ' ');
 
@@ -2649,7 +2670,7 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
         console.debug('calling runGenerate');
 
         if (!dryRun) {
-            streamingProcessor = isStreamingEnabled() ? new StreamingProcessor(type, force_name2) : false;
+            streamingProcessor = isStreamingEnabled() ? new StreamingProcessor(type, force_name2, generation_started) : false;
         }
 
         if (isContinue) {
@@ -2712,9 +2733,14 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
             }
 
             function modifyLastPromptLine(lastMesString) {
+                //#########QUIET PROMPT STUFF PT2##############
+
                 // Add quiet generation prompt at depth 0
                 if (quiet_prompt && quiet_prompt.length) {
+
+                    // here name1 is forced for all quiet prompts..why?
                     const name = name1;
+                    //checks if we are in instruct, if so, formats the chat as such, otherwise just adds the quiet prompt
                     const quietAppend = isInstruct ? formatInstructModeChat(name, quiet_prompt, false, true, '', name1, name2, false) : `\n${quiet_prompt}`;
 
                     //This begins to fix quietPrompts (particularly /sysgen) for instruct
@@ -2723,13 +2749,23 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
                     //TODO: respect output_sequence vs last_output_sequence settings
                     //TODO: decide how to prompt this to clarify who is talking 'Narrator', 'System', etc.
                     if (isInstruct) {
-                        lastMesString += '\n' + quietAppend + power_user.instruct.output_sequence + '\n';
+                        lastMesString += '\n' + quietAppend; // + power_user.instruct.output_sequence + '\n';
                     } else {
                         lastMesString += quietAppend;
                     }
-                    // Bail out early
-                    return lastMesString;
+
+
+                    // Ross: bailing out early prevents quiet prompts from respecting other instruct prompt toggles
+                    // for sysgen, SD, and summary this is desireable as it prevents the AI from responding as char..
+                    // but for idle prompting, we want the flexibility of the other prompt toggles, and to respect them as per settings in the extension
+                    // need a detection for what the quiet prompt is being asked for...
+
+                    // Bail out early?
+                    if (quietToLoud !== true) {
+                        return lastMesString;
+                    }
                 }
+
 
                 // Get instruct mode line
                 if (isInstruct && !isContinue) {
@@ -2752,7 +2788,6 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
                     if (!lastMesString.endsWith('\n')) {
                         lastMesString += '\n';
                     }
-
                     lastMesString += `${name2}:`;
                 }
 
@@ -2912,6 +2947,7 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
                 mesSendString = addChatsSeparator(mesSendString);
 
                 let combinedPrompt =
+                    beforeScenarioAnchor +
                     storyString +
                     afterScenarioAnchor +
                     mesExmString +
@@ -3019,6 +3055,7 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
                 smartContextString: (extension_prompts['chromadb']?.value || ''),
                 worldInfoString: worldInfoString,
                 storyString: storyString,
+                beforeScenarioAnchor: beforeScenarioAnchor,
                 afterScenarioAnchor: afterScenarioAnchor,
                 examplesString: examplesString,
                 mesSendString: mesSendString,
@@ -3238,6 +3275,14 @@ async function Generate(type, { automatic_trigger, force_name2, resolve, reject,
             toastr.warning('Сharacter is not selected');
         }
         is_send_press = false;
+    }
+
+    //prevent custom depth WI entries (which have unique random key names) from duplicating
+    for (let key in extension_prompts) {
+        if (key.includes('customDepthWI')) {
+            let keyname = extension_prompts[key]
+            delete extension_prompts[key];
+        }
     }
     //console.log('generate ending');
 } //generate ends
@@ -3539,6 +3584,7 @@ function promptItemize(itemizedPrompts, requestedMesId) {
     var summarizeStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].summarizeString);
     var authorsNoteStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].authorsNoteString);
     var smartContextStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].smartContextString);
+    var beforeScenarioAnchorTokens = getTokenCount(itemizedPrompts[thisPromptSet].beforeScenarioAnchor);
     var afterScenarioAnchorTokens = getTokenCount(itemizedPrompts[thisPromptSet].afterScenarioAnchor);
     var zeroDepthAnchorTokens = getTokenCount(itemizedPrompts[thisPromptSet].zeroDepthAnchor);
     var thisPrompt_max_context = itemizedPrompts[thisPromptSet].this_max_context;
@@ -3554,7 +3600,7 @@ function promptItemize(itemizedPrompts, requestedMesId) {
         var oaiStartTokens = itemizedPrompts[thisPromptSet].oaiStartTokens;
         var ActualChatHistoryTokens = itemizedPrompts[thisPromptSet].oaiConversationTokens;
         var examplesStringTokens = itemizedPrompts[thisPromptSet].oaiExamplesTokens;
-        var oaiPromptTokens = itemizedPrompts[thisPromptSet].oaiPromptTokens - afterScenarioAnchorTokens + examplesStringTokens;
+        var oaiPromptTokens = itemizedPrompts[thisPromptSet].oaiPromptTokens - (afterScenarioAnchorTokens + beforeScenarioAnchorTokens) + examplesStringTokens;
         var oaiBiasTokens = itemizedPrompts[thisPromptSet].oaiBiasTokens;
         var oaiJailbreakTokens = itemizedPrompts[thisPromptSet].oaiJailbreakTokens;
         var oaiNudgeTokens = itemizedPrompts[thisPromptSet].oaiNudgeTokens;
@@ -3574,6 +3620,7 @@ function promptItemize(itemizedPrompts, requestedMesId) {
             //charPersonalityTokens +
             //allAnchorsTokens +
             worldInfoStringTokens +
+            beforeScenarioAnchorTokens +
             afterScenarioAnchorTokens;
         // OAI doesn't use padding
         thisPrompt_padding = 0;
@@ -3586,7 +3633,7 @@ function promptItemize(itemizedPrompts, requestedMesId) {
         var storyStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].storyString) - worldInfoStringTokens;
         var examplesStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].examplesString);
         var mesSendStringTokens = getTokenCount(itemizedPrompts[thisPromptSet].mesSendString)
-        var ActualChatHistoryTokens = mesSendStringTokens - (allAnchorsTokens - afterScenarioAnchorTokens) + power_user.token_padding;
+        var ActualChatHistoryTokens = mesSendStringTokens - (allAnchorsTokens - (beforeScenarioAnchorTokens + afterScenarioAnchorTokens)) + power_user.token_padding;
         var instructionTokens = getTokenCount(itemizedPrompts[thisPromptSet].instruction);
         var promptBiasTokens = getTokenCount(itemizedPrompts[thisPromptSet].promptBias);
 
@@ -3605,7 +3652,7 @@ function promptItemize(itemizedPrompts, requestedMesId) {
     if (this_main_api == 'openai') {
         //console.log('-- applying % on OAI tokens');
         var oaiStartTokensPercentage = ((oaiStartTokens / (finalPromptTokens)) * 100).toFixed(2);
-        var storyStringTokensPercentage = (((afterScenarioAnchorTokens + oaiPromptTokens) / (finalPromptTokens)) * 100).toFixed(2);
+        var storyStringTokensPercentage = (((afterScenarioAnchorTokens + beforeScenarioAnchorTokens + oaiPromptTokens) / (finalPromptTokens)) * 100).toFixed(2);
         var ActualChatHistoryTokensPercentage = ((ActualChatHistoryTokens / (finalPromptTokens)) * 100).toFixed(2);
         var promptBiasTokensPercentage = ((oaiBiasTokens / (finalPromptTokens)) * 100).toFixed(2);
         var worldInfoStringTokensPercentage = ((worldInfoStringTokens / (finalPromptTokens)) * 100).toFixed(2);
@@ -5145,39 +5192,46 @@ export async function getChatsFromFiles(data, isGroupChat) {
     let chat_dict = {};
     let chat_list = Object.values(data).sort((a, b) => a["file_name"].localeCompare(b["file_name"])).reverse();
 
-    for (const { file_name } of chat_list) {
-        try {
-            const endpoint = isGroupChat ? '/getgroupchat' : '/getchat';
-            const requestBody = isGroupChat
-                ? JSON.stringify({ id: file_name })
-                : JSON.stringify({
-                    ch_name: characters[context.characterId].name,
-                    file_name: file_name.replace('.jsonl', ''),
-                    avatar_url: characters[context.characterId].avatar
+    let chat_promise = chat_list.map(({ file_name }) => {
+        return new Promise(async (res, rej) => {
+            try {
+                const endpoint = isGroupChat ? '/getgroupchat' : '/getchat';
+                const requestBody = isGroupChat
+                    ? JSON.stringify({ id: file_name })
+                    : JSON.stringify({
+                        ch_name: characters[context.characterId].name,
+                        file_name: file_name.replace('.jsonl', ''),
+                        avatar_url: characters[context.characterId].avatar
+                    });
+
+                const chatResponse = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: getRequestHeaders(),
+                    body: requestBody,
+                    cache: 'no-cache',
                 });
 
-            const chatResponse = await fetch(endpoint, {
-                method: 'POST',
-                headers: getRequestHeaders(),
-                body: requestBody,
-                cache: 'no-cache',
-            });
+                if (!chatResponse.ok) {
+                    return res();
+                    // continue;
+                }
 
-            if (!chatResponse.ok) {
-                continue;
+                const currentChat = await chatResponse.json();
+                if (!isGroupChat) {
+                    // remove the first message, which is metadata, only for individual chats
+                    currentChat.shift();
+                }
+                chat_dict[file_name] = currentChat;
+
+            } catch (error) {
+                console.error(error);
             }
 
-            const currentChat = await chatResponse.json();
-            if (!isGroupChat) {
-                // remove the first message, which is metadata, only for individual chats
-                currentChat.shift();
-            }
-            chat_dict[file_name] = currentChat;
+            return res();
+        })
+    })
 
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    await Promise.all(chat_promise)
 
     return chat_dict;
 }
@@ -6470,6 +6524,11 @@ function swipe_left() {      // when we swipe left..but no generation.
     }
 }
 
+async function branchChat(mesID) {
+    let name = await createBranch(mesID);
+    await openCharacterChat(name);
+}
+
 // when we click swipe right button
 const swipe_right = () => {
     if (chat.length - 1 === Number(this_edit_mes_id)) {
@@ -6649,6 +6708,8 @@ const swipe_right = () => {
         });
     }
 }
+
+
 
 function displayOverrideWarnings() {
     if (!this_chid || !selected_group) {
@@ -6944,17 +7005,6 @@ jQuery(async function () {
         $("#groupControlsToggle").trigger('click');
         $("#groupCurrentMemberListToggle .inline-drawer-icon").trigger('click');
     }, 200);
-
-    $('#chat').on('scroll', async () => {
-        // if on the start of the chat and has hidden messages
-        if ($('#chat').scrollTop() === 0 && $('#chat').children('.mes').not(':visible').length > 0) {
-            // show next hidden messages
-            const prevHeight = $('#chat').prop('scrollHeight');
-            $('#chat').children('.mes').not(':visible').slice(-power_user.lazy_load).show();
-            const newHeight = $('#chat').prop('scrollHeight');
-            $('#chat').scrollTop(newHeight - prevHeight);
-        }
-    });
 
     $("#chat").on('mousewheel touchstart', () => {
         scrollLock = true;
@@ -8371,6 +8421,13 @@ jQuery(async function () {
         }
     });
 
+    $(document).on("click", ".mes_create_branch", async function () {
+        var selected_mes_id = $(this).closest(".mes").attr("mesid");
+        if (selected_mes_id !== undefined) {
+            branchChat(selected_mes_id);
+        }
+    });
+
     $(document).on("click", ".mes_stop", function () {
         if (streamingProcessor) {
             streamingProcessor.abortController.abort();
@@ -8688,7 +8745,7 @@ jQuery(async function () {
         }
 
         console.debug('Label value OK, setting to the master input control', myText);
-        $(masterElement).val(myValue).trigger('input');
+        $(masterElement).val(myValue).trigger('input').trigger('mouseup');
         restoreCaretPosition($(this).get(0), caretPosition);
     });
 

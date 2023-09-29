@@ -309,8 +309,8 @@ app.get('/deviceinfo', function (request, response) {
     const deviceInfo = deviceDetector.parse(userAgent || "");
     return response.send(deviceInfo);
 });
-app.get('/version', function (_, response) {
-    const data = getVersion();
+app.get('/version', async function (_, response) {
+    const data = await getVersion();
     response.send(data);
 })
 
@@ -375,6 +375,7 @@ app.post("/generate", jsonParser, async function (request, response_generate) {
             mirostat: request.body.mirostat,
             mirostat_eta: request.body.mirostat_eta,
             mirostat_tau: request.body.mirostat_tau,
+            grammar: request.body.grammar,
         };
         if (!!request.body.stop_sequence) {
             this_settings['stop_sequence'] = request.body.stop_sequence;
@@ -1295,6 +1296,26 @@ app.post("/getonecharacter", jsonParser, async function (request, response) {
 app.post("/getstats", jsonParser, function (request, response) {
     response.send(JSON.stringify(statsHelpers.getCharStats()));
 });
+
+/**
+ * Endpoint: POST /recreatestats
+ * 
+ * Triggers the recreation of statistics from chat files.
+ * - If successful: returns a 200 OK status.
+ * - On failure: returns a 500 Internal Server Error status.
+ * 
+ * @param {Object} request - Express request object.
+ * @param {Object} response - Express response object.
+ */
+app.post("/recreatestats", jsonParser, function (request, response) {
+    if (statsHelpers.loadStatsFile(DIRECTORIES.chats, DIRECTORIES.characters, true)) {
+        return response.sendStatus(200);
+    } else {
+        return response.sendStatus(500);
+    }
+});
+
+
 
 /**
  * Handle a POST request to update the stats object
@@ -2699,7 +2720,7 @@ function convertChatMLPrompt(messages) {
             messageStrings.push(m.role + ": " + m.content);
         }
     });
-    return messageStrings.join("\n");
+    return messageStrings.join("\n") + '\nassistant:';
 }
 
 async function sendScaleRequest(request, response) {
@@ -3255,7 +3276,7 @@ const autorunUrl = new URL(
 );
 
 const setupTasks = async function () {
-    const version = getVersion();
+    const version = await getVersion();
 
     console.log(`SillyTavern ${version.pkgVersion}` + (version.gitBranch ? ` '${version.gitBranch}' (${version.gitRevision})` : ''));
 
