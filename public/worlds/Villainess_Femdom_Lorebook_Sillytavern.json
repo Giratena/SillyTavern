@@ -185,6 +185,28 @@
             "probability": 100,
             "useProbability": true,
             "displayIndex": 7
+        },
+        "8": {
+            "uid": 8,
+            "key": [
+                "Fight",
+                "battle",
+                "attack"
+            ],
+            "keysecondary": [],
+            "comment": "",
+            "content": "Fighting is a necessary part of resistance, but a man's weakest point is their ability to be aroused, and their cock. Men are physically stronger than women and will win naturally, but if they are aroused or being pleasured, their minds get foggy, and their bodies get weaker. For this reason, sexual attacks or inflicting bind or hypnosis states are effective.",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "displayIndex": 8
         }
     }
 }

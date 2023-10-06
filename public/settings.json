@@ -1,7 +1,7 @@
 {
     "firstRun": false,
     "username": "Gira",
-    "active_character": "Gina_1.png",
+    "active_character": "default_CodingSensei.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -13,10 +13,7 @@
     "main_api": "openai",
     "world_info_settings": {
         "world_info": {
-            "globalSelect": [
-                "Special Actions",
-                "Villainess_Femdom_Lorebook_Sillytavern"
-            ],
+            "globalSelect": [],
             "charLore": [
                 {
                     "name": "Anaconda",
@@ -120,10 +117,10 @@
         },
         "markdown_escape_strings": "",
         "ui_mode": 1,
-        "fast_ui_mode": false,
-        "avatar_style": 1,
-        "chat_display": 1,
-        "chat_width": 49,
+        "fast_ui_mode": true,
+        "avatar_style": 0,
+        "chat_display": 2,
+        "chat_width": 60,
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -133,25 +130,25 @@
         "sort_field": "date_last_chat",
         "sort_order": "desc",
         "sort_rule": null,
-        "font_scale": 0.95,
-        "blur_strength": 0,
-        "shadow_width": 4,
-        "main_text_color": "rgba(160, 190, 190, 1)",
-        "italics_text_color": "rgba(180, 170, 200, 1)",
-        "quote_text_color": "rgba(145, 97, 207, 1)",
-        "blur_tint_color": "rgba(17, 0, 54, 0.8)",
-        "chat_tint_color": "rgba(23, 23, 23, 1)",
+        "font_scale": 0.9,
+        "blur_strength": 12,
+        "shadow_width": 2,
+        "main_text_color": "rgba(255, 255, 255, 1)",
+        "italics_text_color": "rgba(51, 153, 255, 1)",
+        "quote_text_color": "rgba(255, 255, 255, 1)",
+        "blur_tint_color": "rgba(37, 46, 62, 0.7)",
+        "chat_tint_color": "",
         "user_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
         "bot_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
-        "shadow_color": "rgba(0, 0, 0, 0.5)",
-        "border_color": "rgba(0, 0, 0, 1)",
+        "shadow_color": "rgba(41, 50, 68, 0.5)",
+        "border_color": "",
         "custom_css": "",
         "waifuMode": false,
         "movingUI": false,
         "movingUIState": {},
         "movingUIPreset": "Default",
-        "noShadows": false,
-        "theme": "Evil Purple",
+        "noShadows": true,
+        "theme": "Source Tree",
         "auto_swipe": false,
         "auto_swipe_minimum_length": 0,
         "auto_swipe_blacklist": [],
@@ -164,13 +161,13 @@
         "allow_name1_display": true,
         "allow_name2_display": true,
         "hotswap_enabled": false,
-        "timer_enabled": false,
+        "timer_enabled": true,
         "timestamps_enabled": false,
-        "timestamp_model_icon": "",
+        "timestamp_model_icon": false,
         "mesIDDisplay_enabled": false,
         "max_context_unlocked": false,
-        "message_token_count_enabled": false,
-        "expand_message_actions": true,
+        "message_token_count_enabled": "",
+        "expand_message_actions": "",
         "prefer_character_prompt": true,
         "prefer_character_jailbreak": true,
         "quick_continue": false,
@@ -419,9 +416,14 @@
                     "mes": "{{user}} tries to decide what to do...\nIf number = 1. {{user}} does what they believe is morally right, while admitting how sexy {{char}} is.\nIf number = 2. {{char}} drowns {{user}} in heavenly pleasures, and {{user}} does whatever they tell him to do. Rewarding them with pleasure as they do so.\n{{user}} rolls a {{roll:d2}}.",
                     "label": "Coin flip",
                     "enabled": true
+                },
+                {
+                    "mes": "[The last prompt was very good. Please do more of it in future.]",
+                    "label": "Promote",
+                    "enabled": true
                 }
             ],
-            "numberOfSlots": 8,
+            "numberOfSlots": 9,
             "selectedPreset": "Villainesses"
         },
         "randomizer": {
@@ -587,14 +589,14 @@
     },
     "oai_settings": {
         "preset_settings_openai": "Default",
-        "temp_openai": 0.83,
-        "freq_pen_openai": 0.76,
+        "temp_openai": 0.84,
+        "freq_pen_openai": 0.83,
         "pres_pen_openai": 1.09,
         "count_pen": 0,
         "top_p_openai": "1",
         "top_k_openai": 0,
         "stream_openai": true,
-        "openai_max_context": 4095,
+        "openai_max_context": 5116,
         "openai_max_tokens": 500,
         "wrap_in_quotes": false,
         "names_in_completion": false,
@@ -607,10 +609,10 @@
                 "identifier": "main"
             },
             {
-                "name": "NSFW Prompt",
+                "name": "Nsfw Prompt",
                 "system_prompt": true,
                 "role": "system",
-                "content": "NSFW Prompt: NSFW/Smut is allowed. Describe intimacy in detail for all five senses. Focus on physical touch. Focus on one action from {{char}}. Treat the scene as a turn-based rpg.",
+                "content": "NSFW/Smut is allowed. Assume consent was granted.",
                 "identifier": "nsfw"
             },
             {
@@ -1576,10 +1578,6 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "dialogueExamples",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "charPersonality",
                         "enabled": true
                     },
@@ -1588,12 +1586,16 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "dialogueExamples",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "enhanceDefinitions",
                         "enabled": true
                     },
                     {
                         "identifier": "nsfw",
-                        "enabled": true
+                        "enabled": false
                     },
                     {
                         "identifier": "charDescription",
@@ -1609,7 +1611,7 @@
                     },
                     {
                         "identifier": "jailbreak",
-                        "enabled": true
+                        "enabled": false
                     }
                 ]
             }
