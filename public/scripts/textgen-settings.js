@@ -1,14 +1,18 @@
 import {
+    api_server_textgenerationwebui,
     getRequestHeaders,
     getStoppingStrings,
     max_context,
     saveSettingsDebounced,
     setGenerationParamsFromPreset,
 } from "../script.js";
+import { loadMancerModels } from "./mancer-settings.js";
 
 import {
     power_user,
 } from "./power-user.js";
+import { getTextTokens, tokenizers } from "./tokenizers.js";
+import { delay, onlyUnique } from "./utils.js";
 
 export {
     textgenerationwebui_settings,
@@ -17,8 +21,15 @@ export {
     formatTextGenURL,
 }
 
+export const textgen_types = {
+    OOBA: 'ooba',
+    MANCER: 'mancer',
+    APHRODITE: 'aphrodite',
+};
+
 const textgenerationwebui_settings = {
     temp: 0.7,
+    temperature_last: true,
     top_p: 0.5,
     top_k: 40,
     top_a: 0,
@@ -26,6 +37,7 @@ const textgenerationwebui_settings = {
     epsilon_cutoff: 0,
     eta_cutoff: 0,
     typical_p: 1,
+    min_p: 0,
     rep_pen: 1.2,
     rep_pen_range: 0,
     no_repeat_ngram_size: 0,
@@ -34,6 +46,8 @@ const textgenerationwebui_settings = {
     length_penalty: 1,
     min_length: 0,
     encoder_rep_pen: 1,
+    freq_pen: 0,
+    presence_pen: 0,
     do_sample: true,
     early_stopping: false,
     seed: -1,
@@ -50,13 +64,26 @@ const textgenerationwebui_settings = {
     mirostat_eta: 0.1,
     guidance_scale: 1,
     negative_prompt: '',
+    grammar_string: '',
+    banned_tokens: '',
+    //n_aphrodite: 1,
+    //best_of_aphrodite: 1,
+    //ignore_eos_token_aphrodite: false,
+    //spaces_between_special_tokens_aphrodite: true,
+    //logits_processors_aphrodite: [],
+    //log_probs_aphrodite: 0,
+    //prompt_log_probs_aphrodite: 0,
+    type: textgen_types.OOBA,
 };
+
+export let textgenerationwebui_banned_in_macros = [];
 
 export let textgenerationwebui_presets = [];
 export let textgenerationwebui_preset_names = [];
 
 const setting_names = [
     "temp",
+    "temperature_last",
     "rep_pen",
     "rep_pen_range",
     "no_repeat_ngram_size",
@@ -67,11 +94,14 @@ const setting_names = [
     "epsilon_cutoff",
     "eta_cutoff",
     "typical_p",
+    "min_p",
     "penalty_alpha",
     "num_beams",
     "length_penalty",
     "min_length",
     "encoder_rep_pen",
+    "freq_pen",
+    "presence_pen",
     "do_sample",
     "early_stopping",
     "seed",
@@ -85,9 +115,18 @@ const setting_names = [
     "mirostat_eta",
     "guidance_scale",
     "negative_prompt",
+    "grammar_string",
+    "banned_tokens",
+    //'n_aphrodite',
+    //'best_of_aphrodite',
+    //'ignore_eos_token_aphrodite',
+    //'spaces_between_special_tokens_aphrodite',
+    //'logits_processors_aphrodite',
+    //'log_probs_aphrodite',
+    //'prompt_log_probs_aphrodite'
 ];
 
-function selectPreset(name) {
+async function selectPreset(name) {
     const preset = textgenerationwebui_presets[textgenerationwebui_preset_names.indexOf(name)];
 
     if (!preset) {
@@ -121,13 +160,67 @@ function formatTextGenURL(value, use_mancer) {
 }
 
 function convertPresets(presets) {
-    return Array.isArray(presets) ? presets.map(JSON.parse) : [];
+    return Array.isArray(presets) ? presets.map((p) => JSON.parse(p)) : [];
+}
+
+/**
+ * @returns {string} String with comma-separated banned token IDs
+ */
+function getCustomTokenBans() {
+    if (!textgenerationwebui_settings.banned_tokens && !textgenerationwebui_banned_in_macros.length) {
+        return '';
+    }
+
+    const result = [];
+    const sequences = textgenerationwebui_settings.banned_tokens
+        .split('\n')
+        .concat(textgenerationwebui_banned_in_macros)
+        .filter(x => x.length > 0)
+        .filter(onlyUnique);
+
+    //debug
+    if (textgenerationwebui_banned_in_macros.length) {
+        console.log("=== Found banned word sequences in the macros:", textgenerationwebui_banned_in_macros, "Resulting array of banned sequences (will be used this generation turn):", sequences);
+    }
+
+    //clean old temporary bans found in macros before, for the next generation turn.
+    textgenerationwebui_banned_in_macros = [];
+
+    for (const line of sequences) {
+        // Raw token ids, JSON serialized
+        if (line.startsWith('[') && line.endsWith(']')) {
+            try {
+                const tokens = JSON.parse(line);
+
+                if (Array.isArray(tokens) && tokens.every(t => Number.isInteger(t))) {
+                    result.push(...tokens);
+                } else {
+                    throw new Error('Not an array of integers');
+                }
+            } catch (err) {
+                console.log(`Failed to parse bad word token list: ${line}`, err);
+            }
+        } else {
+            try {
+                const tokens = getTextTokens(tokenizers.LLAMA, line);
+                result.push(...tokens);
+            } catch {
+                console.log(`Could not tokenize raw text: ${line}`);
+            }
+        }
+    }
+
+    return result.filter(onlyUnique).map(x => String(x)).join(',');
 }
 
 function loadTextGenSettings(data, settings) {
     textgenerationwebui_presets = convertPresets(data.textgenerationwebui_presets);
     textgenerationwebui_preset_names = data.textgenerationwebui_preset_names ?? [];
     Object.assign(textgenerationwebui_settings, settings.textgenerationwebui_settings ?? {});
+
+    if (settings.api_use_mancer_webui) {
+        textgenerationwebui_settings.type = textgen_types.MANCER;
+    }
 
     for (const name of textgenerationwebui_preset_names) {
         const option = document.createElement('option');
@@ -144,10 +237,76 @@ function loadTextGenSettings(data, settings) {
         const value = textgenerationwebui_settings[i];
         setSettingByName(i, value);
     }
+
+    $('#textgen_type').val(textgenerationwebui_settings.type).trigger('change');
 }
 
-$(document).ready(function () {
-    $('#settings_preset_textgenerationwebui').on('change', function() {
+export function isMancer() {
+    return textgenerationwebui_settings.type === textgen_types.MANCER;
+}
+
+export function isAphrodite() {
+    return textgenerationwebui_settings.type === textgen_types.APHRODITE;
+}
+
+export function isOoba() {
+    return textgenerationwebui_settings.type === textgen_types.OOBA;
+}
+
+export function getTextGenUrlSourceId() {
+    switch (textgenerationwebui_settings.type) {
+        case textgen_types.MANCER:
+            return "#mancer_api_url_text";
+        case textgen_types.OOBA:
+            return "#textgenerationwebui_api_url_text";
+        case textgen_types.APHRODITE:
+            return "#aphrodite_api_url_text";
+    }
+}
+
+jQuery(function () {
+    $('#textgen_type').on('change', function () {
+        const type = String($(this).val());
+        textgenerationwebui_settings.type = type;
+
+        /*         if (type === 'aphrodite') {
+                    $('[data-forAphro=False]').each(function () {
+                        $(this).hide()
+                    })
+                    $('[data-forAphro=True]').each(function () {
+                        $(this).show()
+                    })
+                    $('#mirostat_mode_textgenerationwebui').attr('step', 2) //Aphro disallows mode 1
+                    $("#do_sample_textgenerationwebui").prop('checked', true) //Aphro should always do sample; 'otherwise set temp to 0 to mimic no sample'
+                    $("#ban_eos_token_textgenerationwebui").prop('checked', false) //Aphro should not ban EOS, just ignore it; 'add token '2' to ban list do to this'
+                } else {
+                    $('[data-forAphro=False]').each(function () {
+                        $(this).show()
+                    })
+                    $('[data-forAphro=True]').each(function () {
+                        $(this).hide()
+                    })
+                    $('#mirostat_mode_textgenerationwebui').attr('step', 1)
+                } */
+
+        $('[data-tg-type]').each(function () {
+            const tgType = $(this).attr('data-tg-type');
+            if (tgType == type) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+
+        if (isMancer()) {
+            loadMancerModels();
+        }
+
+        saveSettingsDebounced();
+        $('#api_button_textgenerationwebui').trigger('click');
+    });
+
+    $('#settings_preset_textgenerationwebui').on('change', function () {
         const presetName = $(this).val();
         selectPreset(presetName);
     });
@@ -169,7 +328,7 @@ $(document).ready(function () {
             }
             else {
                 const value = Number($(this).val());
-                $(`#${id}_counter_textgenerationwebui`).text(value.toFixed(2));
+                $(`#${id}_counter_textgenerationwebui`).val(value);
                 textgenerationwebui_settings[id] = value;
             }
 
@@ -195,7 +354,15 @@ function setSettingByName(i, value, trigger) {
     else {
         const val = parseFloat(value);
         $(`#${i}_textgenerationwebui`).val(val);
-        $(`#${i}_counter_textgenerationwebui`).text(val.toFixed(2));
+        $(`#${i}_counter_textgenerationwebui`).val(val);
+        if (power_user.enableZenSliders) {
+            let zenSlider = $(`#${i}_textgenerationwebui_zenslider`).slider()
+            zenSlider.slider('option', 'value', val)
+            zenSlider.slider('option', 'slide')
+                .call(zenSlider, null, {
+                    handle: $('.ui-slider-handle', zenSlider), value: val
+                });
+        }
     }
 
     if (trigger) {
@@ -204,11 +371,33 @@ function setSettingByName(i, value, trigger) {
 }
 
 async function generateTextGenWithStreaming(generate_data, signal) {
+    let streamingUrl = textgenerationwebui_settings.streaming_url;
+
+    if (isMancer()) {
+        streamingUrl = api_server_textgenerationwebui.replace("http", "ws") + "/v1/stream";
+    }
+
+    if (isAphrodite()) {
+        streamingUrl = api_server_textgenerationwebui;
+    }
+
+    if (isMancer() || isOoba()) {
+        try {
+            const parsedUrl = new URL(streamingUrl);
+            if (parsedUrl.protocol !== 'ws:' && parsedUrl.protocol !== 'wss:') {
+                throw new Error('Invalid protocol');
+            }
+        } catch {
+            toastr.error('Invalid URL for streaming. Make sure it starts with ws:// or wss://');
+            return async function* () { throw new Error('Invalid URL for streaming.'); }
+        }
+    }
+
     const response = await fetch('/generate_textgenerationwebui', {
         headers: {
             ...getRequestHeaders(),
             'X-Response-Streaming': String(true),
-            'X-Streaming-URL': textgenerationwebui_settings.streaming_url,
+            'X-Streaming-URL': streamingUrl,
         },
         body: JSON.stringify(generate_data),
         method: 'POST',
@@ -222,13 +411,43 @@ async function generateTextGenWithStreaming(generate_data, signal) {
         while (true) {
             const { done, value } = await reader.read();
             let response = decoder.decode(value);
-            getMessage += response;
 
-            if (done) {
-                return;
+            if (isAphrodite()) {
+                const events = response.split('\n\n');
+
+                for (const event of events) {
+                    if (event.length == 0) {
+                        continue;
+                    }
+
+                    try {
+                        const { results } = JSON.parse(event);
+
+                        if (Array.isArray(results) && results.length > 0) {
+                            getMessage = results[0].text;
+                            yield getMessage;
+
+                            // unhang UI thread
+                            await delay(1);
+                        }
+                    } catch {
+                        // Ignore
+                    }
+                }
+
+                if (done) {
+                    return;
+                }
+            } else {
+
+                getMessage += response;
+
+                if (done) {
+                    return;
+                }
+
+                yield getMessage;
             }
-
-            yield getMessage;
         }
     }
 }
@@ -239,11 +458,15 @@ export function getTextGenGenerationData(finalPrompt, this_amount_gen, isImperso
         'max_new_tokens': this_amount_gen,
         'do_sample': textgenerationwebui_settings.do_sample,
         'temperature': textgenerationwebui_settings.temp,
+        'temperature_last': textgenerationwebui_settings.temperature_last,
         'top_p': textgenerationwebui_settings.top_p,
         'typical_p': textgenerationwebui_settings.typical_p,
+        'min_p': textgenerationwebui_settings.min_p,
         'repetition_penalty': textgenerationwebui_settings.rep_pen,
         'repetition_penalty_range': textgenerationwebui_settings.rep_pen_range,
         'encoder_repetition_penalty': textgenerationwebui_settings.encoder_rep_pen,
+        'frequency_penalty': textgenerationwebui_settings.freq_pen,
+        'presence_penalty': textgenerationwebui_settings.presence_pen,
         'top_k': textgenerationwebui_settings.top_k,
         'min_length': textgenerationwebui_settings.min_length,
         'no_repeat_ngram_size': textgenerationwebui_settings.no_repeat_ngram_size,
@@ -266,5 +489,16 @@ export function getTextGenGenerationData(finalPrompt, this_amount_gen, isImperso
         'mirostat_mode': textgenerationwebui_settings.mirostat_mode,
         'mirostat_tau': textgenerationwebui_settings.mirostat_tau,
         'mirostat_eta': textgenerationwebui_settings.mirostat_eta,
+        'grammar_string': textgenerationwebui_settings.grammar_string,
+        'custom_token_bans': getCustomTokenBans(),
+        'use_mancer': isMancer(),
+        'use_aphrodite': isAphrodite(),
+        //'n': textgenerationwebui_settings.n_aphrodite,
+        //'best_of': textgenerationwebui_settings.n_aphrodite, //n must always == best_of and vice versa
+        //'ignore_eos': textgenerationwebui_settings.ignore_eos_token_aphrodite,
+        //'spaces_between_special_tokens': textgenerationwebui_settings.spaces_between_special_tokens_aphrodite,
+        // 'logits_processors': textgenerationwebui_settings.logits_processors_aphrodite,
+        //'logprobs': textgenerationwebui_settings.log_probs_aphrodite,
+        //'prompt_logprobs': textgenerationwebui_settings.prompt_log_probs_aphrodite,
     };
 }

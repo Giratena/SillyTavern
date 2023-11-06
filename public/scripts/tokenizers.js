@@ -1,6 +1,6 @@
 import { characters, main_api, nai_settings, online_status, this_chid } from "../script.js";
 import { power_user, registerDebugFunction } from "./power-user.js";
-import { chat_completion_sources, oai_settings } from "./openai.js";
+import { chat_completion_sources, model_list, oai_settings } from "./openai.js";
 import { groups, selected_group } from "./group-chats.js";
 import { getStringHash } from "./utils.js";
 import { kai_flags } from "./kai-settings.js";
@@ -11,14 +11,12 @@ const TOKENIZER_WARNING_KEY = 'tokenizationWarningShown';
 export const tokenizers = {
     NONE: 0,
     GPT2: 1,
-    /**
-     * @deprecated Use GPT2 instead.
-     */
-    LEGACY: 2,
+    OPENAI: 2,
     LLAMA: 3,
     NERD: 4,
     NERD2: 5,
     API: 6,
+    MISTRAL: 7,
     BEST_MATCH: 99,
 };
 
@@ -65,7 +63,7 @@ async function resetTokenCache() {
     }
 }
 
-function getTokenizerBestMatch() {
+export function getTokenizerBestMatch() {
     if (main_api === 'novel') {
         if (nai_settings.model_novel.includes('clio')) {
             return tokenizers.NERD;
@@ -108,6 +106,8 @@ function callTokenizer(type, str, padding) {
             return countTokensRemote('/api/tokenize/nerdstash', str, padding);
         case tokenizers.NERD2:
             return countTokensRemote('/api/tokenize/nerdstash_v2', str, padding);
+        case tokenizers.MISTRAL:
+            return countTokensRemote('/api/tokenize/mistral', str, padding);
         case tokenizers.API:
             return countTokensRemote('/tokenize_via_api', str, padding);
         default:
@@ -182,10 +182,13 @@ export function getTokenizerModel() {
         return oai_settings.openai_model;
     }
 
+    const turbo0301Tokenizer = 'gpt-3.5-turbo-0301';
     const turboTokenizer = 'gpt-3.5-turbo';
     const gpt4Tokenizer = 'gpt-4';
     const gpt2Tokenizer = 'gpt2';
     const claudeTokenizer = 'claude';
+    const llamaTokenizer = 'llama';
+    const mistralTokenizer = 'mistral';
 
     // Assuming no one would use it for different models.. right?
     if (oai_settings.chat_completion_source == chat_completion_sources.SCALE) {
@@ -196,6 +199,9 @@ export function getTokenizerModel() {
     if (oai_settings.chat_completion_source == chat_completion_sources.WINDOWAI && oai_settings.windowai_model) {
         if (oai_settings.windowai_model.includes('gpt-4')) {
             return gpt4Tokenizer;
+        }
+        else if (oai_settings.windowai_model.includes('gpt-3.5-turbo-0301')) {
+            return turbo0301Tokenizer;
         }
         else if (oai_settings.windowai_model.includes('gpt-3.5-turbo')) {
             return turboTokenizer;
@@ -210,8 +216,19 @@ export function getTokenizerModel() {
 
     // And for OpenRouter (if not a site model, then it's impossible to determine the tokenizer)
     if (oai_settings.chat_completion_source == chat_completion_sources.OPENROUTER && oai_settings.openrouter_model) {
-        if (oai_settings.openrouter_model.includes('gpt-4')) {
+        const model = model_list.find(x => x.id === oai_settings.openrouter_model);
+
+        if (model?.architecture?.tokenizer === 'Llama2') {
+            return llamaTokenizer;
+        }
+        else if (model?.architecture?.tokenizer === 'Mistral') {
+            return mistralTokenizer;
+        }
+        else if (oai_settings.openrouter_model.includes('gpt-4')) {
             return gpt4Tokenizer;
+        }
+        else if (oai_settings.openrouter_model.includes('gpt-3.5-turbo-0301')) {
+            return turbo0301Tokenizer;
         }
         else if (oai_settings.openrouter_model.includes('gpt-3.5-turbo')) {
             return turboTokenizer;
@@ -350,9 +367,14 @@ function countTokensRemote(endpoint, str, padding) {
  * Calls the underlying tokenizer model to encode a string to tokens.
  * @param {string} endpoint API endpoint.
  * @param {string} str String to tokenize.
+ * @param {string} model Tokenizer model.
  * @returns {number[]} Array of token ids.
  */
-function getTextTokensRemote(endpoint, str) {
+function getTextTokensRemote(endpoint, str, model = '') {
+    if (model) {
+        endpoint += `?model=${model}`;
+    }
+
     let ids = [];
     jQuery.ajax({
         async: false,
@@ -363,6 +385,11 @@ function getTextTokensRemote(endpoint, str) {
         contentType: "application/json",
         success: function (data) {
             ids = data.ids;
+
+            // Don't want to break reverse compatibility, so sprinkle in some of the JS magic
+            if (Array.isArray(data.chunks)) {
+                Object.defineProperty(ids, 'chunks', { value: data.chunks });
+            }
         }
     });
     return ids;
@@ -405,6 +432,11 @@ export function getTextTokens(tokenizerType, str) {
             return getTextTokensRemote('/api/tokenize/nerdstash', str);
         case tokenizers.NERD2:
             return getTextTokensRemote('/api/tokenize/nerdstash_v2', str);
+        case tokenizers.MISTRAL:
+            return getTextTokensRemote('/api/tokenize/mistral', str);
+        case tokenizers.OPENAI:
+            const model = getTokenizerModel();
+            return getTextTokensRemote('/api/tokenize/openai-encode', str, model);
         default:
             console.warn("Calling getTextTokens with unsupported tokenizer type", tokenizerType);
             return [];
@@ -426,13 +458,15 @@ export function decodeTextTokens(tokenizerType, ids) {
             return decodeTextTokensRemote('/api/decode/nerdstash', ids);
         case tokenizers.NERD2:
             return decodeTextTokensRemote('/api/decode/nerdstash_v2', ids);
+        case tokenizers.MISTRAL:
+            return decodeTextTokensRemote('/api/decode/mistral', ids);
         default:
             console.warn("Calling decodeTextTokens with unsupported tokenizer type", tokenizerType);
             return '';
     }
 }
 
-jQuery(async () => {
+export async function initTokenizers() {
     await loadTokenCache();
     registerDebugFunction('resetTokenCache', 'Reset token cache', 'Purges the calculated token counts. Use this if you want to force a full re-tokenization of all chats or suspect the token counts are wrong.', resetTokenCache);
-});
+}
