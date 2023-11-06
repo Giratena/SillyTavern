@@ -122,13 +122,8 @@
         "ui_mode": 1,
         "fast_ui_mode": false,
         "avatar_style": 1,
-<<<<<<< HEAD
-        "chat_display": 1,
-        "chat_width": 49,
-=======
         "chat_display": 2,
         "chat_width": 60,
->>>>>>> dd2c18e0601ad48d0a790f60318cfeabfbe75dbd
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -140,7 +135,6 @@
         "sort_rule": null,
         "font_scale": 0.95,
         "blur_strength": 0,
-<<<<<<< HEAD
         "shadow_width": 4,
         "main_text_color": "rgba(160, 190, 190, 1)",
         "italics_text_color": "rgba(180, 170, 200, 1)",
@@ -150,17 +144,6 @@
         "user_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
         "bot_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
         "shadow_color": "rgba(0, 0, 0, 0.5)",
-=======
-        "shadow_width": 2,
-        "main_text_color": "rgba(255, 255, 255, 1)",
-        "italics_text_color": "rgba(51, 153, 255, 1)",
-        "quote_text_color": "rgba(255, 255, 255, 1)",
-        "blur_tint_color": "rgba(37, 46, 62, 0.7)",
-        "chat_tint_color": "rgba(0, 0, 0, 1)",
-        "user_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
-        "bot_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
-        "shadow_color": "rgba(41, 50, 68, 0.5)",
->>>>>>> dd2c18e0601ad48d0a790f60318cfeabfbe75dbd
         "border_color": "rgba(0, 0, 0, 1)",
         "custom_css": "",
         "waifuMode": false,
@@ -168,11 +151,7 @@
         "movingUIState": {},
         "movingUIPreset": "Default",
         "noShadows": false,
-<<<<<<< HEAD
         "theme": "Evil Purple",
-=======
-        "theme": "Source Tree",
->>>>>>> dd2c18e0601ad48d0a790f60318cfeabfbe75dbd
         "auto_swipe": false,
         "auto_swipe_minimum_length": 0,
         "auto_swipe_blacklist": [],
