@@ -1,9 +1,10 @@
-import { characters, main_api, nai_settings, online_status, this_chid } from "../script.js";
+import { characters, getAPIServerUrl, main_api, nai_settings, online_status, this_chid } from "../script.js";
 import { power_user, registerDebugFunction } from "./power-user.js";
 import { chat_completion_sources, model_list, oai_settings } from "./openai.js";
 import { groups, selected_group } from "./group-chats.js";
 import { getStringHash } from "./utils.js";
 import { kai_flags } from "./kai-settings.js";
+import { isMancer, textgenerationwebui_settings } from "./textgen-settings.js";
 
 export const CHARACTERS_PER_TOKEN_RATIO = 3.35;
 const TOKENIZER_WARNING_KEY = 'tokenizationWarningShown';
@@ -63,8 +64,47 @@ async function resetTokenCache() {
     }
 }
 
-export function getTokenizerBestMatch() {
-    if (main_api === 'novel') {
+/**
+ * Gets the friendly name of the current tokenizer.
+ * @param {string} forApi API to get the tokenizer for. Defaults to the main API.
+ * @returns { { tokenizerName: string, tokenizerId: number } } Tokenizer info
+ */
+export function getFriendlyTokenizerName(forApi) {
+    if (!forApi) {
+        forApi = main_api;
+    }
+
+    const tokenizerOption = $("#tokenizer").find(':selected');
+    let tokenizerId = Number(tokenizerOption.val());
+    let tokenizerName = tokenizerOption.text();
+
+    if (forApi !== 'openai' && tokenizerId === tokenizers.BEST_MATCH) {
+        tokenizerId = getTokenizerBestMatch(forApi);
+        tokenizerName = $(`#tokenizer option[value="${tokenizerId}"]`).text();
+    }
+
+    tokenizerName = forApi == 'openai'
+        ? getTokenizerModel()
+        : tokenizerName;
+
+    tokenizerId = forApi == 'openai'
+        ? tokenizers.OPENAI
+        : tokenizerId;
+
+    return { tokenizerName, tokenizerId };
+}
+
+/**
+ * Gets the best tokenizer for the current API.
+ * @param {string} forApi API to get the tokenizer for. Defaults to the main API.
+ * @returns {number} Tokenizer type.
+ */
+export function getTokenizerBestMatch(forApi) {
+    if (!forApi) {
+        forApi = main_api;
+    }
+
+    if (forApi === 'novel') {
         if (nai_settings.model_novel.includes('clio')) {
             return tokenizers.NERD;
         }
@@ -72,7 +112,7 @@ export function getTokenizerBestMatch() {
             return tokenizers.NERD2;
         }
     }
-    if (main_api === 'kobold' || main_api === 'textgenerationwebui' || main_api === 'koboldhorde') {
+    if (forApi === 'kobold' || forApi === 'textgenerationwebui' || forApi === 'koboldhorde') {
         // Try to use the API tokenizer if possible:
         // - API must be connected
         // - Kobold must pass a version check
@@ -140,7 +180,7 @@ export function getTokenCount(str, padding = undefined) {
     }
 
     if (tokenizerType === tokenizers.BEST_MATCH) {
-        tokenizerType = getTokenizerBestMatch();
+        tokenizerType = getTokenizerBestMatch(main_api);
     }
 
     if (padding === undefined) {
@@ -323,6 +363,15 @@ function getTokenCacheObject() {
     return tokenCache[String(chatId)];
 }
 
+function getRemoteTokenizationParams(str) {
+    return {
+        text: str,
+        api: main_api,
+        url: getAPIServerUrl(),
+        legacy_api: main_api === 'textgenerationwebui' && textgenerationwebui_settings.legacy_api && !isMancer(),
+    };
+}
+
 /**
  * Counts token using the remote server API.
  * @param {string} endpoint API endpoint.
@@ -337,7 +386,7 @@ function countTokensRemote(endpoint, str, padding) {
         async: false,
         type: 'POST',
         url: endpoint,
-        data: JSON.stringify({ text: str }),
+        data: JSON.stringify(getRemoteTokenizationParams(str)),
         dataType: "json",
         contentType: "application/json",
         success: function (data) {
@@ -380,7 +429,7 @@ function getTextTokensRemote(endpoint, str, model = '') {
         async: false,
         type: 'POST',
         url: endpoint,
-        data: JSON.stringify({ text: str }),
+        data: JSON.stringify(getRemoteTokenizationParams(str)),
         dataType: "json",
         contentType: "application/json",
         success: function (data) {
@@ -437,6 +486,8 @@ export function getTextTokens(tokenizerType, str) {
         case tokenizers.OPENAI:
             const model = getTokenizerModel();
             return getTextTokensRemote('/api/tokenize/openai-encode', str, model);
+        case tokenizers.API:
+            return getTextTokensRemote('/tokenize_via_api', str);
         default:
             console.warn("Calling getTextTokens with unsupported tokenizer type", tokenizerType);
             return [];
