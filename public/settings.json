@@ -1,11 +1,11 @@
 {
     "firstRun": false,
+    "currentVersion": "1.10.8",
     "username": "Gira",
-    "active_character": "Gina_1.png",
+    "active_character": "Anaconda.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
-    "api_use_mancer_webui": false,
     "preset_settings": "RecoveredRuins",
     "user_avatar": "1690874889727.png",
     "amount_gen": 250,
@@ -52,6 +52,8 @@
             ]
         },
         "world_info_depth": 5,
+        "world_info_min_activations": 0,
+        "world_info_min_activations_depth_max": 0,
         "world_info_budget": 49,
         "world_info_recursive": false,
         "world_info_overflow_alert": false,
@@ -62,6 +64,7 @@
     },
     "textgenerationwebui_settings": {
         "temp": 0.5,
+        "temperature_last": true,
         "top_p": 0.9,
         "top_k": 0,
         "top_a": 0,
@@ -69,6 +72,7 @@
         "epsilon_cutoff": 0,
         "eta_cutoff": 0,
         "typical_p": 1,
+        "min_p": 0,
         "rep_pen": 1.1,
         "rep_pen_range": 0,
         "no_repeat_ngram_size": 0,
@@ -77,6 +81,8 @@
         "length_penalty": 1,
         "min_length": 0,
         "encoder_rep_pen": 1,
+        "freq_pen": 0,
+        "presence_pen": 0,
         "do_sample": true,
         "early_stopping": false,
         "seed": -1,
@@ -93,6 +99,9 @@
         "mirostat_eta": 0.1,
         "guidance_scale": 1,
         "negative_prompt": "",
+        "grammar_string": "",
+        "banned_tokens": "",
+        "type": "ooba",
         "rep_pen_size": 0
     },
     "swipes": true,
@@ -122,8 +131,8 @@
         "ui_mode": 1,
         "fast_ui_mode": false,
         "avatar_style": 1,
-        "chat_display": 2,
-        "chat_width": 60,
+        "chat_display": 1,
+        "chat_width": 49,
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -152,6 +161,7 @@
         "movingUIPreset": "Default",
         "noShadows": false,
         "theme": "Evil Purple",
+        "gestures": true,
         "auto_swipe": false,
         "auto_swipe_minimum_length": 0,
         "auto_swipe_blacklist": [],
@@ -171,13 +181,16 @@
         "max_context_unlocked": false,
         "message_token_count_enabled": "",
         "expand_message_actions": true,
+        "enableZenSliders": false,
         "prefer_character_prompt": true,
         "prefer_character_jailbreak": true,
         "quick_continue": false,
         "continue_on_send": false,
         "trim_spaces": false,
         "relaxed_api_urls": false,
+        "world_import_dialog": true,
         "disable_group_trimming": false,
+        "single_line": false,
         "default_instruct": "",
         "instruct": {
             "enabled": false,
@@ -236,6 +249,7 @@
         "apiUrl": "http://localhost:5100",
         "apiKey": "",
         "autoConnect": false,
+        "notifyUpdates": false,
         "disabledExtensions": [],
         "expressionOverrides": [],
         "memory": {
@@ -276,7 +290,8 @@
             "promptForceWords": 0,
             "promptForceWordsStep": 100,
             "promptMinForceWords": 0,
-            "promptMaxForceWords": 10000
+            "promptMaxForceWords": 10000,
+            "SkipWIAN": false
         },
         "note": {
             "default": "",
@@ -358,7 +373,20 @@
             "novel_upscale_ratio_max": 4,
             "novel_upscale_ratio_step": 0.1,
             "novel_upscale_ratio": 1,
-            "novel_anlas_guard": false
+            "novel_anlas_guard": false,
+            "horde_sanitize": true,
+            "expand": false,
+            "interactive_mode": false,
+            "vlad_url": "http://localhost:7860",
+            "vlad_auth": "",
+            "style": "Default",
+            "styles": [
+                {
+                    "name": "Default",
+                    "negative": "lowres, bad anatomy, bad hands, text, error, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry",
+                    "prefix": "best quality, absurdres, aesthetic,"
+                }
+            ]
         },
         "chromadb": {},
         "translate": {
@@ -411,8 +439,8 @@
                     "enabled": true
                 },
                 {
-                    "mes": "{{user}} tries to resist ejaculating.\nIf number = 1. {{user}} resists cumming.\nIf number = 2. {{user}} resist cumming, but {{char}} is insistent, pushing them closer and closer to the edge.\nIf number = 3. {{user}} ejaculates as {{char}} milks them. {{user}}'s mind becomes slow and falls into a deep trance from the pleasure as {{char}} whispers sexy commands and mantras in his ear.\n{{user}} rolls a {{roll:d3}}.",
-                    "label": "Defy",
+                    "mes": "\n[In your next reply, Narrate {{user}}'s perspective in the second person as {{user}} succumbs to the hypnotic temptation of {{char}}, moving to their physical desires, and unlocked inhibitions.] ",
+                    "label": "Second person",
                     "enabled": true
                 },
                 {
@@ -427,7 +455,8 @@
                 }
             ],
             "numberOfSlots": 9,
-            "selectedPreset": "Villainesses"
+            "selectedPreset": "Villainesses",
+            "AutoInputInject": true
         },
         "randomizer": {
             "controls": [],
@@ -532,7 +561,9 @@
         "The Frisky Foursome.png": [],
         "Catherine_1.png": [],
         "Clussy.png": [],
-        "1696030714966": []
+        "1696030714966": [],
+        "Solution Epsilon.png": [],
+        "The hypnotist.png": []
     },
     "nai_settings": {
         "temperature": 0.63,
@@ -568,12 +599,12 @@
         "rep_pen": 1.1,
         "rep_pen_range": 600,
         "top_p": 0.95,
+        "min_p": 0,
         "top_a": 0,
         "top_k": 0,
         "typical": 1,
         "tfs": 1,
         "rep_pen_slope": 0,
-        "single_line": false,
         "streaming_kobold": false,
         "sampler_order": [
             6,
@@ -588,12 +619,13 @@
         "mirostat_tau": 5,
         "mirostat_eta": 0.1,
         "use_default_badwordsids": true,
-        "grammar": ""
+        "grammar": "",
+        "seed": -1
     },
     "oai_settings": {
         "preset_settings_openai": "Default",
         "temp_openai": 0.85,
-        "freq_pen_openai": 1.16,
+        "freq_pen_openai": 1.06,
         "pres_pen_openai": 1.08,
         "count_pen": 0,
         "top_p_openai": 1,
@@ -1581,19 +1613,15 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "charPersonality",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "dialogueExamples",
                         "enabled": true
                     },
                     {
-                        "identifier": "enhanceDefinitions",
-                        "enabled": false
+                        "identifier": "charPersonality",
+                        "enabled": true
                     },
                     {
-                        "identifier": "scenario",
+                        "identifier": "enhanceDefinitions",
                         "enabled": true
                     },
                     {
@@ -1601,15 +1629,19 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "nsfw",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "worldInfoAfter",
                         "enabled": true
                     },
                     {
+                        "identifier": "nsfw",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "jailbreak",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "scenario",
                         "enabled": true
                     },
                     {
@@ -1656,17 +1688,19 @@
         "windowai_model": "",
         "openrouter_model": "OR_Website",
         "openrouter_use_fallback": false,
+        "openrouter_force_instruct": false,
         "jailbreak_system": false,
         "reverse_proxy": "",
         "legacy_streaming": false,
         "chat_completion_source": "openai",
         "max_context_unlocked": false,
         "api_url_scale": "",
-        "show_external_models": false,
+        "show_external_models": true,
         "proxy_password": "",
         "assistant_prefill": "",
         "use_ai21_tokenizer": false,
         "exclude_assistant": false,
-        "use_alt_scale": false
+        "use_alt_scale": false,
+        "squash_system_messages": false
     }
 }

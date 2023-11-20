@@ -26,7 +26,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 0
+            "displayIndex": 0,
+            "depth": 4
         },
         "1": {
             "uid": 1,
@@ -48,7 +49,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 1
+            "displayIndex": 1,
+            "depth": 4
         },
         "2": {
             "uid": 2,
@@ -70,7 +72,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 2
+            "displayIndex": 2,
+            "depth": 4
         },
         "3": {
             "uid": 3,
@@ -92,7 +95,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 3
+            "displayIndex": 3,
+            "depth": 4
         },
         "4": {
             "uid": 4,
@@ -114,7 +118,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 4
+            "displayIndex": 4,
+            "depth": 4
         },
         "5": {
             "uid": 5,
@@ -138,7 +143,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 5
+            "displayIndex": 5,
+            "depth": 4
         },
         "6": {
             "uid": 6,
@@ -161,7 +167,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 6
+            "displayIndex": 6,
+            "depth": 4
         },
         "7": {
             "uid": 7,
@@ -184,7 +191,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 7
+            "displayIndex": 7,
+            "depth": 4
         },
         "8": {
             "uid": 8,
@@ -206,7 +214,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 8
+            "displayIndex": 8,
+            "depth": 4
         }
     }
 }
