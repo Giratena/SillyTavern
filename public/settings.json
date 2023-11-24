@@ -1,6 +1,6 @@
 {
     "firstRun": false,
-    "currentVersion": "1.10.8",
+    "currentVersion": "1.10.9",
     "username": "Gira",
     "active_character": "Anaconda.png",
     "active_group": null,
@@ -93,7 +93,6 @@
         "ban_eos_token": false,
         "skip_special_tokens": true,
         "streaming": false,
-        "streaming_url": "ws://127.0.0.1:5005/api/v1/stream",
         "mirostat_mode": 0,
         "mirostat_tau": 5,
         "mirostat_eta": 0.1,
@@ -102,6 +101,9 @@
         "grammar_string": "",
         "banned_tokens": "",
         "type": "ooba",
+        "mancer_model": "mytholite",
+        "legacy_api": false,
+        "streaming_url": "ws://127.0.0.1:5005/api/v1/stream",
         "rep_pen_size": 0
     },
     "swipes": true,
@@ -182,6 +184,7 @@
         "message_token_count_enabled": "",
         "expand_message_actions": true,
         "enableZenSliders": false,
+        "enableLabMode": false,
         "prefer_character_prompt": true,
         "prefer_character_jailbreak": true,
         "quick_continue": false,
@@ -231,6 +234,8 @@
         "fuzzy_search": false,
         "encode_tags": true,
         "servers": [],
+        "bogus_folders": false,
+        "aux_field": "character_version",
         "lazy_load": 0,
         "pygmalion_formatting": 0,
         "disable_description_formatting": false,
@@ -302,7 +307,10 @@
             "defaultInterval": 1
         },
         "caption": {
-            "refine_mode": false
+            "refine_mode": false,
+            "source": "extras",
+            "prompt": "What’s in this image?",
+            "template": "[{{user}} sends {{char}} a picture that contains: {{caption}}]"
         },
         "expressions": {
             "showDefault": false,
@@ -386,7 +394,9 @@
                     "negative": "lowres, bad anatomy, bad hands, text, error, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry",
                     "prefix": "best quality, absurdres, aesthetic,"
                 }
-            ]
+            ],
+            "openai_style": "vivid",
+            "openai_quality": "standard"
         },
         "chromadb": {},
         "translate": {
@@ -484,6 +494,9 @@
         },
         "hypebot": {},
         "vectors": {},
+        "variables": {
+            "global": {}
+        },
         "cfg": {
             "global": {
                 "guidance_scale": 1,
@@ -1633,6 +1646,10 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "chatHistory",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "nsfw",
                         "enabled": true
                     },
@@ -1642,10 +1659,6 @@
                     },
                     {
                         "identifier": "scenario",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "chatHistory",
                         "enabled": true
                     }
                 ]
@@ -1689,6 +1702,8 @@
         "openrouter_model": "OR_Website",
         "openrouter_use_fallback": false,
         "openrouter_force_instruct": false,
+        "openrouter_group_models": false,
+        "openrouter_sort_models": "alphabetically",
         "jailbreak_system": false,
         "reverse_proxy": "",
         "legacy_streaming": false,
@@ -1701,6 +1716,8 @@
         "use_ai21_tokenizer": false,
         "exclude_assistant": false,
         "use_alt_scale": false,
-        "squash_system_messages": false
+        "squash_system_messages": false,
+        "image_inlining": false,
+        "bypass_status_check": false
     }
 }
