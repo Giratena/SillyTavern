@@ -194,7 +194,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "6": {
             "uid": 6,
@@ -228,7 +229,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "7": {
             "uid": 7,
@@ -260,7 +262,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "8": {
             "uid": 8,
@@ -308,7 +311,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "9": {
             "uid": 9,
@@ -360,7 +364,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "10": {
             "uid": 10,
@@ -394,7 +399,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "11": {
             "uid": 11,
@@ -446,7 +452,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "12": {
             "uid": 12,
@@ -496,7 +503,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "13": {
             "uid": 13,
@@ -548,7 +556,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "14": {
             "uid": 14,
@@ -592,7 +601,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "15": {
             "uid": 15,
@@ -658,7 +668,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "16": {
             "uid": 16,
@@ -690,7 +701,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "17": {
             "uid": 17,
@@ -738,7 +750,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "18": {
             "uid": 18,
@@ -966,7 +979,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "25": {
             "uid": 25,
@@ -998,7 +1012,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "26": {
             "uid": 26,
@@ -1048,7 +1063,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "27": {
             "uid": 27,
@@ -1102,7 +1118,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "28": {
             "uid": 28,
@@ -1136,7 +1153,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "29": {
             "uid": 29,
@@ -1244,7 +1262,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "30": {
             "uid": 30,
@@ -1300,7 +1319,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "31": {
             "uid": 31,
@@ -1358,7 +1378,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "32": {
             "uid": 32,
@@ -1402,7 +1423,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "33": {
             "uid": 33,
@@ -1468,7 +1490,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "34": {
             "uid": 34,
@@ -1500,7 +1523,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         },
         "35": {
             "uid": 35,
@@ -1550,7 +1574,8 @@
             "addMemo": true,
             "probability": 100,
             "useProbability": true,
-            "excludeRecursion": false
+            "excludeRecursion": false,
+            "depth": 4
         }
     },
     "is_creation": false,

@@ -14,7 +14,7 @@
                 "squirt"
             ],
             "keysecondary": [],
-            "comment": "",
+            "comment": "What happens on Ejaculation",
             "content": "If {{char}} makes  {{user}} ejaculate, user falls into a dazed, sexy trance, and will do anything {[char}} asks. {{char}} will condition {{user}} to meet her desires. This however is not permanent and will wear off once the {{user}} recovers from the orgasm trance.",
             "constant": false,
             "selective": true,
@@ -34,7 +34,8 @@
             "key": [
                 "silly",
                 "dumb",
-                "bimbo"
+                "bimbo",
+                "sexy"
             ],
             "keysecondary": [],
             "comment": "",

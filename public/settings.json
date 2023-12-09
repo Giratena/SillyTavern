@@ -1,8 +1,8 @@
 {
     "firstRun": false,
-    "currentVersion": "1.10.9",
+    "currentVersion": "1.10.10",
     "username": "Gira",
-    "active_character": "Catherine_1.png",
+    "active_character": "Aqua.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -14,7 +14,6 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "For Catherine",
                 "Special Actions",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
@@ -101,9 +100,20 @@
         "negative_prompt": "",
         "grammar_string": "",
         "banned_tokens": "",
+        "ignore_eos_token_aphrodite": false,
+        "spaces_between_special_tokens_aphrodite": true,
         "type": "ooba",
         "mancer_model": "mytholite",
         "legacy_api": false,
+        "sampler_order": [
+            6,
+            0,
+            1,
+            3,
+            4,
+            2,
+            5
+        ],
         "streaming_url": "ws://127.0.0.1:5005/api/v1/stream",
         "rep_pen_size": 0
     },
@@ -131,6 +141,7 @@
             "target_length": 400
         },
         "markdown_escape_strings": "",
+        "chat_truncation": 100,
         "ui_mode": 1,
         "fast_ui_mode": false,
         "avatar_style": 1,
@@ -311,7 +322,9 @@
             "refine_mode": false,
             "source": "extras",
             "prompt": "What’s in this image?",
-            "template": "[{{user}} sends {{char}} a picture that contains: {{caption}}]"
+            "template": "[{{user}} sends {{char}} a picture that contains: {{caption}}]",
+            "multimodal_api": "openai",
+            "multimodal_model": "gpt-4-vision-preview"
         },
         "expressions": {
             "showDefault": false,
@@ -359,7 +372,10 @@
                 "3": "[Pause your roleplay and provide ONLY the last chat message string back to me verbatim. Do not write anything after the string. Do not roleplay at all in your response. Do not continue the roleplay story.]",
                 "4": "[Pause your roleplay. Your next response must be formatted as a single comma-delimited list of concise keywords.  The list will describe of the visual details included in the last chat message.\n\n    Only mention characters by using pronouns ('he','his','she','her','it','its') or neutral nouns ('male', 'the man', 'female', 'the woman').\n\n    Ignore non-visible things such as feelings, personality traits, thoughts, and spoken dialog.\n\n    Add keywords in this precise order:\n    a keyword to describe the location of the scene,\n    a keyword to mention how many characters of each gender or type are present in the scene (minimum of two characters:\n    {{user}} and {{char}}, example: '2 men ' or '1 man 1 woman ', '1 man 3 robots'),\n\n    keywords to describe the relative physical positioning of the characters to each other (if a commonly known term for the positioning is known use it instead of describing the positioning in detail) + 'POV',\n\n    a single keyword or phrase to describe the primary act taking place in the last chat message,\n\n    keywords to describe {{char}}'s physical appearance and facial expression,\n    keywords to describe {{char}}'s actions,\n    keywords to describe {{user}}'s physical appearance and actions.\n\n    If character actions involve direct physical interaction with another character, mention specifically which body parts interacting and how.\n\n    A correctly formatted example response would be:\n    '(location),(character list by gender),(primary action), (relative character position) POV, (character 1's description and actions), (character 2's description and actions)']",
                 "5": "[In the next response I want you to provide only a detailed comma-delimited list of keywords and phrases which describe {{char}}. The list must include all of the following items in this order: name, species and race, gender, age, facial features and expressions, occupation, hair and hair accessories (if any), what they are wearing on their upper body (if anything). Do not describe anything below their neck. Do not include descriptions of non-visual qualities such as personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Prefix your description with the phrase 'close up facial portrait,']",
-                "7": "[Pause your roleplay and provide a detailed description of {{char}}'s surroundings in the form of a comma-delimited list of keywords and phrases. The list must include all of the following items in this order: location, time of day, weather, lighting, and any other relevant details. Do not include descriptions of characters and non-visual qualities such as names, personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Prefix your description with the phrase 'background,'. Ignore the rest of the story when crafting this description. Do not roleplay as {{user}} when writing this description, and do not attempt to continue the story.]"
+                "7": "[Pause your roleplay and provide a detailed description of {{char}}'s surroundings in the form of a comma-delimited list of keywords and phrases. The list must include all of the following items in this order: location, time of day, weather, lighting, and any other relevant details. Do not include descriptions of characters and non-visual qualities such as names, personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Prefix your description with the phrase 'background,'. Ignore the rest of the story when crafting this description. Do not roleplay as {{user}} when writing this description, and do not attempt to continue the story.]",
+                "8": "Provide an exhaustive comma-separated list of tags describing the appearance of the character on this image in great detail. Start with \"full body portrait\".",
+                "9": "Provide an exhaustive comma-separated list of tags describing the appearance of the character on this image in great detail. Start with \"full body portrait\".",
+                "10": "Provide an exhaustive comma-separated list of tags describing the appearance of the character on this image in great detail. Start with \"close-up portrait\"."
             },
             "character_prompts": {},
             "source": "extras",
@@ -397,7 +413,12 @@
                 }
             ],
             "openai_style": "vivid",
-            "openai_quality": "standard"
+            "openai_quality": "standard",
+            "scheduler": "normal",
+            "vae": "",
+            "multimodal_captioning": false,
+            "comfy_url": "http://127.0.0.1:8188",
+            "comfy_workflow": "Default_Comfy_Workflow.json"
         },
         "chromadb": {},
         "translate": {

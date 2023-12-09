@@ -19,7 +19,8 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "displayIndex": 0
+            "displayIndex": 0,
+            "depth": 4
         }
     }
 }

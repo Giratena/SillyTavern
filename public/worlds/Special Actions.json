@@ -74,25 +74,6 @@
             "useProbability": true,
             "displayIndex": 2,
             "depth": 4
-        },
-        "3": {
-            "uid": 3,
-            "key": [],
-            "keysecondary": [],
-            "comment": "",
-            "content": "",
-            "constant": false,
-            "selective": true,
-            "selectiveLogic": 0,
-            "addMemo": true,
-            "order": 100,
-            "position": 0,
-            "disable": false,
-            "excludeRecursion": false,
-            "probability": 100,
-            "useProbability": true,
-            "displayIndex": 3,
-            "depth": 4
         }
     }
 }
