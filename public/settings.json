@@ -1,8 +1,8 @@
 {
     "firstRun": false,
-    "currentVersion": "1.10.10",
+    "currentVersion": "1.11.0",
     "username": "Gira",
-    "active_character": "Aqua.png",
+    "active_character": "Paizuri Specialist Gardevoir.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -114,6 +114,7 @@
             2,
             5
         ],
+        "n": 1,
         "streaming_url": "ws://127.0.0.1:5005/api/v1/stream",
         "rep_pen_size": 0
     },
@@ -146,7 +147,7 @@
         "fast_ui_mode": false,
         "avatar_style": 1,
         "chat_display": 0,
-        "chat_width": 49,
+        "chat_width": 60,
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -226,7 +227,8 @@
             "preset": "Default",
             "story_string": "{{#if system}}{{system}}\n{{/if}}{{#if description}}{{description}}\n{{/if}}{{#if personality}}{{char}}'s personality: {{personality}}\n{{/if}}{{#if scenario}}Scenario: {{scenario}}\n{{/if}}{{#if persona}}{{persona}}\n{{/if}}",
             "chat_start": "***",
-            "example_separator": "***"
+            "example_separator": "***",
+            "use_stop_strings": false
         },
         "personas": {
             "user-default.png": "Gira"
@@ -248,6 +250,7 @@
         "servers": [],
         "bogus_folders": false,
         "aux_field": "character_version",
+        "restore_user_input": true,
         "lazy_load": 0,
         "pygmalion_formatting": 0,
         "disable_description_formatting": false,
@@ -605,7 +608,11 @@
         "Solution Epsilon.png": [],
         "The hypnotist.png": [],
         "The onahole virus.png": [],
-        "The Narrator.png": []
+        "The Narrator.png": [],
+        "Paizuri Specialist Gardevoir.png": [],
+        "Megumi Nakasaka.png": [],
+        "Mitsuki Tomoe.png": [],
+        "Hatsune Miku.png": []
     },
     "nai_settings": {
         "temperature": 0.63,
@@ -1724,6 +1731,9 @@
             ]
         },
         "wi_format": "[Details of the fictional world the RP is set in:\n{0}]\n",
+        "group_nudge_prompt": "[Write the next reply only as {{char}}.]",
+        "scenario_format": "[Circumstances and context of the dialogue: {{scenario}}]",
+        "personality_format": "[{{char}}'s personality: {{personality}}]",
         "openai_model": "gpt-4",
         "claude_model": "claude-instant-v1",
         "ai21_model": "j2-ultra",
@@ -1747,6 +1757,7 @@
         "use_alt_scale": false,
         "squash_system_messages": false,
         "image_inlining": false,
-        "bypass_status_check": false
+        "bypass_status_check": false,
+        "seed": -1
     }
 }
