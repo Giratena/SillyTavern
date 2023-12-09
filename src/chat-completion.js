@@ -10,49 +10,55 @@
 function convertClaudePrompt(messages, addHumanPrefix, addAssistantPostfix, withSystemPrompt) {
     // Claude doesn't support message names, so we'll just add them to the message content.
     for (const message of messages) {
-        if (message.name && message.role !== "system") {
-            message.content = message.name + ": " + message.content;
+        if (message.name && message.role !== 'system') {
+            message.content = message.name + ': ' + message.content;
             delete message.name;
         }
     }
 
     let systemPrompt = '';
     if (withSystemPrompt) {
-        for (const message of messages) {
-            if (message.role === "system" && !message.name) {
+        let lastSystemIdx = -1;
+
+        for (let i = 0; i < messages.length - 1; i++) {
+            const message = messages[i];
+            if (message.role === 'system' && !message.name) {
                 systemPrompt += message.content + '\n\n';
-                messages.splice(messages.indexOf(message), 1);
             } else {
+                lastSystemIdx = i - 1;
                 break;
             }
+        }
+        if (lastSystemIdx >= 0) {
+            messages.splice(0, lastSystemIdx + 1);
         }
     }
 
     let requestPrompt = messages.map((v) => {
         let prefix = '';
         switch (v.role) {
-            case "assistant":
-                prefix = "\n\nAssistant: ";
-                break
-            case "user":
-                prefix = "\n\nHuman: ";
-                break
-            case "system":
+            case 'assistant':
+                prefix = '\n\nAssistant: ';
+                break;
+            case 'user':
+                prefix = '\n\nHuman: ';
+                break;
+            case 'system':
                 // According to the Claude docs, H: and A: should be used for example conversations.
-                if (v.name === "example_assistant") {
-                    prefix = "\n\nA: ";
-                } else if (v.name === "example_user") {
-                    prefix = "\n\nH: ";
+                if (v.name === 'example_assistant') {
+                    prefix = '\n\nA: ';
+                } else if (v.name === 'example_user') {
+                    prefix = '\n\nH: ';
                 } else {
-                    prefix = "\n\n";
+                    prefix = '\n\n';
                 }
-                break
+                break;
         }
         return prefix + v.content;
     }).join('');
 
     if (addHumanPrefix) {
-        requestPrompt = "\n\nHuman: " + requestPrompt;
+        requestPrompt = '\n\nHuman: ' + requestPrompt;
     }
 
     if (addAssistantPostfix) {
@@ -68,4 +74,4 @@ function convertClaudePrompt(messages, addHumanPrefix, addAssistantPostfix, with
 
 module.exports = {
     convertClaudePrompt,
-}
+};

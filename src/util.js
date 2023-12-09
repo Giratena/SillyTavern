@@ -4,20 +4,48 @@ const commandExistsSync = require('command-exists').sync;
 const _ = require('lodash');
 const yauzl = require('yauzl');
 const mime = require('mime-types');
+const yaml = require('yaml');
 const { default: simpleGit } = require('simple-git');
 
+const { DIRECTORIES } = require('./constants');
+
 /**
- * Returns the config object from the config.conf file.
+ * Returns the config object from the config.yaml file.
  * @returns {object} Config object
  */
 function getConfig() {
-    try {
-        const config = require(path.join(process.cwd(), './config.conf'));
-        return config;
-    } catch (error) {
-        console.warn('Failed to read config.conf');
-        return {};
+    function getNewConfig() {
+        try {
+            const config = yaml.parse(fs.readFileSync(path.join(process.cwd(), './config.yaml'), 'utf8'));
+            return config;
+        } catch (error) {
+            console.warn('Failed to read config.yaml');
+            return {};
+        }
     }
+
+    function getLegacyConfig() {
+        try {
+            console.log(color.yellow('WARNING: config.conf is deprecated. Please run "npm run postinstall" to convert to config.yaml'));
+            const config = require(path.join(process.cwd(), './config.conf'));
+            return config;
+        } catch (error) {
+            console.warn('Failed to read config.conf');
+            return {};
+        }
+    }
+
+    if (fs.existsSync('./config.yaml')) {
+        return getNewConfig();
+    }
+
+    if (fs.existsSync('./config.conf')) {
+        return getLegacyConfig();
+    }
+
+    console.error(color.red('No config file found. Please create a config.yaml file. The default config file can be found in the /default folder.'));
+    console.error(color.red('The program will now exit.'));
+    process.exit(1);
 }
 
 /**
@@ -217,6 +245,98 @@ function deepMerge(target, source) {
     return output;
 }
 
+const color = {
+    byNum: (mess, fgNum) => {
+        mess = mess || '';
+        fgNum = fgNum === undefined ? 31 : fgNum;
+        return '\u001b[' + fgNum + 'm' + mess + '\u001b[39m';
+    },
+    black: (mess) => color.byNum(mess, 30),
+    red: (mess) => color.byNum(mess, 31),
+    green: (mess) => color.byNum(mess, 32),
+    yellow: (mess) => color.byNum(mess, 33),
+    blue: (mess) => color.byNum(mess, 34),
+    magenta: (mess) => color.byNum(mess, 35),
+    cyan: (mess) => color.byNum(mess, 36),
+    white: (mess) => color.byNum(mess, 37),
+};
+
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function humanizedISO8601DateTime(date) {
+    let baseDate = typeof date === 'number' ? new Date(date) : new Date();
+    let humanYear = baseDate.getFullYear();
+    let humanMonth = (baseDate.getMonth() + 1);
+    let humanDate = baseDate.getDate();
+    let humanHour = (baseDate.getHours() < 10 ? '0' : '') + baseDate.getHours();
+    let humanMinute = (baseDate.getMinutes() < 10 ? '0' : '') + baseDate.getMinutes();
+    let humanSecond = (baseDate.getSeconds() < 10 ? '0' : '') + baseDate.getSeconds();
+    let humanMillisecond = (baseDate.getMilliseconds() < 10 ? '0' : '') + baseDate.getMilliseconds();
+    let HumanizedDateTime = (humanYear + '-' + humanMonth + '-' + humanDate + ' @' + humanHour + 'h ' + humanMinute + 'm ' + humanSecond + 's ' + humanMillisecond + 'ms');
+    return HumanizedDateTime;
+}
+
+function tryParse(str) {
+    try {
+        return JSON.parse(str);
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * Takes a path to a client-accessible file in the `public` folder and converts it to a relative URL segment that the
+ * client can fetch it from. This involves stripping the `public/` prefix and always using `/` as the separator.
+ * @param {string} inputPath The path to be converted.
+ * @returns The relative URL path from which the client can access the file.
+ */
+function clientRelativePath(inputPath) {
+    return path.normalize(inputPath).split(path.sep).slice(1).join('/');
+}
+
+/**
+ * Strip the last file extension from a given file name. If there are multiple extensions, only the last is removed.
+ * @param {string} filename The file name to remove the extension from.
+ * @returns The file name, sans extension
+ */
+function removeFileExtension(filename) {
+    return filename.replace(/\.[^.]+$/, '');
+}
+
+function generateTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+}
+
+/**
+ * @param {string} prefix
+ */
+function removeOldBackups(prefix) {
+    const MAX_BACKUPS = 25;
+
+    let files = fs.readdirSync(DIRECTORIES.backups).filter(f => f.startsWith(prefix));
+    if (files.length > MAX_BACKUPS) {
+        files = files.map(f => path.join(DIRECTORIES.backups, f));
+        files.sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
+
+        fs.rmSync(files[0]);
+    }
+}
+
+
 module.exports = {
     getConfig,
     getConfigValue,
@@ -227,4 +347,12 @@ module.exports = {
     readAllChunks,
     delay,
     deepMerge,
+    color,
+    uuidv4,
+    humanizedISO8601DateTime,
+    tryParse,
+    clientRelativePath,
+    removeFileExtension,
+    generateTimestamp,
+    removeOldBackups,
 };

@@ -1,7 +1,7 @@
-import { getRequestHeaders } from "../../script.js";
-import { extension_settings } from "../extensions.js";
-import { SECRET_KEYS, secret_state } from "../secrets.js";
-import { createThumbnail } from "../utils.js";
+import { getRequestHeaders } from '../../script.js';
+import { extension_settings } from '../extensions.js';
+import { SECRET_KEYS, secret_state } from '../secrets.js';
+import { createThumbnail } from '../utils.js';
 
 /**
  * Generates a caption for an image using a multimodal model.
@@ -23,7 +23,7 @@ export async function getMultimodalCaption(base64Img, prompt) {
     const compressionLimit = 2 * 1024 * 1024;
     if (extension_settings.caption.multimodal_api === 'openrouter' && base64Bytes > compressionLimit) {
         const maxSide = 1024;
-        base64Img = await createThumbnail(base64Img, maxSide, maxSide);
+        base64Img = await createThumbnail(base64Img, maxSide, maxSide, 'image/jpeg');
     }
 
     const apiResult = await fetch('/api/openai/caption-image', {
