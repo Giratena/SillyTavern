@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.11.0",
     "username": "Gira",
-    "active_character": "Paizuri Specialist Gardevoir.png",
+    "active_character": "Pyra and Mythra.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -612,7 +612,11 @@
         "Paizuri Specialist Gardevoir.png": [],
         "Megumi Nakasaka.png": [],
         "Mitsuki Tomoe.png": [],
-        "Hatsune Miku.png": []
+        "Hatsune Miku.png": [],
+        "Aurael.png": [],
+        "Rouge the Bat.png": [],
+        "Samantha.png": [],
+        "Pyra and Mythra.png": []
     },
     "nai_settings": {
         "temperature": 0.63,
