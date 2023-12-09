@@ -16,7 +16,7 @@
             "keysecondary": [],
             "comment": "",
             "content": "If {{char}} makes  {{user}} ejaculate, user falls into a dazed, sexy trance, and will do anything {[char}} asks. {{char}} will condition {{user}} to meet her desires. This however is not permanent and will wear off once the {{user}} recovers from the orgasm trance.",
-            "constant": true,
+            "constant": false,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
