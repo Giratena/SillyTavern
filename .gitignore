@@ -11,9 +11,6 @@ whitelist.txt
 .idea/
 secrets.json
 /dist
-/backups/
-public/movingUI/
-public/QuickReplies/
 content.log
 cloudflared.exe
 public/assets/
