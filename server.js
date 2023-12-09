@@ -35,7 +35,6 @@ const ipMatching = require('ip-matching');
 
 // image processing related library imports
 const jimp = require('jimp');
-const mime = require('mime-types');
 
 // Unrestrict console logs display limit
 util.inspect.defaultOptions.maxArrayLength = null;
@@ -45,13 +44,11 @@ util.inspect.defaultOptions.maxStringLength = null;
 const basicAuthMiddleware = require('./src/middleware/basicAuthMiddleware');
 const { jsonParser, urlencodedParser } = require('./src/express-common.js');
 const contentManager = require('./src/endpoints/content-manager');
-const statsHelpers = require('./statsHelpers.js');
 const { readSecret, migrateSecrets, SECRET_KEYS } = require('./src/endpoints/secrets');
-const { delay, getVersion, getConfigValue, color, uuidv4, humanizedISO8601DateTime, tryParse, clientRelativePath, removeFileExtension, generateTimestamp, removeOldBackups } = require('./src/util');
-const { invalidateThumbnail, ensureThumbnailCache } = require('./src/endpoints/thumbnails');
+const { delay, getVersion, getConfigValue, color, uuidv4, tryParse, clientRelativePath, removeFileExtension, generateTimestamp, removeOldBackups, getImages } = require('./src/util');
+const { ensureThumbnailCache } = require('./src/endpoints/thumbnails');
 const { getTokenizerModel, getTiktokenTokenizer, loadTokenizers, TEXT_COMPLETION_MODELS, getSentencepiceTokenizer, sentencepieceTokenizers } = require('./src/endpoints/tokenizers');
 const { convertClaudePrompt } = require('./src/chat-completion');
-const { readWorldInfoFile } = require('./src/worldinfo');
 
 // Work around a node v20.0.0, v20.1.0, and v20.2.0 bug. The issue was fixed in v20.3.0.
 // https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
@@ -100,8 +97,6 @@ const app = express();
 app.use(compression());
 app.use(responseTime());
 
-// impoort from statsHelpers.js
-
 const server_port = process.env.SILLY_TAVERN_PORT || getConfigValue('port', 8000);
 
 const whitelistPath = path.join(process.cwd(), './whitelist.txt');
@@ -123,8 +118,6 @@ const listen = getConfigValue('listen', false);
 
 const API_OPENAI = 'https://api.openai.com/v1';
 const API_CLAUDE = 'https://api.anthropic.com/v1';
-
-let response_dw_bg;
 
 function getMancerHeaders() {
     const apiKey = readSecret(SECRET_KEYS.MANCER);
@@ -779,64 +772,6 @@ app.post('/getstatus', jsonParser, async function (request, response) {
     }
 });
 
-/**
- * Handle a POST request to get the stats object
- *
- * This function returns the stats object that was calculated by the `calculateStats` function.
- *
- *
- * @param {Object} request - The HTTP request object.
- * @param {Object} response - The HTTP response object.
- * @returns {void}
- */
-app.post('/getstats', jsonParser, function (request, response) {
-    response.send(JSON.stringify(statsHelpers.getCharStats()));
-});
-
-/**
- * Endpoint: POST /recreatestats
- *
- * Triggers the recreation of statistics from chat files.
- * - If successful: returns a 200 OK status.
- * - On failure: returns a 500 Internal Server Error status.
- *
- * @param {Object} request - Express request object.
- * @param {Object} response - Express response object.
- */
-app.post('/recreatestats', jsonParser, async function (request, response) {
-    try {
-        await statsHelpers.loadStatsFile(DIRECTORIES.chats, DIRECTORIES.characters, true);
-        return response.sendStatus(200);
-    } catch (error) {
-        console.error(error);
-        return response.sendStatus(500);
-    }
-});
-
-
-/**
- * Handle a POST request to update the stats object
- *
- * This function updates the stats object with the data from the request body.
- *
- * @param {Object} request - The HTTP request object.
- * @param {Object} response - The HTTP response object.
- * @returns {void}
- *
-*/
-app.post('/updatestats', jsonParser, function (request, response) {
-    if (!request.body) return response.sendStatus(400);
-    statsHelpers.setCharStats(request.body);
-    return response.sendStatus(200);
-});
-
-
-
-app.post('/getbackgrounds', jsonParser, function (request, response) {
-    var images = getImages('public/backgrounds');
-    response.send(JSON.stringify(images));
-
-});
 
 app.post('/getuseravatars', jsonParser, function (request, response) {
     var images = getImages('public/User Avatars');
@@ -862,75 +797,6 @@ app.post('/deleteuseravatar', jsonParser, function (request, response) {
     return response.sendStatus(404);
 });
 
-app.post('/setbackground', jsonParser, function (request, response) {
-    try {
-        const bg = `#bg1 {background-image: url('../backgrounds/${request.body.bg}');}`;
-        writeFileAtomicSync('public/css/bg_load.css', bg, 'utf8');
-        response.send({ result: 'ok' });
-    } catch (err) {
-        console.log(err);
-        response.send(err);
-    }
-});
-
-app.post('/delbackground', jsonParser, function (request, response) {
-    if (!request.body) return response.sendStatus(400);
-
-    if (request.body.bg !== sanitize(request.body.bg)) {
-        console.error('Malicious bg name prevented');
-        return response.sendStatus(403);
-    }
-
-    const fileName = path.join('public/backgrounds/', sanitize(request.body.bg));
-
-    if (!fs.existsSync(fileName)) {
-        console.log('BG file not found');
-        return response.sendStatus(400);
-    }
-
-    fs.rmSync(fileName);
-    invalidateThumbnail('bg', request.body.bg);
-    return response.send('ok');
-});
-
-app.post('/renamebackground', jsonParser, function (request, response) {
-    if (!request.body) return response.sendStatus(400);
-
-    const oldFileName = path.join(DIRECTORIES.backgrounds, sanitize(request.body.old_bg));
-    const newFileName = path.join(DIRECTORIES.backgrounds, sanitize(request.body.new_bg));
-
-    if (!fs.existsSync(oldFileName)) {
-        console.log('BG file not found');
-        return response.sendStatus(400);
-    }
-
-    if (fs.existsSync(newFileName)) {
-        console.log('New BG file already exists');
-        return response.sendStatus(400);
-    }
-
-    fs.renameSync(oldFileName, newFileName);
-    invalidateThumbnail('bg', request.body.old_bg);
-    return response.send('ok');
-});
-
-app.post('/downloadbackground', urlencodedParser, function (request, response) {
-    response_dw_bg = response;
-    if (!request.body || !request.file) return response.sendStatus(400);
-
-    const img_path = path.join(UPLOADS_PATH, request.file.filename);
-    const filename = request.file.originalname;
-
-    try {
-        fs.copyFileSync(img_path, path.join('public/backgrounds/', filename));
-        invalidateThumbnail('bg', filename);
-        response_dw_bg.send(filename);
-        fs.unlinkSync(img_path);
-    } catch (err) {
-        console.error(err);
-        response_dw_bg.sendStatus(500);
-    }
-});
 
 app.post('/savesettings', jsonParser, function (request, response) {
     try {
@@ -1060,34 +926,6 @@ app.post('/getsettings', jsonParser, (request, response) => {
     });
 });
 
-app.post('/getworldinfo', jsonParser, (request, response) => {
-    if (!request.body?.name) {
-        return response.sendStatus(400);
-    }
-
-    const file = readWorldInfoFile(request.body.name);
-
-    return response.send(file);
-});
-
-app.post('/deleteworldinfo', jsonParser, (request, response) => {
-    if (!request.body?.name) {
-        return response.sendStatus(400);
-    }
-
-    const worldInfoName = request.body.name;
-    const filename = sanitize(`${worldInfoName}.json`);
-    const pathToWorldInfo = path.join(DIRECTORIES.worlds, filename);
-
-    if (!fs.existsSync(pathToWorldInfo)) {
-        throw new Error(`World info file ${filename} doesn't exist.`);
-    }
-
-    fs.rmSync(pathToWorldInfo);
-
-    return response.sendStatus(200);
-});
-
 app.post('/savetheme', jsonParser, (request, response) => {
     if (!request.body || !request.body.name) {
         return response.sendStatus(400);
@@ -1121,76 +959,6 @@ app.post('/savequickreply', jsonParser, (request, response) => {
     return response.sendStatus(200);
 });
 
-
-function getImages(path) {
-    return fs
-        .readdirSync(path)
-        .filter(file => {
-            const type = mime.lookup(file);
-            return type && type.startsWith('image/');
-        })
-        .sort(Intl.Collator().compare);
-}
-
-app.post('/importworldinfo', urlencodedParser, (request, response) => {
-    if (!request.file) return response.sendStatus(400);
-
-    const filename = `${path.parse(sanitize(request.file.originalname)).name}.json`;
-
-    let fileContents = null;
-
-    if (request.body.convertedData) {
-        fileContents = request.body.convertedData;
-    } else {
-        const pathToUpload = path.join(UPLOADS_PATH, request.file.filename);
-        fileContents = fs.readFileSync(pathToUpload, 'utf8');
-        fs.unlinkSync(pathToUpload);
-    }
-
-    try {
-        const worldContent = JSON.parse(fileContents);
-        if (!('entries' in worldContent)) {
-            throw new Error('File must contain a world info entries list');
-        }
-    } catch (err) {
-        return response.status(400).send('Is not a valid world info file');
-    }
-
-    const pathToNewFile = path.join(DIRECTORIES.worlds, filename);
-    const worldName = path.parse(pathToNewFile).name;
-
-    if (!worldName) {
-        return response.status(400).send('World file must have a name');
-    }
-
-    writeFileAtomicSync(pathToNewFile, fileContents);
-    return response.send({ name: worldName });
-});
-
-app.post('/editworldinfo', jsonParser, (request, response) => {
-    if (!request.body) {
-        return response.sendStatus(400);
-    }
-
-    if (!request.body.name) {
-        return response.status(400).send('World file must have a name');
-    }
-
-    try {
-        if (!('entries' in request.body.data)) {
-            throw new Error('World info must contain an entries list');
-        }
-    } catch (err) {
-        return response.status(400).send('Is not a valid world info file');
-    }
-
-    const filename = `${sanitize(request.body.name)}.json`;
-    const pathToFile = path.join(DIRECTORIES.worlds, filename);
-
-    writeFileAtomicSync(pathToFile, JSON.stringify(request.body.data, null, 4));
-
-    return response.send({ ok: true });
-});
 
 app.post('/uploaduseravatar', urlencodedParser, async (request, response) => {
     if (!request.file) return response.sendStatus(400);
@@ -1299,126 +1067,6 @@ app.post('/listimgfiles/:folder', (req, res) => {
     }
 });
 
-
-app.post('/getgroups', jsonParser, (_, response) => {
-    const groups = [];
-
-    if (!fs.existsSync(DIRECTORIES.groups)) {
-        fs.mkdirSync(DIRECTORIES.groups);
-    }
-
-    const files = fs.readdirSync(DIRECTORIES.groups).filter(x => path.extname(x) === '.json');
-    const chats = fs.readdirSync(DIRECTORIES.groupChats).filter(x => path.extname(x) === '.jsonl');
-
-    files.forEach(function (file) {
-        try {
-            const filePath = path.join(DIRECTORIES.groups, file);
-            const fileContents = fs.readFileSync(filePath, 'utf8');
-            const group = JSON.parse(fileContents);
-            const groupStat = fs.statSync(filePath);
-            group['date_added'] = groupStat.birthtimeMs;
-            group['create_date'] = humanizedISO8601DateTime(groupStat.birthtimeMs);
-
-            let chat_size = 0;
-            let date_last_chat = 0;
-
-            if (Array.isArray(group.chats) && Array.isArray(chats)) {
-                for (const chat of chats) {
-                    if (group.chats.includes(path.parse(chat).name)) {
-                        const chatStat = fs.statSync(path.join(DIRECTORIES.groupChats, chat));
-                        chat_size += chatStat.size;
-                        date_last_chat = Math.max(date_last_chat, chatStat.mtimeMs);
-                    }
-                }
-            }
-
-            group['date_last_chat'] = date_last_chat;
-            group['chat_size'] = chat_size;
-            groups.push(group);
-        }
-        catch (error) {
-            console.error(error);
-        }
-    });
-
-    return response.send(groups);
-});
-
-app.post('/creategroup', jsonParser, (request, response) => {
-    if (!request.body) {
-        return response.sendStatus(400);
-    }
-
-    const id = String(Date.now());
-    const groupMetadata = {
-        id: id,
-        name: request.body.name ?? 'New Group',
-        members: request.body.members ?? [],
-        avatar_url: request.body.avatar_url,
-        allow_self_responses: !!request.body.allow_self_responses,
-        activation_strategy: request.body.activation_strategy ?? 0,
-        generation_mode: request.body.generation_mode ?? 0,
-        disabled_members: request.body.disabled_members ?? [],
-        chat_metadata: request.body.chat_metadata ?? {},
-        fav: request.body.fav,
-        chat_id: request.body.chat_id ?? id,
-        chats: request.body.chats ?? [id],
-    };
-    const pathToFile = path.join(DIRECTORIES.groups, `${id}.json`);
-    const fileData = JSON.stringify(groupMetadata);
-
-    if (!fs.existsSync(DIRECTORIES.groups)) {
-        fs.mkdirSync(DIRECTORIES.groups);
-    }
-
-    writeFileAtomicSync(pathToFile, fileData);
-    return response.send(groupMetadata);
-});
-
-app.post('/editgroup', jsonParser, (request, response) => {
-    if (!request.body || !request.body.id) {
-        return response.sendStatus(400);
-    }
-    const id = request.body.id;
-    const pathToFile = path.join(DIRECTORIES.groups, `${id}.json`);
-    const fileData = JSON.stringify(request.body);
-
-    writeFileAtomicSync(pathToFile, fileData);
-    return response.send({ ok: true });
-});
-
-app.post('/deletegroup', jsonParser, async (request, response) => {
-    if (!request.body || !request.body.id) {
-        return response.sendStatus(400);
-    }
-
-    const id = request.body.id;
-    const pathToGroup = path.join(DIRECTORIES.groups, sanitize(`${id}.json`));
-
-    try {
-        // Delete group chats
-        const group = JSON.parse(fs.readFileSync(pathToGroup, 'utf8'));
-
-        if (group && Array.isArray(group.chats)) {
-            for (const chat of group.chats) {
-                console.log('Deleting group chat', chat);
-                const pathToFile = path.join(DIRECTORIES.groupChats, `${id}.jsonl`);
-
-                if (fs.existsSync(pathToFile)) {
-                    fs.rmSync(pathToFile);
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Could not delete group chats. Clean them up manually.', error);
-    }
-
-    if (fs.existsSync(pathToGroup)) {
-        fs.rmSync(pathToGroup);
-    }
-
-    return response.send({ ok: true });
-});
 
 function cleanUploads() {
     try {
@@ -2248,6 +1896,30 @@ redirect('/getgroupchat', '/api/chats/group/get');
 redirect('/deletegroupchat', '/api/chats/group/delete');
 redirect('/savegroupchat', '/api/chats/group/save');
 
+// Redirect deprecated group API endpoints
+redirect('/getgroups', '/api/groups/all');
+redirect('/creategroup', '/api/groups/create');
+redirect('/editgroup', '/api/groups/edit');
+redirect('/deletegroup', '/api/groups/delete');
+
+// Redirect deprecated worldinfo API endpoints
+redirect('/getworldinfo', '/api/worldinfo/get');
+redirect('/deleteworldinfo', '/api/worldinfo/delete');
+redirect('/importworldinfo', '/api/worldinfo/import');
+redirect('/editworldinfo', '/api/worldinfo/edit');
+
+// Redirect deprecated stats API endpoints
+redirect('/getstats', '/api/stats/get');
+redirect('/recreatestats', '/api/stats/recreate');
+redirect('/updatestats', '/api/stats/update');
+
+// Redirect deprecated backgrounds API endpoints
+redirect('/getbackgrounds', '/api/backgrounds/all');
+redirect('/setbackground', '/api/backgrounds/set');
+redirect('/delbackground', '/api/backgrounds/delete');
+redirect('/renamebackground', '/api/backgrounds/rename');
+redirect('/downloadbackground', '/api/backgrounds/upload'); // yes, the downloadbackground endpoint actually uploads one
+
 // ** REST CLIENT ASYNC WRAPPERS **
 
 /**
@@ -2302,6 +1974,19 @@ app.use('/api/characters', require('./src/endpoints/characters').router);
 // Chat management
 app.use('/api/chats', require('./src/endpoints/chats').router);
 
+// Group management
+app.use('/api/groups', require('./src/endpoints/groups').router);
+
+// World info management
+app.use('/api/worldinfo', require('./src/endpoints/worldinfo').router);
+
+// Stats calculation
+const statsEndpoint = require('./src/endpoints/stats');
+app.use('/api/stats', statsEndpoint.router);
+
+// Background management
+app.use('/api/backgrounds', require('./src/endpoints/backgrounds').router);
+
 // Character sprite management
 app.use('/api/sprites', require('./src/endpoints/sprites').router);
 
@@ -2354,17 +2039,20 @@ const setupTasks = async function () {
     cleanUploads();
 
     await loadTokenizers();
-    await statsHelpers.loadStatsFile(DIRECTORIES.chats, DIRECTORIES.characters);
+    await statsEndpoint.init();
+
+    const exitProcess = () => {
+        statsEndpoint.onExit();
+        process.exit();
+    };
 
     // Set up event listeners for a graceful shutdown
-    process.on('SIGINT', statsHelpers.writeStatsToFileAndExit);
-    process.on('SIGTERM', statsHelpers.writeStatsToFileAndExit);
+    process.on('SIGINT', exitProcess);
+    process.on('SIGTERM', exitProcess);
     process.on('uncaughtException', (err) => {
         console.error('Uncaught exception:', err);
-        statsHelpers.writeStatsToFileAndExit();
+        exitProcess();
     });
-
-    setInterval(statsHelpers.saveStatsToFile, 5 * 60 * 1000);
 
     console.log('Launching...');
 
