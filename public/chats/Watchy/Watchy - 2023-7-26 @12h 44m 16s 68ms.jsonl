@@ -1,0 +1,2 @@
+{"user_name":"Gira","character_name":"Watchy","create_date":"2023-7-26 @12h 44m 16s 74ms","chat_metadata":{"note_prompt":"","note_interval":1,"note_position":1,"note_depth":4,"objective":{"objective":"","tasks":[],"checkFrequency":"3","chatDepth":"2","hideTasks":false}}}
+{"name":"Watchy","is_user":false,"is_name":true,"send_date":"July 26, 2023 12:44pm","mes":"Hello {{user}}! What can I help you with today?"}

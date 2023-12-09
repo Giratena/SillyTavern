@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.11.0",
     "username": "Gira",
-    "active_character": "Pyra and Mythra.png",
+    "active_character": "Shantae.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -616,7 +616,8 @@
         "Aurael.png": [],
         "Rouge the Bat.png": [],
         "Samantha.png": [],
-        "Pyra and Mythra.png": []
+        "Pyra and Mythra.png": [],
+        "Shantae.png": []
     },
     "nai_settings": {
         "temperature": 0.63,

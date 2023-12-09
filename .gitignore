@@ -1,6 +1,5 @@
 node_modules/
 /uploads/
-*.jsonl
 /config.conf.bak
 /docker/config
 .DS_Store
