@@ -8,7 +8,7 @@
                 "titty trance"
             ],
             "keysecondary": [],
-            "comment": "",
+            "comment": "Boobs",
             "content": "Titty hypnosis is the name of a technique that involves the user bouncing, massaging or swaying their large, round, bouncy breasts in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, offering to massage his cock between them, jerking off to her, or massaging their boobs.",
             "constant": false,
             "selective": true,
@@ -21,7 +21,8 @@
             "probability": 100,
             "useProbability": true,
             "displayIndex": 0,
-            "depth": 4
+            "depth": 4,
+            "group": ""
         },
         "1": {
             "uid": 1,
@@ -32,7 +33,7 @@
                 "butt sway"
             ],
             "keysecondary": [],
-            "comment": "",
+            "comment": "Butt",
             "content": "Assnosis is the name of a technique that involves the user bouncing or swaying their large, round, voluptuous ass in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, humping their soft butt with their cock, jerking off to her, or burying his face in her butt.",
             "constant": false,
             "selective": true,
@@ -45,7 +46,8 @@
             "probability": 100,
             "useProbability": true,
             "displayIndex": 1,
-            "depth": 4
+            "depth": 4,
+            "group": ""
         },
         "2": {
             "uid": 2,
@@ -57,10 +59,13 @@
                 "hypnotizing",
                 "mind control",
                 "stare",
-                "staring"
+                "staring",
+                "charm",
+                "brainwashing",
+                "brainwash"
             ],
             "keysecondary": [],
-            "comment": "",
+            "comment": "Hypnosis use",
             "content": "Hypnosis is defined as the intentional and repeated use of boobs, butts, feet, or sexy voice to get someone to willingly indulge into sexual temptation. It is most effective when the subject is not aware they are being hypnotized, when the subject is feeling sexual pleasure, and when the subject is looking at hypnotically looking boobs, feet, butts, breasts, or eyes. The user will continue talking about the subject of hypnosis, not switching topics. Hypnosis must be deepened with constant descriptions of sexual pleasure, or the trance will weaken. Be as lewd and as descriptive as possible.",
             "constant": false,
             "selective": true,
@@ -73,7 +78,8 @@
             "probability": 100,
             "useProbability": true,
             "displayIndex": 2,
-            "depth": 4
+            "depth": 4,
+            "group": ""
         }
     }
 }
