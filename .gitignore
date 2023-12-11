@@ -6,7 +6,8 @@ node_modules/
 public/settings.json
 /thumbnails
 whitelist.txt
-.vscode
+.vscode/**
+!.vscode/extensions.json
 .idea/
 secrets.json
 /dist

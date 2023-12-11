@@ -7,7 +7,6 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const util = require('util');
-const { Readable } = require('stream');
 
 // cli/fs related library imports
 const open = require('open');
@@ -45,10 +44,24 @@ const basicAuthMiddleware = require('./src/middleware/basicAuthMiddleware');
 const { jsonParser, urlencodedParser } = require('./src/express-common.js');
 const contentManager = require('./src/endpoints/content-manager');
 const { readSecret, migrateSecrets, SECRET_KEYS } = require('./src/endpoints/secrets');
-const { delay, getVersion, getConfigValue, color, uuidv4, tryParse, clientRelativePath, removeFileExtension, generateTimestamp, removeOldBackups, getImages } = require('./src/util');
+const {
+    delay,
+    getVersion,
+    getConfigValue,
+    color,
+    uuidv4,
+    tryParse,
+    clientRelativePath,
+    removeFileExtension,
+    generateTimestamp,
+    removeOldBackups,
+    getImages,
+    forwardFetchResponse,
+} = require('./src/util');
 const { ensureThumbnailCache } = require('./src/endpoints/thumbnails');
 const { getTokenizerModel, getTiktokenTokenizer, loadTokenizers, TEXT_COMPLETION_MODELS, getSentencepiceTokenizer, sentencepieceTokenizers } = require('./src/endpoints/tokenizers');
 const { convertClaudePrompt } = require('./src/chat-completion');
+const { getOverrideHeaders, setAdditionalHeaders } = require('./src/additional-headers');
 
 // Work around a node v20.0.0, v20.1.0, and v20.2.0 bug. The issue was fixed in v20.3.0.
 // https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
@@ -119,106 +132,8 @@ const listen = getConfigValue('listen', false);
 const API_OPENAI = 'https://api.openai.com/v1';
 const API_CLAUDE = 'https://api.anthropic.com/v1';
 
-function getMancerHeaders() {
-    const apiKey = readSecret(SECRET_KEYS.MANCER);
-
-    return apiKey ? ({
-        'X-API-KEY': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-    }) : {};
-}
-
-function getAphroditeHeaders() {
-    const apiKey = readSecret(SECRET_KEYS.APHRODITE);
-
-    return apiKey ? ({
-        'X-API-KEY': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-    }) : {};
-}
-
-function getTabbyHeaders() {
-    const apiKey = readSecret(SECRET_KEYS.TABBY);
-
-    return apiKey ? ({
-        'x-api-key': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-    }) : {};
-}
-
-function getOverrideHeaders(urlHost) {
-    const requestOverrides = getConfigValue('requestOverrides', []);
-    const overrideHeaders = requestOverrides?.find((e) => e.hosts?.includes(urlHost))?.headers;
-    if (overrideHeaders && urlHost) {
-        return overrideHeaders;
-    } else {
-        return {};
-    }
-}
-
-/**
- * Sets additional headers for the request.
- * @param {object} request Original request body
- * @param {object} args New request arguments
- * @param {string|null} server API server for new request
- */
-function setAdditionalHeaders(request, args, server) {
-    let headers;
-
-    switch (request.body.api_type) {
-        case TEXTGEN_TYPES.MANCER:
-            headers = getMancerHeaders();
-            break;
-        case TEXTGEN_TYPES.APHRODITE:
-            headers = getAphroditeHeaders();
-            break;
-        case TEXTGEN_TYPES.TABBY:
-            headers = getTabbyHeaders();
-            break;
-        default:
-            headers = server ? getOverrideHeaders((new URL(server))?.host) : {};
-            break;
-    }
-
-    Object.assign(args.headers, headers);
-}
-
 const SETTINGS_FILE = './public/settings.json';
 const { DIRECTORIES, UPLOADS_PATH, PALM_SAFETY, TEXTGEN_TYPES, CHAT_COMPLETION_SOURCES, AVATAR_WIDTH, AVATAR_HEIGHT } = require('./src/constants');
-
-// CSRF Protection //
-if (!cliArguments.disableCsrf) {
-    const CSRF_SECRET = crypto.randomBytes(8).toString('hex');
-    const COOKIES_SECRET = crypto.randomBytes(8).toString('hex');
-
-    const { generateToken, doubleCsrfProtection } = doubleCsrf({
-        getSecret: () => CSRF_SECRET,
-        cookieName: 'X-CSRF-Token',
-        cookieOptions: {
-            httpOnly: true,
-            sameSite: 'strict',
-            secure: false,
-        },
-        size: 64,
-        getTokenFromRequest: (req) => req.headers['x-csrf-token'],
-    });
-
-    app.get('/csrf-token', (req, res) => {
-        res.json({
-            'token': generateToken(res, req),
-        });
-    });
-
-    app.use(cookieParser(COOKIES_SECRET));
-    app.use(doubleCsrfProtection);
-} else {
-    console.warn('\nCSRF protection is disabled. This will make your server vulnerable to CSRF attacks.\n');
-    app.get('/csrf-token', (req, res) => {
-        res.json({
-            'token': 'disabled',
-        });
-    });
-}
 
 // CORS Settings //
 const CORS = cors({
@@ -273,6 +188,40 @@ app.use(function (req, res, next) {
     next();
 });
 
+// CSRF Protection //
+if (!cliArguments.disableCsrf) {
+    const CSRF_SECRET = crypto.randomBytes(8).toString('hex');
+    const COOKIES_SECRET = crypto.randomBytes(8).toString('hex');
+
+    const { generateToken, doubleCsrfProtection } = doubleCsrf({
+        getSecret: () => CSRF_SECRET,
+        cookieName: 'X-CSRF-Token',
+        cookieOptions: {
+            httpOnly: true,
+            sameSite: 'strict',
+            secure: false,
+        },
+        size: 64,
+        getTokenFromRequest: (req) => req.headers['x-csrf-token'],
+    });
+
+    app.get('/csrf-token', (req, res) => {
+        res.json({
+            'token': generateToken(res, req),
+        });
+    });
+
+    app.use(cookieParser(COOKIES_SECRET));
+    app.use(doubleCsrfProtection);
+} else {
+    console.warn('\nCSRF protection is disabled. This will make your server vulnerable to CSRF attacks.\n');
+    app.get('/csrf-token', (req, res) => {
+        res.json({
+            'token': 'disabled',
+        });
+    });
+}
+
 if (getConfigValue('enableCorsProxy', false) || cliArguments.corsProxy) {
     const bodyParser = require('body-parser');
     app.use(bodyParser.json());
@@ -307,9 +256,7 @@ if (getConfigValue('enableCorsProxy', false) || cliArguments.corsProxy) {
             });
 
             // Copy over relevant response params to the proxy response
-            res.statusCode = response.status;
-            res.statusMessage = response.statusText;
-            response.body.pipe(res);
+            forwardFetchResponse(response, res);
 
         } catch (error) {
             res.status(500).send('Error occurred while trying to proxy to: ' + url + ' ' + error);
@@ -457,18 +404,9 @@ app.post('/generate', jsonParser, async function (request, response_generate) {
             const response = await fetch(url, { method: 'POST', timeout: 0, ...args });
 
             if (request.body.streaming) {
-                request.socket.on('close', function () {
-                    if (response.body instanceof Readable) response.body.destroy(); // Close the remote stream
-                    response_generate.end(); // End the Express response
-                });
-
-                response.body.on('end', function () {
-                    console.log('Streaming request finished');
-                    response_generate.end();
-                });
-
                 // Pipe remote SSE stream to Express response
-                return response.body.pipe(response_generate);
+                forwardFetchResponse(response, response_generate);
+                return;
             } else {
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -666,17 +604,7 @@ app.post('/api/textgenerationwebui/generate', jsonParser, async function (reques
         if (request.body.stream) {
             const completionsStream = await fetch(url, args);
             // Pipe remote SSE stream to Express response
-            completionsStream.body.pipe(response_generate);
-
-            request.socket.on('close', function () {
-                if (completionsStream.body instanceof Readable) completionsStream.body.destroy(); // Close the remote stream
-                response_generate.end(); // End the Express response
-            });
-
-            completionsStream.body.on('end', function () {
-                console.log('Streaming request finished');
-                response_generate.end();
-            });
+            forwardFetchResponse(completionsStream, response_generate);
         }
         else {
             const completionsReply = await fetch(url, args);
@@ -729,47 +657,37 @@ app.post('/getstatus', jsonParser, async function (request, response) {
 
     setAdditionalHeaders(request, args, api_server);
 
-    const url = api_server + '/v1/model';
-    let version = '';
-    let koboldVersion = {};
+    const result = {};
 
-    if (request.body.main_api == 'kobold') {
-        try {
-            version = (await fetchJSON(api_server + '/v1/info/version')).result;
-        }
-        catch {
-            version = '0.0.0';
-        }
-        try {
-            koboldVersion = (await fetchJSON(api_server + '/extra/version'));
-        }
-        catch {
-            koboldVersion = {
-                result: 'Kobold',
-                version: '0.0',
-            };
-        }
-    }
+    const [koboldUnitedResponse, koboldExtraResponse, koboldModelResponse] = await Promise.all([
+        // We catch errors both from the response not having a successful HTTP status and from JSON parsing failing
 
-    try {
-        let data = await fetchJSON(url, args);
+        // Kobold United API version
+        fetch(`${api_server}/v1/info/version`).then(response => {
+            if (!response.ok) throw new Error(`Kobold API error: ${response.status, response.statusText}`);
+            return response.json();
+        }).catch(() => ({ result: '0.0.0' })),
 
-        if (!data || typeof data !== 'object') {
-            data = {};
-        }
+        // KoboldCpp version
+        fetch(`${api_server}/extra/version`).then(response => {
+            if (!response.ok) throw new Error(`Kobold API error: ${response.status, response.statusText}`);
+            return response.json();
+        }).catch(() => ({ version: '0.0' })),
 
-        if (data.result == 'ReadOnly') {
-            data.result = 'no_connection';
-        }
+        // Current model
+        fetch(`${api_server}/v1/model`).then(response => {
+            if (!response.ok) throw new Error(`Kobold API error: ${response.status, response.statusText}`);
+            return response.json();
+        }).catch(() => null),
+    ]);
 
-        data.version = version;
-        data.koboldVersion = koboldVersion;
+    result.koboldUnitedVersion = koboldUnitedResponse.result;
+    result.koboldCppVersion = koboldExtraResponse.result;
+    result.model = !koboldModelResponse || koboldModelResponse.result === 'ReadOnly' ?
+        'no_connection' :
+        koboldModelResponse.result;
 
-        return response.send(data);
-    } catch (error) {
-        console.log(error);
-        return response.send({ result: 'no_connection' });
-    }
+    response.send(result);
 });
 
 
@@ -1108,7 +1026,8 @@ app.post('/getstatus_openai', jsonParser, async function (request, response_gets
     }
 
     if (!api_key_openai && !request.body.reverse_proxy) {
-        return response_getstatus_openai.status(401).send({ error: true });
+        console.log('OpenAI API key is missing.');
+        return response_getstatus_openai.status(400).send({ error: true });
     }
 
     try {
@@ -1262,7 +1181,8 @@ async function sendScaleRequest(request, response) {
     const api_key_scale = readSecret(SECRET_KEYS.SCALE);
 
     if (!api_key_scale) {
-        return response.status(401).send({ error: true });
+        console.log('Scale API key is missing.');
+        return response.status(400).send({ error: true });
     }
 
     const requestPrompt = convertChatMLPrompt(request.body.messages);
@@ -1379,7 +1299,8 @@ async function sendClaudeRequest(request, response) {
     const api_key_claude = request.body.reverse_proxy ? request.body.proxy_password : readSecret(SECRET_KEYS.CLAUDE);
 
     if (!api_key_claude) {
-        return response.status(401).send({ error: true });
+        console.log('Claude API key is missing.');
+        return response.status(400).send({ error: true });
     }
 
     try {
@@ -1427,17 +1348,7 @@ async function sendClaudeRequest(request, response) {
 
         if (request.body.stream) {
             // Pipe remote SSE stream to Express response
-            generateResponse.body.pipe(response);
-
-            request.socket.on('close', function () {
-                if (generateResponse.body instanceof Readable) generateResponse.body.destroy(); // Close the remote stream
-                response.end(); // End the Express response
-            });
-
-            generateResponse.body.on('end', function () {
-                console.log('Streaming request finished');
-                response.end();
-            });
+            forwardFetchResponse(generateResponse, response);
         } else {
             if (!generateResponse.ok) {
                 console.log(`Claude API returned error: ${generateResponse.status} ${generateResponse.statusText} ${await generateResponse.text()}`);
@@ -1468,7 +1379,8 @@ async function sendPalmRequest(request, response) {
     const api_key_palm = readSecret(SECRET_KEYS.PALM);
 
     if (!api_key_palm) {
-        return response.status(401).send({ error: true });
+        console.log('Palm API key is missing.');
+        return response.status(400).send({ error: true });
     }
 
     const body = {
@@ -1573,7 +1485,8 @@ app.post('/generate_openai', jsonParser, function (request, response_generate_op
     }
 
     if (!api_key_openai && !request.body.reverse_proxy) {
-        return response_generate_openai.status(401).send({ error: true });
+        console.log('OpenAI API key is missing.');
+        return response_generate_openai.status(400).send({ error: true });
     }
 
     // Add custom stop sequences
@@ -1637,20 +1550,17 @@ app.post('/generate_openai', jsonParser, function (request, response_generate_op
         try {
             const fetchResponse = await fetch(endpointUrl, config);
 
+            if (request.body.stream) {
+                console.log('Streaming request in progress');
+                forwardFetchResponse(fetchResponse, response_generate_openai);
+                return;
+            }
+
             if (fetchResponse.ok) {
-                if (request.body.stream) {
-                    console.log('Streaming request in progress');
-                    fetchResponse.body.pipe(response_generate_openai);
-                    fetchResponse.body.on('end', () => {
-                        console.log('Streaming request finished');
-                        response_generate_openai.end();
-                    });
-                } else {
-                    let json = await fetchResponse.json();
-                    response_generate_openai.send(json);
-                    console.log(json);
-                    console.log(json?.choices[0]?.message);
-                }
+                let json = await fetchResponse.json();
+                response_generate_openai.send(json);
+                console.log(json);
+                console.log(json?.choices[0]?.message);
             } else if (fetchResponse.status === 429 && retries > 0) {
                 console.log(`Out of quota, retrying in ${Math.round(timeout / 1000)}s`);
                 setTimeout(() => {
@@ -1769,93 +1679,6 @@ async function sendAI21Request(request, response) {
 
 }
 
-app.post('/tokenize_via_api', jsonParser, async function (request, response) {
-    if (!request.body) {
-        return response.sendStatus(400);
-    }
-    const text = String(request.body.text) || '';
-    const api = String(request.body.main_api);
-    const baseUrl = String(request.body.url);
-    const legacyApi = Boolean(request.body.legacy_api);
-
-    try {
-        if (api == 'textgenerationwebui') {
-            const args = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            };
-
-            setAdditionalHeaders(request, args, null);
-
-            // Convert to string + remove trailing slash + /v1 suffix
-            let url = String(baseUrl).replace(/\/$/, '').replace(/\/v1$/, '');
-
-            if (legacyApi) {
-                url += '/v1/token-count';
-                args.body = JSON.stringify({ 'prompt': text });
-            } else {
-                switch (request.body.api_type) {
-                    case TEXTGEN_TYPES.TABBY:
-                        url += '/v1/token/encode';
-                        args.body = JSON.stringify({ 'text': text });
-                        break;
-                    case TEXTGEN_TYPES.KOBOLDCPP:
-                        url += '/api/extra/tokencount';
-                        args.body = JSON.stringify({ 'prompt': text });
-                        break;
-                    default:
-                        url += '/v1/internal/encode';
-                        args.body = JSON.stringify({ 'text': text });
-                        break;
-                }
-            }
-
-            const result = await fetch(url, args);
-
-            if (!result.ok) {
-                console.log(`API returned error: ${result.status} ${result.statusText}`);
-                return response.send({ error: true });
-            }
-
-            const data = await result.json();
-            const count = legacyApi ? data?.results[0]?.tokens : (data?.length ?? data?.value);
-            const ids = legacyApi ? [] : (data?.tokens ?? []);
-
-            return response.send({ count, ids });
-        }
-
-        else if (api == 'kobold') {
-            const args = {
-                method: 'POST',
-                body: JSON.stringify({ 'prompt': text }),
-                headers: { 'Content-Type': 'application/json' },
-            };
-
-            let url = String(baseUrl).replace(/\/$/, '');
-            url += '/extra/tokencount';
-
-            const result = await fetch(url, args);
-
-            if (!result.ok) {
-                console.log(`API returned error: ${result.status} ${result.statusText}`);
-                return response.send({ error: true });
-            }
-
-            const data = await result.json();
-            const count = data['value'];
-            return response.send({ count: count, ids: [] });
-        }
-
-        else {
-            console.log('Unknown API', api);
-            return response.send({ error: true });
-        }
-    } catch (error) {
-        console.log(error);
-        return response.send({ error: true });
-    }
-});
-
 /**
  * Redirect a deprecated API endpoint URL to its replacement. Because fetch, form submissions, and $.ajax follow
  * redirects, this is transparent to client-side code.
@@ -1919,27 +1742,6 @@ redirect('/setbackground', '/api/backgrounds/set');
 redirect('/delbackground', '/api/backgrounds/delete');
 redirect('/renamebackground', '/api/backgrounds/rename');
 redirect('/downloadbackground', '/api/backgrounds/upload'); // yes, the downloadbackground endpoint actually uploads one
-
-// ** REST CLIENT ASYNC WRAPPERS **
-
-/**
- * Convenience function for fetch requests (default GET) returning as JSON.
- * @param {string} url
- * @param {import('node-fetch').RequestInit} args
- */
-async function fetchJSON(url, args = {}) {
-    if (args.method === undefined) args.method = 'GET';
-    const response = await fetch(url, args);
-
-    if (response.ok) {
-        const data = await response.json();
-        return data;
-    }
-
-    throw response;
-}
-
-// ** END **
 
 // OpenAI API
 app.use('/api/openai', require('./src/endpoints/openai').router);

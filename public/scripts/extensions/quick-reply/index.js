@@ -1,4 +1,4 @@
-import { saveSettingsDebounced, callPopup, getRequestHeaders, substituteParams, eventSource, event_types } from '../../../script.js';
+import { saveSettingsDebounced, callPopup, getRequestHeaders, substituteParams, eventSource, event_types, animation_duration } from '../../../script.js';
 import { getContext, extension_settings } from '../../extensions.js';
 import { getSortableDelay, escapeHtml } from '../../utils.js';
 import { executeSlashCommands, registerSlashCommand } from '../../slash-commands.js';
@@ -241,7 +241,15 @@ async function executeQuickReplyByName(name) {
         throw new Error('Quick Reply is disabled');
     }
 
-    const qr = extension_settings.quickReply.quickReplySlots.find(x => x.label == name);
+    let qr = extension_settings.quickReply.quickReplySlots.find(x => x.label == name);
+
+    if (!qr && name.includes('.')) {
+        const [presetName, qrName] = name.split('.');
+        const preset = presets.find(x => x.name == presetName);
+        if (preset) {
+            qr = preset.quickReplySlots.find(x => x.label == qrName);
+        }
+    }
 
     if (!qr) {
         throw new Error(`Quick Reply "${name}" not found`);
@@ -380,7 +388,7 @@ async function doQuickReplyBarPopout() {
         });
 
         loadMovingUIState();
-        $('#quickReplyBarPopout').fadeIn(250);
+        $('#quickReplyBarPopout').fadeIn(animation_duration);
         dragElement(newElement);
 
         $('#quickReplyBarPopoutClose').off('click').on('click', function () {
@@ -388,8 +396,8 @@ async function doQuickReplyBarPopout() {
             let quickRepliesClone = $('#quickReplies').html();
             $('#quickReplyBar').append(newQuickRepliesDiv);
             $('#quickReplies').prepend(quickRepliesClone);
-            $('#quickReplyBar').append(popoutButtonClone).fadeIn(250);
-            $('#quickReplyBarPopout').fadeOut(250, () => { $('#quickReplyBarPopout').remove(); });
+            $('#quickReplyBar').append(popoutButtonClone).fadeIn(animation_duration);
+            $('#quickReplyBarPopout').fadeOut(animation_duration, () => { $('#quickReplyBarPopout').remove(); });
             $('.quickReplyButton').on('click', function () {
                 let index = $(this).data('index');
                 sendQuickReply(index);
@@ -631,7 +639,7 @@ function generateQuickReplyElements() {
             <span class="drag-handle ui-sortable-handle">☰</span>
             <input class="text_pole wide30p" id="quickReply${i}Label" placeholder="(Button label)">
             <span class="menu_button menu_button_icon" id="quickReply${i}CtxButton" title="Additional options: context menu, auto-execution">⋮</span>
-            <span class="menu_button menu_button_icon editor_maximize fa-solid fa-maximize" data-for="quickReply${i}Mes" id="quickReply${i}ExpandButton" title="Expand the editor"></span>
+            <span class="menu_button menu_button_icon editor_maximize fa-solid fa-maximize" data-tab="true" data-for="quickReply${i}Mes" id="quickReply${i}ExpandButton" title="Expand the editor"></span>
             <textarea id="quickReply${i}Mes" placeholder="(Custom message or /command)" class="text_pole widthUnset flex1" rows="2"></textarea>
         </div>
         `;

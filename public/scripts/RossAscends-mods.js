@@ -902,7 +902,7 @@ export function initRossMods() {
         const chatBlock = $('#chat');
         const originalScrollBottom = chatBlock[0].scrollHeight - (chatBlock.scrollTop() + chatBlock.outerHeight());
         this.style.height = window.getComputedStyle(this).getPropertyValue('min-height');
-        this.style.height = this.scrollHeight + 0.1 + 'px';
+        this.style.height = this.scrollHeight + 0.3 + 'px';
 
         if (!isFirefox) {
             const newScrollTop = Math.round(chatBlock[0].scrollHeight - (chatBlock.outerHeight() + originalScrollBottom));
@@ -1123,12 +1123,14 @@ export function initRossMods() {
                 .not('#left-nav-panel')
                 .not('#right-nav-panel')
                 .not('#floatingPrompt')
+                .not('#cfgConfig')
                 .is(':visible')) {
                 let visibleDrawerContent = $('.drawer-content:visible')
                     .not('#WorldInfo')
                     .not('#left-nav-panel')
                     .not('#right-nav-panel')
-                    .not('#floatingPrompt');
+                    .not('#floatingPrompt')
+                    .not('#cfgConfig');
                 $(visibleDrawerContent).parent().find('.drawer-icon').trigger('click');
                 return;
             }
@@ -1140,6 +1142,11 @@ export function initRossMods() {
 
             if ($('#WorldInfo').is(':visible')) {
                 $('#WIDrawerIcon').trigger('click');
+                return;
+            }
+
+            if ($('#cfgConfig').is(':visible')) {
+                $('#CFGClose').trigger('click');
                 return;
             }
 

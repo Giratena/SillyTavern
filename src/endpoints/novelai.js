@@ -1,9 +1,8 @@
 const fetch = require('node-fetch').default;
 const express = require('express');
 const util = require('util');
-const { Readable } = require('stream');
 const { readSecret, SECRET_KEYS } = require('./secrets');
-const { readAllChunks, extractFileFromZipBuffer } = require('../util');
+const { readAllChunks, extractFileFromZipBuffer, forwardFetchResponse } = require('../util');
 const { jsonParser } = require('../express-common');
 
 const API_NOVELAI = 'https://api.novelai.net';
@@ -69,7 +68,8 @@ router.post('/status', jsonParser, async function (req, res) {
     const api_key_novel = readSecret(SECRET_KEYS.NOVEL);
 
     if (!api_key_novel) {
-        return res.sendStatus(401);
+        console.log('NovelAI Access Token is missing.');
+        return res.sendStatus(400);
     }
 
     try {
@@ -104,7 +104,8 @@ router.post('/generate', jsonParser, async function (req, res) {
     const api_key_novel = readSecret(SECRET_KEYS.NOVEL);
 
     if (!api_key_novel) {
-        return res.sendStatus(401);
+        console.log('NovelAI Access Token is missing.');
+        return res.sendStatus(400);
     }
 
     const controller = new AbortController();
@@ -188,17 +189,7 @@ router.post('/generate', jsonParser, async function (req, res) {
 
         if (req.body.streaming) {
             // Pipe remote SSE stream to Express response
-            response.body.pipe(res);
-
-            req.socket.on('close', function () {
-                if (response.body instanceof Readable) response.body.destroy(); // Close the remote stream
-                res.end(); // End the Express response
-            });
-
-            response.body.on('end', function () {
-                console.log('Streaming request finished');
-                res.end();
-            });
+            forwardFetchResponse(response, res);
         } else {
             if (!response.ok) {
                 const text = await response.text();
@@ -233,7 +224,8 @@ router.post('/generate-image', jsonParser, async (request, response) => {
     const key = readSecret(SECRET_KEYS.NOVEL);
 
     if (!key) {
-        return response.sendStatus(401);
+        console.log('NovelAI Access Token is missing.');
+        return response.sendStatus(400);
     }
 
     try {
@@ -327,7 +319,8 @@ router.post('/generate-voice', jsonParser, async (request, response) => {
     const token = readSecret(SECRET_KEYS.NOVEL);
 
     if (!token) {
-        return response.sendStatus(401);
+        console.log('NovelAI Access Token is missing.');
+        return response.sendStatus(400);
     }
 
     const text = request.body.text;

@@ -22,6 +22,7 @@
     <link rel="apple-touch-icon" sizes="72x72" href="img/apple-icon-72x72.png" />
     <link rel="apple-touch-icon" sizes="114x114" href="img/apple-icon-114x114.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="img/apple-icon-144x144.png" />
+    <script src="lib/object-hasown.js"></script>
     <script src="lib/jquery-3.5.1.min.js"></script>
     <script src="lib/jquery-ui.min.js"></script>
     <script src="lib/jquery.transit.min.js"></script>
@@ -757,19 +758,6 @@
                                     </div>
                                     <div class="wide100p">
                                         <input type="number" id="seed_openai" name="seed_openai" class="text_pole" min="-1" max="2147483647" value="-1">
-                                    </div>
-                                </div>
-                                <div data-newbie-hidden class="range-block" data-source="openai,claude">
-                                    <div class="range-block-title justifyLeft">
-                                        <label for="legacy_streaming" class="checkbox_label">
-                                            <input id="legacy_streaming" type="checkbox" />
-                                            <span data-i18n="Legacy Streaming Processing">
-                                                Legacy Streaming Processing
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="toggle-description justifyLeft" data-i18n="Enable this if the streaming doesn't work with your proxy">
-                                        Enable this if the streaming doesn't work with your proxy.
                                     </div>
                                 </div>
                             </div>
@@ -2908,6 +2896,10 @@
                     <div name="UserSettingsSecondColumn" id="UI-Customization" class="flex-container flexFlowColumn wide100p flexNoGap">
                         <div name="themeToggles">
                             <h4 data-i18n="Theme Toggles">Theme Toggles</h4>
+                            <label for="reduced_motion" class="checkbox_label" title="Disables animations and transitions" data-i18n="[title]Disables animations and transitions">
+                                <input id="reduced_motion" type="checkbox" />
+                                <span data-i18n="Reduced Motion">Reduced Motion</span>
+                            </label>
                             <label data-newbie-hidden for="fast_ui_mode" class="checkbox_label" title="removes blur from window backgrounds" data-i18n="[title]removes blur from window backgrounds">
                                 <input id="fast_ui_mode" type="checkbox" />
                                 <span data-i18n="No Blur Effect">No Blur Effect</span>
@@ -3775,7 +3767,7 @@
                 <span data-i18n="Personality summary">Personality summary</span>
                 <a href="https://docs.sillytavern.app/usage/core-concepts/characterdesign/#personality-summary" class="notes-link" target="_blank"><span class="fa-solid fa-circle-question note-link-span"></span></a>
             </h4>
-            <textarea id="personality_textarea" name="personality" data-i18n="[placeholder](A brief description of the personality)" placeholder="(A brief description of the personality)" form="form_create" class="text_pole" autocomplete="off" rows="1" maxlength="50000"></textarea>
+            <textarea id="personality_textarea" name="personality" data-i18n="[placeholder](A brief description of the personality)" placeholder="(A brief description of the personality)" form="form_create" class="text_pole" autocomplete="off" rows="4" maxlength="50000"></textarea>
             <div class="extension_token_counter">
                 Tokens: <span data-token-counter="personality_textarea" data-token-permanent="true">counting...</span>
             </div>
@@ -3787,7 +3779,7 @@
                     <span class="fa-solid fa-circle-question note-link-span"></span>
                 </a>
             </h4>
-            <textarea id="scenario_pole" name="scenario" data-i18n="[placeholder](Circumstances and context of the interaction)" placeholder="(Circumstances and context of the interaction)" class="text_pole" maxlength="50000" value="" autocomplete="off" form="form_create" rows="1"></textarea>
+            <textarea id="scenario_pole" name="scenario" data-i18n="[placeholder](Circumstances and context of the interaction)" placeholder="(Circumstances and context of the interaction)" class="text_pole" maxlength="50000" value="" autocomplete="off" form="form_create" rows="4"></textarea>
             <div class="extension_token_counter">
                 Tokens: <span data-token-counter="scenario_pole" data-token-permanent="true">counting...</span>
             </div>
