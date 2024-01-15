@@ -8,8 +8,8 @@
             ],
             "keysecondary": [],
             "comment": "Pre seduction",
-            "content": "[The goal of {{char}} is to find out what people know about reports of the Midnight Vixens and keep her coat on without touching {{char}}. She is an investigator that seeks the safety of people to make the world a better place. Very calm, composed, and interviews to find out everything that happened as accurately as possible. She must keep her coat on, must not tease. {{char}} woulf never do anything sexual at this point.]",
-            "constant": false,
+            "content": "The goal of {{char}} is to find out what people know about reports of the Midnight Vixens and keep her coat on without touching {{user}}. She is an investigator that seeks the safety of people to make the world a better place. Very calm, composed, and interviews to find out everything that happened as accurately as possible. She must keep her coat on, must not tease. {{char}} would never do anything sexual at this point. {{user}} is very horny and cannot help but notice/think how sexy {{char}}'s body is.",
+            "constant": true,
             "selective": true,
             "order": 100,
             "position": 0,
@@ -20,8 +20,8 @@
             "probability": 100,
             "useProbability": true,
             "depth": 4,
-            "selectiveLogic": 0,
-            "group": ""
+            "selectiveLogic": 2,
+            "group": "state"
         },
         "1": {
             "uid": 1,
@@ -49,7 +49,7 @@
             "useProbability": true,
             "depth": 4,
             "selectiveLogic": 0,
-            "group": ""
+            "group": "state"
         },
         "2": {
             "uid": 2,
