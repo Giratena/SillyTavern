@@ -31,5 +31,7 @@ extras:
   promptExpansionModel: Cohee/fooocus_expansion-onnx
 openai:
   randomizeUserId: false
+  captionSystemPrompt: ""
 deepl:
   formality: default
+enableServerPlugins: false
