@@ -134,7 +134,7 @@ async function doCaptionRequest(base64Img, fileData) {
         case 'horde':
             return await captionHorde(base64Img);
         case 'multimodal':
-            return await captionMultimodal(fileData);
+            return await captionMultimodal(extension_settings.caption.multimodal_api === 'google' ? base64Img : fileData);
         default:
             throw new Error('Unknown caption source.');
     }
@@ -273,6 +273,7 @@ jQuery(function () {
                 (modules.includes('caption') && extension_settings.caption.source === 'extras') ||
                 (extension_settings.caption.source === 'multimodal' && extension_settings.caption.multimodal_api === 'openai' && secret_state[SECRET_KEYS.OPENAI]) ||
                 (extension_settings.caption.source === 'multimodal' && extension_settings.caption.multimodal_api === 'openrouter' && secret_state[SECRET_KEYS.OPENROUTER]) ||
+                (extension_settings.caption.source === 'multimodal' && extension_settings.caption.multimodal_api === 'google' && secret_state[SECRET_KEYS.MAKERSUITE]) ||
                 extension_settings.caption.source === 'local' ||
                 extension_settings.caption.source === 'horde';
 
@@ -299,7 +300,7 @@ jQuery(function () {
         $('#caption_prompt_block').toggle(isMultimodal);
         $('#caption_multimodal_api').val(extension_settings.caption.multimodal_api);
         $('#caption_multimodal_model').val(extension_settings.caption.multimodal_model);
-        $('#caption_multimodal_model option').each(function () {
+        $('#caption_multimodal_block [data-type]').each(function () {
             const type = $(this).data('type');
             $(this).toggle(type === extension_settings.caption.multimodal_api);
         });
@@ -328,7 +329,7 @@ jQuery(function () {
                     <label for="caption_source">Source</label>
                     <select id="caption_source" class="text_pole">
                         <option value="local">Local</option>
-                        <option value="multimodal">Multimodal (OpenAI / OpenRouter)</option>
+                        <option value="multimodal">Multimodal (OpenAI / OpenRouter / Google)</option>
                         <option value="extras">Extras</option>
                         <option value="horde">Horde</option>
                     </select>
@@ -338,16 +339,22 @@ jQuery(function () {
                             <select id="caption_multimodal_api" class="flex1 text_pole">
                                 <option value="openai">OpenAI</option>
                                 <option value="openrouter">OpenRouter</option>
+                                <option value="google">Google</option>
                             </select>
                         </div>
                         <div class="flex1 flex-container flexFlowColumn flexNoGap">
                             <label for="caption_multimodal_model">Model</label>
                             <select id="caption_multimodal_model" class="flex1 text_pole">
                                 <option data-type="openai" value="gpt-4-vision-preview">gpt-4-vision-preview</option>
+                                <option data-type="google" value="gemini-pro-vision">gemini-pro-vision</option>
                                 <option data-type="openrouter" value="openai/gpt-4-vision-preview">openai/gpt-4-vision-preview</option>
                                 <option data-type="openrouter" value="haotian-liu/llava-13b">haotian-liu/llava-13b</option>
                             </select>
                         </div>
+                        <label data-type="openai" class="checkbox_label flexBasis100p" for="caption_allow_reverse_proxy" title="Allow using reverse proxy if defined and valid.">
+                            <input id="caption_allow_reverse_proxy" type="checkbox" class="checkbox">
+                            Allow reverse proxy
+                        </label>
                     </div>
                     <div id="caption_prompt_block">
                         <label for="caption_prompt">Caption Prompt</label>
@@ -374,6 +381,7 @@ jQuery(function () {
     switchMultimodalBlocks();
 
     $('#caption_refine_mode').prop('checked', !!(extension_settings.caption.refine_mode));
+    $('#caption_allow_reverse_proxy').prop('checked', !!(extension_settings.caption.allow_reverse_proxy));
     $('#caption_source').val(extension_settings.caption.source);
     $('#caption_prompt').val(extension_settings.caption.prompt);
     $('#caption_template').val(extension_settings.caption.template);
@@ -389,6 +397,10 @@ jQuery(function () {
     });
     $('#caption_template').on('input', () => {
         extension_settings.caption.template = String($('#caption_template').val());
+        saveSettingsDebounced();
+    });
+    $('#caption_allow_reverse_proxy').on('input', () => {
+        extension_settings.caption.allow_reverse_proxy = $('#caption_allow_reverse_proxy').prop('checked');
         saveSettingsDebounced();
     });
 });

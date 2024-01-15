@@ -18,6 +18,7 @@ import {
     eventSource,
     menu_type,
     substituteParams,
+    callPopup,
 } from '../script.js';
 
 import {
@@ -36,6 +37,7 @@ import { chat_completion_sources, oai_settings } from './openai.js';
 import { getTokenCount } from './tokenizers.js';
 import { textgen_types, textgenerationwebui_settings as textgen_settings } from './textgen-settings.js';
 
+import Bowser from '../lib/bowser.min.js';
 
 var RPanelPin = document.getElementById('rm_button_panel_pin');
 var LPanelPin = document.getElementById('lm_button_panel_pin');
@@ -98,43 +100,22 @@ export function humanizeGenTime(total_gen_time) {
     return time_spent;
 }
 
+let parsedUA = null;
+try {
+    parsedUA = Bowser.parse(navigator.userAgent);
+} catch {
+    // In case the user agent is an empty string or Bowser can't parse it for some other reason
+}
+
+
 /**
  * Checks if the device is a mobile device.
  * @returns {boolean} - True if the device is a mobile device, false otherwise.
  */
 export function isMobile() {
-    const mobileTypes = ['smartphone', 'tablet', 'phablet', 'feature phone', 'portable media player'];
-    const deviceInfo = getDeviceInfo();
+    const mobileTypes = ['mobile', 'tablet'];
 
-    return mobileTypes.includes(deviceInfo?.device?.type);
-}
-
-/**
- * Loads device info from the server. Caches the result in sessionStorage.
- * @returns {object} - The device info object.
- */
-export function getDeviceInfo() {
-    let deviceInfo = null;
-
-    if (sessionStorage.getItem('deviceInfo')) {
-        deviceInfo = JSON.parse(sessionStorage.getItem('deviceInfo'));
-    } else {
-        $.ajax({
-            url: '/deviceinfo',
-            dataType: 'json',
-            async: false,
-            cache: true,
-            success: function (result) {
-                sessionStorage.setItem('deviceInfo', JSON.stringify(result));
-                deviceInfo = result;
-            },
-            error: function () {
-                console.log('Couldn\'t load device info. Defaulting to desktop');
-                deviceInfo = { device: { type: 'desktop' } };
-            },
-        });
-    }
-    return deviceInfo;
+    return mobileTypes.includes(parsedUA?.platform?.type);
 }
 
 function shouldSendOnEnter() {
@@ -415,7 +396,8 @@ function RA_autoconnect(PrevApi) {
                     || (oai_settings.chat_completion_source == chat_completion_sources.WINDOWAI)
                     || (secret_state[SECRET_KEYS.OPENROUTER] && oai_settings.chat_completion_source == chat_completion_sources.OPENROUTER)
                     || (secret_state[SECRET_KEYS.AI21] && oai_settings.chat_completion_source == chat_completion_sources.AI21)
-                    || (secret_state[SECRET_KEYS.PALM] && oai_settings.chat_completion_source == chat_completion_sources.PALM)
+                    || (secret_state[SECRET_KEYS.MAKERSUITE] && oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE)
+                    || (secret_state[SECRET_KEYS.MISTRALAI] && oai_settings.chat_completion_source == chat_completion_sources.MISTRALAI)
                 ) {
                     $('#api_button_openai').trigger('click');
                 }
@@ -431,8 +413,7 @@ function RA_autoconnect(PrevApi) {
 }
 
 function OpenNavPanels() {
-    const deviceInfo = getDeviceInfo();
-    if (deviceInfo && deviceInfo.device.type === 'desktop') {
+    if (!isMobile()) {
         //auto-open R nav if locked and previously open
         if (LoadLocalBool('NavLockOn') == true && LoadLocalBool('NavOpened') == true) {
             //console.log("RA -- clicking right nav to open");
@@ -508,7 +489,7 @@ export function dragElement(elmnt) {
             || Number((String(target.height).replace('px', ''))) < 50
             || Number((String(target.width).replace('px', ''))) < 50
             || power_user.movingUI === false
-            || isMobile() === true
+            || isMobile()
         ) {
             console.debug('aborting mutator');
             return;
@@ -716,7 +697,7 @@ export function dragElement(elmnt) {
 }
 
 export async function initMovingUI() {
-    if (isMobile() === false && power_user.movingUI === true) {
+    if (!isMobile() && power_user.movingUI === true) {
         console.debug('START MOVING UI');
         dragElement($('#sheld'));
         dragElement($('#left-nav-panel'));
@@ -1015,9 +996,31 @@ export function initRossMods() {
                 console.debug('Accepting edits with Ctrl+Enter');
                 editMesDone.trigger('click');
             } else if (is_send_press == false) {
-                console.debug('Regenerating with Ctrl+Enter');
-                $('#option_regenerate').click();
-                $('#options').hide();
+                const skipConfirmKey = 'RegenerateWithCtrlEnter';
+                const skipConfirm = LoadLocalBool(skipConfirmKey);
+                function doRegenerate() {
+                    console.debug('Regenerating with Ctrl+Enter');
+                    $('#option_regenerate').trigger('click');
+                    $('#options').hide();
+                }
+                if (skipConfirm) {
+                    doRegenerate();
+                } else {
+                    const popupText = `
+                    <div class="marginBot10">Are you sure you want to regenerate the latest message?</div>
+                    <label class="checkbox_label justifyCenter" for="regenerateWithCtrlEnter">
+                        <input type="checkbox" id="regenerateWithCtrlEnter">
+                        Don't ask again
+                    </label>`;
+                    callPopup(popupText, 'confirm').then(result =>{
+                        if (!result) {
+                            return;
+                        }
+                        const regenerateWithCtrlEnter = $('#regenerateWithCtrlEnter').prop('checked');
+                        SaveLocal(skipConfirmKey, regenerateWithCtrlEnter);
+                        doRegenerate();
+                    });
+                }
             } else {
                 console.debug('Ctrl+Enter ignored');
             }
@@ -1073,11 +1076,12 @@ export function initRossMods() {
         }
 
         if (event.key == 'ArrowUp') { //edits last message if chatbar is empty and focused
-            //console.log('got uparrow input');
+            console.log('got uparrow input');
             if (
                 $('#send_textarea').val() === '' &&
                 chatbarInFocus === true &&
-                $('.swipe_right:last').css('display') === 'flex' &&
+                //$('.swipe_right:last').css('display') === 'flex' &&
+                $('.last_mes .mes_buttons').is(':visible') &&
                 $('#character_popup').css('display') === 'none' &&
                 $('#shadow_select_chat_popup').css('display') === 'none'
             ) {

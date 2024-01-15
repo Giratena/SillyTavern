@@ -109,16 +109,21 @@ function loadSettings() {
     $('#memory_depth').val(extension_settings.memory.depth).trigger('input');
     $(`input[name="memory_position"][value="${extension_settings.memory.position}"]`).prop('checked', true).trigger('input');
     $('#memory_prompt_words_force').val(extension_settings.memory.promptForceWords).trigger('input');
+    switchSourceControls(extension_settings.memory.source);
 }
 
 function onSummarySourceChange(event) {
     const value = event.target.value;
     extension_settings.memory.source = value;
+    switchSourceControls(value);
+    saveSettingsDebounced();
+}
+
+function switchSourceControls(value) {
     $('#memory_settings [data-source]').each((_, element) => {
         const source = $(element).data('source');
         $(element).toggle(source === value);
     });
-    saveSettingsDebounced();
 }
 
 function onMemoryShortInput() {
@@ -317,6 +322,11 @@ async function onChatEvent() {
 }
 
 async function forceSummarizeChat() {
+    if (extension_settings.memory.source === summary_sources.extras) {
+        toastr.warning('Force summarization is not supported for Extras API');
+        return;
+    }
+
     const context = getContext();
 
     const skipWIAN = extension_settings.memory.SkipWIAN;
@@ -659,7 +669,7 @@ jQuery(function () {
 
                         <textarea id="memory_contents" class="text_pole textarea_compact" rows="6" placeholder="Summary will be generated here..."></textarea>
                         <div class="memory_contents_controls">
-                            <div id="memory_force_summarize" class="menu_button menu_button_icon">
+                            <div id="memory_force_summarize" data-source="main" class="menu_button menu_button_icon">
                                 <i class="fa-solid fa-database"></i>
                                 <span>Summarize now</span>
                             </div>

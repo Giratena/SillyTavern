@@ -4,7 +4,7 @@ const express = require('express');
 const { SentencePieceProcessor } = require('@agnai/sentencepiece-js');
 const tiktoken = require('@dqbd/tiktoken');
 const { Tokenizer } = require('@agnai/web-tokenizers');
-const { convertClaudePrompt } = require('../chat-completion');
+const { convertClaudePrompt, convertGooglePrompt } = require('./prompt-converters');
 const { readSecret, SECRET_KEYS } = require('./secrets');
 const { TEXTGEN_TYPES } = require('../constants');
 const { jsonParser } = require('../express-common');
@@ -387,6 +387,26 @@ router.post('/ai21/count', jsonParser, async function (req, res) {
     }
 });
 
+router.post('/google/count', jsonParser, async function (req, res) {
+    if (!req.body) return res.sendStatus(400);
+    const options = {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({ contents: convertGooglePrompt(req.body) }),
+    };
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${req.query.model}:countTokens?key=${readSecret(SECRET_KEYS.MAKERSUITE)}`, options);
+        const data = await response.json();
+        return res.send({ 'token_count': data?.totalTokens || 0 });
+    } catch (err) {
+        console.error(err);
+        return res.send({ 'token_count': 0 });
+    }
+});
+
 router.post('/llama/encode', jsonParser, createSentencepieceEncodingHandler(spp_llama));
 router.post('/nerdstash/encode', jsonParser, createSentencepieceEncodingHandler(spp_nerd));
 router.post('/nerdstash_v2/encode', jsonParser, createSentencepieceEncodingHandler(spp_nerd_v2));
@@ -562,7 +582,8 @@ router.post('/remote/kobold/count', jsonParser, async function (request, respons
 
         const data = await result.json();
         const count = data['value'];
-        return response.send({ count, ids: [] });
+        const ids = data['ids'] ?? [];
+        return response.send({ count, ids });
     } catch (error) {
         console.log(error);
         return response.send({ error: true });
@@ -617,7 +638,7 @@ router.post('/remote/textgenerationwebui/encode', jsonParser, async function (re
 
         const data = await result.json();
         const count = legacyApi ? data?.results[0]?.tokens : (data?.length ?? data?.value);
-        const ids = legacyApi ? [] : (data?.tokens ?? []);
+        const ids = legacyApi ? [] : (data?.tokens ?? data?.ids ?? []);
 
         return response.send({ count, ids });
     } catch (error) {

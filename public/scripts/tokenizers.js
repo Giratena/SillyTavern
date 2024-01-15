@@ -63,6 +63,7 @@ const TOKENIZER_URLS = {
     },
     [tokenizers.API_KOBOLD]: {
         count: '/api/tokenizers/remote/kobold/count',
+        encode: '/api/tokenizers/remote/kobold/count',
     },
     [tokenizers.MISTRAL]: {
         encode: '/api/tokenizers/mistral/encode',
@@ -375,8 +376,16 @@ export function getTokenizerModel() {
         }
     }
 
+    if (oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE) {
+        return oai_settings.google_model;
+    }
+
     if (oai_settings.chat_completion_source == chat_completion_sources.CLAUDE) {
         return claudeTokenizer;
+    }
+
+    if (oai_settings.chat_completion_source == chat_completion_sources.MISTRALAI) {
+        return mistralTokenizer;
     }
 
     // Default to Turbo 3.5
@@ -388,6 +397,15 @@ export function getTokenizerModel() {
  */
 export function countTokensOpenAI(messages, full = false) {
     const shouldTokenizeAI21 = oai_settings.chat_completion_source === chat_completion_sources.AI21 && oai_settings.use_ai21_tokenizer;
+    const shouldTokenizeGoogle = oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE && oai_settings.use_google_tokenizer;
+    let tokenizerEndpoint = '';
+    if (shouldTokenizeAI21) {
+        tokenizerEndpoint = '/api/tokenizers/ai21/count';
+    } else if (shouldTokenizeGoogle) {
+        tokenizerEndpoint = `/api/tokenizers/google/count?model=${getTokenizerModel()}`;
+    } else {
+        tokenizerEndpoint = `/api/tokenizers/openai/count?model=${getTokenizerModel()}`;
+    }
     const cacheObject = getTokenCacheObject();
 
     if (!Array.isArray(messages)) {
@@ -399,7 +417,7 @@ export function countTokensOpenAI(messages, full = false) {
     for (const message of messages) {
         const model = getTokenizerModel();
 
-        if (model === 'claude' || shouldTokenizeAI21) {
+        if (model === 'claude' || shouldTokenizeAI21 || shouldTokenizeGoogle) {
             full = true;
         }
 
@@ -415,7 +433,7 @@ export function countTokensOpenAI(messages, full = false) {
             jQuery.ajax({
                 async: false,
                 type: 'POST', //
-                url: shouldTokenizeAI21 ? '/api/tokenizers/ai21/count' : `/api/tokenizers/openai/count?model=${model}`,
+                url: tokenizerEndpoint,
                 data: JSON.stringify([message]),
                 dataType: 'json',
                 contentType: 'application/json',
@@ -618,6 +636,32 @@ function getTextTokensFromTextgenAPI(str) {
 }
 
 /**
+ * Calls the AI provider's tokenize API to encode a string to tokens.
+ * @param {string} str String to tokenize.
+ * @returns {number[]} Array of token ids.
+ */
+function getTextTokensFromKoboldAPI(str) {
+    let ids = [];
+
+    jQuery.ajax({
+        async: false,
+        type: 'POST',
+        url: TOKENIZER_URLS[tokenizers.API_KOBOLD].encode,
+        data: JSON.stringify({
+            text: str,
+            url: api_server,
+        }),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            ids = data.ids;
+        },
+    });
+
+    return ids;
+}
+
+/**
  * Calls the underlying tokenizer model to decode token ids to text.
  * @param {string} endpoint API endpoint.
  * @param {number[]} ids Array of token ids
@@ -650,6 +694,8 @@ export function getTextTokens(tokenizerType, str) {
             return getTextTokens(currentRemoteTokenizerAPI(), str);
         case tokenizers.API_TEXTGENERATIONWEBUI:
             return getTextTokensFromTextgenAPI(str);
+        case tokenizers.API_KOBOLD:
+            return getTextTokensFromKoboldAPI(str);
         default: {
             const tokenizerEndpoints = TOKENIZER_URLS[tokenizerType];
             if (!tokenizerEndpoints) {

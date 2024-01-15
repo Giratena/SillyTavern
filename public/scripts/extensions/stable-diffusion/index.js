@@ -16,6 +16,7 @@ import {
     user_avatar,
     getCharacterAvatar,
     formatCharacterAvatar,
+    substituteParams,
 } from '../../../script.js';
 import { getApiUrl, getContext, extension_settings, doExtrasFetch, modules, renderExtensionTemplate } from '../../extensions.js';
 import { selected_group } from '../../group-chats.js';
@@ -24,6 +25,7 @@ import { getMessageTimeStamp, humanizedDateTime } from '../../RossAscends-mods.j
 import { SECRET_KEYS, secret_state } from '../../secrets.js';
 import { getNovelUnlimitedImageGeneration, getNovelAnlas, loadNovelSubscriptionData } from '../../nai-settings.js';
 import { getMultimodalCaption } from '../shared.js';
+import { registerSlashCommand } from '../../slash-commands.js';
 export { MODULE_NAME };
 
 // Wraps a string into monospace font-face span
@@ -829,6 +831,16 @@ function onComfyUrlInput() {
 function onComfyWorkflowChange() {
     extension_settings.sd.comfy_workflow = $('#sd_comfy_workflow').find(':selected').val();
     saveSettingsDebounced();
+}
+async function changeComfyWorkflow(_, name) {
+    name = name.replace(/(\.json)?$/i, '.json');
+    if ($(`#sd_comfy_workflow > [value="${name}"]`).length > 0) {
+        extension_settings.sd.comfy_workflow = name;
+        $('#sd_comfy_workflow').val(extension_settings.sd.comfy_workflow);
+        saveSettingsDebounced();
+    } else {
+        toastr.error(`ComfyUI Workflow "${name}" does not exist.`);
+    }
 }
 
 async function validateAutoUrl() {
@@ -1711,7 +1723,7 @@ async function getPrompt(generationType, message, trigger, quietPrompt) {
             prompt = message || getRawLastMessage();
             break;
         case generationMode.FREE:
-            prompt = trigger.trim();
+            prompt = generateFreeModePrompt(trigger.trim());
             break;
         case generationMode.FACE_MULTIMODAL:
         case generationMode.CHARACTER_MULTIMODAL:
@@ -1728,6 +1740,36 @@ async function getPrompt(generationType, message, trigger, quietPrompt) {
     }
 
     return prompt;
+}
+
+/**
+ * Generates a free prompt with a character-specific prompt prefix support.
+ * @param {string} trigger - The prompt to use for the image generation.
+ * @returns {string}
+ */
+function generateFreeModePrompt(trigger) {
+    return trigger
+        .replace(/(?:^char(\s|,)|\{\{charPrefix\}\})/gi, (_, suffix) => {
+            const getLastCharacterKey = () => {
+                if (typeof this_chid !== 'undefined') {
+                    return getCharaFilename(this_chid);
+                }
+                const context = getContext();
+                for (let i = context.chat.length - 1; i >= 0; i--) {
+                    const message = context.chat[i];
+                    if (message.is_user || message.is_system) {
+                        continue;
+                    } else if (typeof message.original_avatar === 'string') {
+                        return message.original_avatar.replace(/\.[^/.]+$/, '');
+                    }
+                }
+                throw new Error('No usable messages found.');
+            };
+
+            const key = getLastCharacterKey();
+            const value = (extension_settings.sd.character_prompts[key] || '').trim();
+            return value ? value + (suffix || '') : '';
+        });
 }
 
 /**
@@ -1756,22 +1798,28 @@ async function generateMultimodalPrompt(generationType, quietPrompt) {
         }
     }
 
-    const response = await fetch(avatarUrl);
+    try {
+        const response = await fetch(avatarUrl);
 
-    if (!response.ok) {
-        throw new Error('Could not fetch avatar image.');
-    }
+        if (!response.ok) {
+            throw new Error('Could not fetch avatar image.');
+        }
 
-    const avatarBlob = await response.blob();
-    const avatarBase64 = await getBase64Async(avatarBlob);
+        const avatarBlob = await response.blob();
+        const avatarBase64 = await getBase64Async(avatarBlob);
 
-    const caption = await getMultimodalCaption(avatarBase64, quietPrompt);
+        const caption = await getMultimodalCaption(avatarBase64, quietPrompt);
 
-    if (!caption) {
+        if (!caption) {
+            throw new Error('No caption returned from the API.');
+        }
+
+        return caption;
+    } catch (error) {
+        console.error(error);
+        toastr.error('Multimodal captioning failed. Please try again.', 'Image Generation');
         throw new Error('Multimodal captioning failed.');
     }
-
-    return caption;
 }
 
 /**
@@ -2144,6 +2192,9 @@ async function generateComfyImage(prompt) {
     placeholders.forEach(ph => {
         workflow = workflow.replace(`"%${ph}%"`, JSON.stringify(extension_settings.sd[ph]));
     });
+    (extension_settings.sd.comfy_placeholders ?? []).forEach(ph => {
+        workflow = workflow.replace(`"%${ph.find}%"`, JSON.stringify(substituteParams(ph.replace)));
+    });
     console.log(`{
         "prompt": ${workflow}
     }`);
@@ -2180,6 +2231,50 @@ async function onComfyOpenWorkflowEditorClick() {
     };
     $('#sd_comfy_workflow_editor_name').text(extension_settings.sd.comfy_workflow);
     $('#sd_comfy_workflow_editor_workflow').val(workflow);
+    const addPlaceholderDom = (placeholder) => {
+        const el = $(`
+            <li class="sd_comfy_workflow_editor_not_found" data-placeholder="${placeholder.find}">
+                <span class="sd_comfy_workflow_editor_custom_remove" title="Remove custom placeholder">⊘</span>
+                <span class="sd_comfy_workflow_editor_custom_final">"%${placeholder.find}%"</span><br>
+                <input placeholder="find" title="find" type="text" class="text_pole sd_comfy_workflow_editor_custom_find" value=""><br>
+                <input placeholder="replace" title="replace" type="text" class="text_pole sd_comfy_workflow_editor_custom_replace">
+            </li>
+        `);
+        $('#sd_comfy_workflow_editor_placeholder_list_custom').append(el);
+        el.find('.sd_comfy_workflow_editor_custom_find').val(placeholder.find);
+        el.find('.sd_comfy_workflow_editor_custom_find').on('input', function() {
+            placeholder.find = this.value;
+            el.find('.sd_comfy_workflow_editor_custom_final').text(`"%${this.value}%"`);
+            el.attr('data-placeholder', `${this.value}`);
+            checkPlaceholders();
+            saveSettingsDebounced();
+        });
+        el.find('.sd_comfy_workflow_editor_custom_replace').val(placeholder.replace);
+        el.find('.sd_comfy_workflow_editor_custom_replace').on('input', function() {
+            placeholder.replace = this.value;
+            saveSettingsDebounced();
+        });
+        el.find('.sd_comfy_workflow_editor_custom_remove').on('click', () => {
+            el.remove();
+            extension_settings.sd.comfy_placeholders.splice(extension_settings.sd.comfy_placeholders.indexOf(placeholder));
+            saveSettingsDebounced();
+        });
+    };
+    $('#sd_comfy_workflow_editor_placeholder_add').on('click', () => {
+        if (!extension_settings.sd.comfy_placeholders) {
+            extension_settings.sd.comfy_placeholders = [];
+        }
+        const placeholder = {
+            find: '',
+            replace: '',
+        };
+        extension_settings.sd.comfy_placeholders.push(placeholder);
+        addPlaceholderDom(placeholder);
+        saveSettingsDebounced();
+    });
+    (extension_settings.sd.comfy_placeholders ?? []).forEach(placeholder=>{
+        addPlaceholderDom(placeholder);
+    });
     checkPlaceholders();
     $('#sd_comfy_workflow_editor_workflow').on('input', checkPlaceholders);
     if (await popupResult) {
@@ -2445,7 +2540,8 @@ $('#sd_dropdown [id]').on('click', function () {
 });
 
 jQuery(async () => {
-    getContext().registerSlashCommand('imagine', generatePicture, ['sd', 'img', 'image'], helpString, true, true);
+    registerSlashCommand('imagine', generatePicture, ['sd', 'img', 'image'], helpString, true, true);
+    registerSlashCommand('imagine-comfy-workflow', changeComfyWorkflow, ['icw'], '(workflowName) - change the workflow to be used for image generation with ComfyUI, e.g. <tt>/imagine-comfy-workflow MyWorkflow</tt>')
 
     $('#extensions_settings').append(renderExtensionTemplate('stable-diffusion', 'settings', defaultSettings));
     $('#sd_source').on('change', onSourceChange);

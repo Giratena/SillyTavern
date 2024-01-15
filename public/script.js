@@ -143,6 +143,7 @@ import {
     onlyUnique,
     getBase64Async,
     humanFileSize,
+    Stopwatch,
 } from './scripts/utils.js';
 
 import { ModuleWorkerWrapper, doDailyExtensionUpdatesCheck, extension_settings, getContext, loadExtensionSettings, processExtensionHelpers, registerExtensionHelper, renderExtensionTemplate, runGenerationInterceptors, saveMetadataDebounced } from './scripts/extensions.js';
@@ -168,7 +169,6 @@ import {
 import { EventEmitter } from './lib/eventemitter.js';
 import { markdownExclusionExt } from './scripts/showdown-exclusion.js';
 import { NOTE_MODULE_NAME, initAuthorsNote, metadata_keys, setFloatingPrompt, shouldWIAddPrompt } from './scripts/authors-note.js';
-import { getDeviceInfo } from './scripts/RossAscends-mods.js';
 import { registerPromptManagerMigration } from './scripts/PromptManager.js';
 import { getRegexedString, regex_placement } from './scripts/extensions/regex/engine.js';
 import { FILTER_TYPES, FilterHelper } from './scripts/filters.js';
@@ -186,12 +186,13 @@ import {
 import { applyLocale, initLocales } from './scripts/i18n.js';
 import { getFriendlyTokenizerName, getTokenCount, getTokenizerModel, initTokenizers, saveTokenCache } from './scripts/tokenizers.js';
 import { createPersona, initPersonas, selectCurrentPersona, setPersonaDescription } from './scripts/personas.js';
-import { getBackgrounds, initBackgrounds } from './scripts/backgrounds.js';
+import { getBackgrounds, initBackgrounds, loadBackgroundSettings, background_settings } from './scripts/backgrounds.js';
 import { hideLoader, showLoader } from './scripts/loader.js';
 import { BulkEditOverlay, CharacterContextMenu } from './scripts/BulkEditOverlay.js';
 import { loadMancerModels } from './scripts/mancer-settings.js';
-import { getFileAttachment, hasPendingFileAttachment, populateFileAttachment } from './scripts/chats.js';
+import { appendFileContent, hasPendingFileAttachment, populateFileAttachment } from './scripts/chats.js';
 import { replaceVariableMacros } from './scripts/variables.js';
+import { initPresetManager } from './scripts/preset-manager.js';
 
 //exporting functions and vars for mods
 export {
@@ -264,8 +265,9 @@ export {
     countOccurrences,
 };
 
-// Cohee: Uncomment when we decide to use loader
 showLoader();
+// Yoink preloader entirely; it only exists to cover up unstyled content while loading JS
+document.getElementById('preloader').remove();
 
 // Allow target="_blank" in links
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
@@ -289,6 +291,7 @@ export const event_types = {
     MESSAGE_DELETED: 'message_deleted',
     IMPERSONATE_READY: 'impersonate_ready',
     CHAT_CHANGED: 'chat_id_changed',
+    GENERATION_STARTED: 'generation_started',
     GENERATION_STOPPED: 'generation_stopped',
     EXTENSIONS_FIRST_LOAD: 'extensions_first_load',
     SETTINGS_LOADED: 'settings_loaded',
@@ -738,6 +741,7 @@ async function firstLoadInit() {
     await getCharacters();
     await getBackgrounds();
     await initTokenizers();
+    await initPresetManager();
     initBackgrounds();
     initAuthorsNote();
     initPersonas();
@@ -888,7 +892,7 @@ async function getStatusKobold() {
     }
 
     try {
-        const response = await fetch('/getstatus', {
+        const response = await fetch('/api/backends/kobold/status', {
             method: 'POST',
             headers: getRequestHeaders(),
             body: JSON.stringify({
@@ -925,7 +929,7 @@ async function getStatusKobold() {
 }
 
 async function getStatusTextgen() {
-    const url = '/api/textgenerationwebui/status';
+    const url = '/api/backends/text-completions/status';
 
     let endpoint = textgen_settings.type === MANCER ?
         MANCER_SERVER :
@@ -2018,6 +2022,20 @@ function getLastMessageId() {
 }
 
 /**
+ * Returns the ID of the first message included in the context.
+ * @returns {string} The ID of the first message in the context.
+ */
+function getFirstIncludedMessageId() {
+    const index = document.querySelector('.lastInContext')?.getAttribute('mesid');
+
+    if (!isNaN(index) && index >= 0) {
+        return String(index);
+    }
+
+    return '';
+}
+
+/**
  * Returns the last message in the chat.
  * @returns {string} The last message in the chat.
  */
@@ -2119,6 +2137,7 @@ function substituteParams(content, _name1, _name2, _original, _group, _replaceCh
     content = content.replace(/{{group}}/gi, _group);
     content = content.replace(/{{lastMessage}}/gi, getLastMessage());
     content = content.replace(/{{lastMessageId}}/gi, getLastMessageId());
+    content = content.replace(/{{firstIncludedMessageId}}/gi, getFirstIncludedMessageId());
     content = content.replace(/{{lastSwipeId}}/gi, getLastSwipeId());
     content = content.replace(/{{currentSwipeId}}/gi, getCurrentSwipeId());
 
@@ -2539,8 +2558,8 @@ function getCharacterCardFields() {
 }
 
 function isStreamingEnabled() {
-    const noStreamSources = [chat_completion_sources.SCALE, chat_completion_sources.AI21, chat_completion_sources.PALM];
-    return ((main_api == 'openai' && oai_settings.stream_openai && !noStreamSources.includes(oai_settings.chat_completion_source))
+    const noStreamSources = [chat_completion_sources.SCALE, chat_completion_sources.AI21];
+    return ((main_api == 'openai' && oai_settings.stream_openai && !noStreamSources.includes(oai_settings.chat_completion_source) && !(oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE && oai_settings.google_model.includes('bison')))
         || (main_api == 'kobold' && kai_settings.streaming_kobold && kai_flags.can_use_streaming)
         || (main_api == 'novel' && nai_settings.streaming_novel)
         || (main_api == 'textgenerationwebui' && textgen_settings.streaming));
@@ -2611,12 +2630,12 @@ class StreamingProcessor {
 
         if (!isImpersonate && !isContinue && Array.isArray(this.swipes) && this.swipes.length > 0) {
             for (let i = 0; i < this.swipes.length; i++) {
-                this.swipes[i] = cleanUpMessage(this.removePrefix(this.swipes[i]), false, false, true);
+                this.swipes[i] = cleanUpMessage(this.removePrefix(this.swipes[i]), false, false, true, this.stoppingStrings);
             }
         }
 
         text = this.removePrefix(text);
-        let processedText = cleanUpMessage(text, isImpersonate, isContinue, !isFinal);
+        let processedText = cleanUpMessage(text, isImpersonate, isContinue, !isFinal, this.stoppingStrings);
 
         // Predict unbalanced asterisks / quotes during streaming
         const charsToBalance = ['*', '"', '```'];
@@ -2787,8 +2806,17 @@ class StreamingProcessor {
             scrollLock = false;
         }
 
+        // Stopping strings are expensive to calculate, especially with macros enabled. To remove stopping strings
+        // when streaming, we cache the result of getStoppingStrings instead of calling it once per token.
+        const isImpersonate = this.type == 'impersonate';
+        const isContinue = this.type == 'continue';
+        this.stoppingStrings = getStoppingStrings(isImpersonate, isContinue);
+
         try {
+            const sw = new Stopwatch(1000 / power_user.streaming_fps);
+            const timestamps = [];
             for await (const { text, swipes } of this.generator()) {
+                timestamps.push(Date.now());
                 if (this.isStopped) {
                     this.onStopStreaming();
                     return;
@@ -2796,8 +2824,10 @@ class StreamingProcessor {
 
                 this.result = text;
                 this.swipes = swipes;
-                this.onProgressStreaming(this.messageId, message_already_generated + text);
+                await sw.tick(() => this.onProgressStreaming(this.messageId, message_already_generated + text));
             }
+            const seconds = (timestamps[timestamps.length - 1] - timestamps[0]) / 1000;
+            console.warn(`Stream stats: ${timestamps.length} tokens, ${seconds.toFixed(2)} seconds, rate: ${Number(timestamps.length / seconds).toFixed(2)} TPS`);
         }
         catch (err) {
             console.error(err);
@@ -2896,6 +2926,7 @@ export async function generateRaw(prompt, api, instructOverride) {
 // Returns a promise that resolves when the text is done generating.
 async function Generate(type, { automatic_trigger, force_name2, quiet_prompt, quietToLoud, skipWIAN, force_chid, signal, quietImage, maxLoops } = {}, dryRun = false) {
     console.log('Generate entered');
+    eventSource.emit(event_types.GENERATION_STARTED, type, { automatic_trigger, force_name2, quiet_prompt, quietToLoud, skipWIAN, force_chid, signal, quietImage, maxLoops }, dryRun);
     setGenerationProgress(0);
     generation_started = new Date();
 
@@ -3098,26 +3129,18 @@ async function Generate(type, { automatic_trigger, force_name2, quiet_prompt, qu
             coreChat.pop();
         }
 
-        coreChat = await Promise.all(coreChat.map(async (chatItem) => {
+        coreChat = await Promise.all(coreChat.map(async (chatItem, index) => {
             let message = chatItem.mes;
             let regexType = chatItem.is_user ? regex_placement.USER_INPUT : regex_placement.AI_OUTPUT;
             let options = { isPrompt: true };
 
             let regexedMessage = getRegexedString(message, regexType, options);
-
-            if (chatItem.extra?.file) {
-                const fileText = chatItem.extra.file.text || (await getFileAttachment(chatItem.extra.file.url));
-
-                if (fileText) {
-                    const fileWrapped = `\`\`\`\n${fileText}\n\`\`\`\n\n`;
-                    chatItem.extra.fileLength = fileWrapped.length;
-                    regexedMessage = fileWrapped + regexedMessage;
-                }
-            }
+            regexedMessage = await appendFileContent(chatItem, regexedMessage);
 
             return {
                 ...chatItem,
                 mes: regexedMessage,
+                index,
             };
         }));
 
@@ -4411,9 +4434,9 @@ function setInContextMessages(lastmsg, type) {
 function getGenerateUrl(api) {
     let generate_url = '';
     if (api == 'kobold') {
-        generate_url = '/generate';
+        generate_url = '/api/backends/kobold/generate';
     } else if (api == 'textgenerationwebui') {
-        generate_url = '/api/textgenerationwebui/generate';
+        generate_url = '/api/backends/text-completions/generate';
     } else if (api == 'novel') {
         generate_url = '/api/novelai/generate';
     }
@@ -4480,7 +4503,7 @@ function extractMultiSwipes(data, type) {
     return swipes;
 }
 
-function cleanUpMessage(getMessage, isImpersonate, isContinue, displayIncompleteSentences = false) {
+function cleanUpMessage(getMessage, isImpersonate, isContinue, displayIncompleteSentences = false, stoppingStrings = null) {
     if (!getMessage) {
         return '';
     }
@@ -4495,7 +4518,11 @@ function cleanUpMessage(getMessage, isImpersonate, isContinue, displayIncomplete
         getMessage = substituteParams(power_user.user_prompt_bias) + getMessage;
     }
 
-    const stoppingStrings = getStoppingStrings(isImpersonate, isContinue);
+    // Allow for caching of stopping strings. getStoppingStrings is an expensive function, especially with macros
+    // enabled, so for streaming, we call it once and then pass it into each cleanUpMessage call.
+    if (!stoppingStrings) {
+        stoppingStrings = getStoppingStrings(isImpersonate, isContinue);
+    }
 
     for (const stoppingString of stoppingStrings) {
         if (stoppingString.length) {
@@ -5370,7 +5397,8 @@ function changeMainAPI() {
         case chat_completion_sources.CLAUDE:
         case chat_completion_sources.OPENAI:
         case chat_completion_sources.AI21:
-        case chat_completion_sources.PALM:
+        case chat_completion_sources.MAKERSUITE:
+        case chat_completion_sources.MISTRALAI:
         default:
             setupChatCompletionPromptManager(oai_settings);
             break;
@@ -5541,7 +5569,7 @@ async function doOnboarding(avatarId) {
 //***************SETTINGS****************//
 ///////////////////////////////////////////
 async function getSettings() {
-    const response = await fetch('/getsettings', {
+    const response = await fetch('/api/settings/get', {
         method: 'POST',
         headers: getRequestHeaders(),
         body: JSON.stringify({}),
@@ -5648,6 +5676,9 @@ async function getSettings() {
         // Load character tags
         loadTagsSettings(settings);
 
+        // Load background
+        loadBackgroundSettings(settings);
+
         // Allow subscribers to mutate settings
         eventSource.emit(event_types.SETTINGS_LOADED_AFTER, settings);
 
@@ -5730,11 +5761,14 @@ async function saveSettings(type) {
         console.warn('Settings not ready, aborting save');
         return;
     }
+
+    console.log(background_settings);
+
     //console.log('Entering settings with name1 = '+name1);
 
     return jQuery.ajax({
         type: 'POST',
-        url: '/savesettings',
+        url: '/api/settings/save',
         data: JSON.stringify({
             firstRun: firstRun,
             currentVersion: currentVersion,
@@ -5759,6 +5793,7 @@ async function saveSettings(type) {
             nai_settings: nai_settings,
             kai_settings: kai_settings,
             oai_settings: oai_settings,
+            background: background_settings,
         }, null, 4),
         beforeSend: function () { },
         cache: false,
@@ -6809,8 +6844,7 @@ function openCharacterWorldPopup() {
     template.find('.character_name').text(name);
 
     // Not needed on mobile
-    const deviceInfo = getDeviceInfo();
-    if (deviceInfo && deviceInfo.device.type === 'desktop') {
+    if (!isMobile()) {
         $(extraSelect).select2({
             width: '100%',
             placeholder: 'No auxillary Lorebooks set. Click here to select.',
@@ -7439,7 +7473,10 @@ const swipe_right = () => {
     }
 };
 
-function connectAPISlash(_, text) {
+/**
+ * @param {string} text API name
+ */
+async function connectAPISlash(_, text) {
     if (!text) return;
 
     const apiMap = {
@@ -7453,7 +7490,29 @@ function connectAPISlash(_, text) {
             button: '#api_button_novel',
         },
         'ooba': {
+            selected: 'textgenerationwebui',
             button: '#api_button_textgenerationwebui',
+            type: textgen_types.OOBA,
+        },
+        'tabby': {
+            selected: 'textgenerationwebui',
+            button: '#api_button_textgenerationwebui',
+            type: textgen_types.TABBY,
+        },
+        'mancer': {
+            selected: 'textgenerationwebui',
+            button: '#api_button_textgenerationwebui',
+            type: textgen_types.MANCER,
+        },
+        'aphrodite': {
+            selected: 'textgenerationwebui',
+            button: '#api_button_textgenerationwebui',
+            type: textgen_types.APHRODITE,
+        },
+        'kcpp': {
+            selected: 'textgenerationwebui',
+            button: '#api_button_textgenerationwebui',
+            type: textgen_types.KOBOLDCPP,
         },
         'oai': {
             selected: 'openai',
@@ -7485,14 +7544,19 @@ function connectAPISlash(_, text) {
             source: 'ai21',
             button: '#api_button_openai',
         },
-        'palm': {
+        'makersuite': {
             selected: 'openai',
-            source: 'palm',
+            source: 'makersuite',
+            button: '#api_button_openai',
+        },
+        'mistralai': {
+            selected: 'openai',
+            source: 'mistralai',
             button: '#api_button_openai',
         },
     };
 
-    const apiConfig = apiMap[text];
+    const apiConfig = apiMap[text.toLowerCase()];
     if (!apiConfig) {
         toastr.error(`Error: ${text} is not a valid API`);
         return;
@@ -7506,11 +7570,23 @@ function connectAPISlash(_, text) {
         $('#chat_completion_source').trigger('change');
     }
 
+    if (apiConfig.type) {
+        $(`#textgen_type option[value='${apiConfig.type}']`).prop('selected', true);
+        $('#textgen_type').trigger('change');
+    }
+
     if (apiConfig.button) {
         $(apiConfig.button).trigger('click');
     }
 
     toastr.info(`API set to ${text}, trying to connect..`);
+
+    try {
+        await waitUntilCondition(() => online_status !== 'no_connection', 5000, 100);
+        console.log('Connection successful');
+    } catch {
+        console.log('Could not connect after 5 seconds, skipping.');
+    }
 }
 
 export async function processDroppedFiles(files) {
@@ -7750,7 +7826,7 @@ function addDebugFunctions() {
 
 jQuery(async function () {
 
-    if (isMobile() === true) {
+    if (isMobile()) {
         console.debug('hiding movingUI and sheldWidth toggles for mobile');
         $('#sheldWidthToggleBlock').hide();
         $('#movingUIModeCheckBlock').hide();
@@ -7764,7 +7840,7 @@ jQuery(async function () {
     }
 
     registerSlashCommand('dupe', DupeChar, [], '– duplicates the currently selected character', true, true);
-    registerSlashCommand('api', connectAPISlash, [], '<span class="monospace">(kobold, horde, novel, ooba, oai, claude, windowai, openrouter, scale, ai21, palm)</span> – connect to an API', true, true);
+    registerSlashCommand('api', connectAPISlash, [], '<span class="monospace">(kobold, horde, novel, ooba, tabby, mancer, aphrodite, kcpp, oai, claude, windowai, openrouter, scale, ai21, makersuite, mistralai)</span> – connect to an API', true, true);
     registerSlashCommand('impersonate', doImpersonate, ['imp'], '– calls an impersonation response', true, true);
     registerSlashCommand('delchat', doDeleteChat, [], '– deletes the current chat', true, true);
     registerSlashCommand('closechat', doCloseChat, [], '– closes the current chat', true, true);
