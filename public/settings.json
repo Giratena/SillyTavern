@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.11.1",
     "username": "Gira",
-    "active_character": "Gina_1.png",
+    "active_character": "Alternate reality Hypno Vixens.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "api_server_textgenerationwebui": "http://127.0.0.1:5000/api",
@@ -14,7 +14,8 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Uses other characters",
+                "Hypno Vixen Reality",
+                "Special Actions",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
             "charLore": [
@@ -148,7 +149,7 @@
         "fast_ui_mode": true,
         "avatar_style": 0,
         "chat_display": 0,
-        "chat_width": 100,
+        "chat_width": 65,
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -237,16 +238,21 @@
             "use_stop_strings": false
         },
         "personas": {
-            "user-default.png": "Gira"
+            "1690874889727.png": "Gira",
+            "1708055439414.png": "Mira"
         },
-        "default_persona": null,
+        "default_persona": "1690874889727.png",
         "persona_descriptions": {
-            "user-default.png": {
-                "description": "",
+            "1690874889727.png": {
+                "description": "[Gira is a 25 year old male]",
+                "position": 0
+            },
+            "1708055439414.png": {
+                "description": "[Mira is an 25 year old magical girl]",
                 "position": 0
             }
         },
-        "persona_description": "",
+        "persona_description": "[Gira is a 25 year old male]",
         "persona_description_position": 0,
         "persona_show_notifications": true,
         "custom_stopping_strings": "",
@@ -492,13 +498,13 @@
                     "enabled": true
                 },
                 {
-                    "mes": "[The last prompt was very good. Please do more of it in future.]",
-                    "label": "Promote",
+                    "mes": "[{{user}} knows deep down {{char}} is right but is too embarassed to admit it as their hips roll lewdly as if desiring what {{char}} descibes, encouraging {{char}} to act lewder]",
+                    "label": "Wait",
                     "enabled": true
                 },
                 {
-                    "mes": "[Without replying as {{char}},Narrate {{user}}s experience in second person. You may reply as other characters who are not {{char}}.]",
-                    "label": "World building",
+                    "mes": "[{{user}} tries their best to act, but they have also been sexually brainwash and their brain can't think about anything other than pleausre, which causes their words and actions to appear more- more submissive, slurred, moany, sexual, obedient, and evil... describe in great sexual detail about {{user}}'s actions and act as lewdly as possible allowing {{user}} to have their cock stroked and pleasured by butts, hands, feet, breasts, or mouth.]",
+                    "label": "In trance",
                     "enabled": true
                 }
             ],
@@ -632,7 +638,9 @@
         "Harley Quinn.png": [],
         "Mind controlled Superheroines.png": [],
         "Starfire.png": [],
-        "MISA.png": []
+        "MISA.png": [],
+        "The latex factory.png": [],
+        "Alternate reality Hypno Vixens.png": []
     },
     "nai_settings": {
         "temperature": 0.63,
@@ -700,7 +708,7 @@
         "top_p_openai": 1,
         "top_k_openai": 0,
         "stream_openai": true,
-        "openai_max_context": 8191,
+        "openai_max_context": 5281,
         "openai_max_tokens": 600,
         "wrap_in_quotes": false,
         "names_in_completion": false,
@@ -1678,11 +1686,11 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "worldInfoBefore",
-                        "enabled": true
+                        "identifier": "personaDescription",
+                        "enabled": false
                     },
                     {
-                        "identifier": "personaDescription",
+                        "identifier": "worldInfoBefore",
                         "enabled": true
                     },
                     {
@@ -1702,10 +1710,6 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "worldInfoAfter",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "jailbreak",
                         "enabled": true
                     },
@@ -1715,6 +1719,10 @@
                     },
                     {
                         "identifier": "charDescription",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "worldInfoAfter",
                         "enabled": true
                     },
                     {
@@ -1758,7 +1766,7 @@
         "group_nudge_prompt": "[Write the next reply only as {{char}}.]",
         "scenario_format": "[Circumstances and context of the dialogue: {{scenario}}]",
         "personality_format": "[{{char}}'s personality: {{personality}}]",
-        "openai_model": "gpt-4",
+        "openai_model": "gpt-4-0613",
         "claude_model": "claude-instant-v1",
         "google_model": "gemini-pro",
         "ai21_model": "j2-ultra",

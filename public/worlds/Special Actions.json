@@ -54,6 +54,7 @@
             "key": [
                 "hypnosis",
                 "hypno",
+                "spiral",
                 "hypnotic",
                 "hypnotized",
                 "hypnotizing",
@@ -80,6 +81,76 @@
             "displayIndex": 2,
             "depth": 4,
             "group": ""
+        },
+        "3": {
+            "uid": 3,
+            "key": [
+                "stare",
+                "staring",
+                "listen",
+                "look",
+                "watch"
+            ],
+            "keysecondary": [],
+            "comment": "Stare",
+            "content": "[Describe a detailed description of what {{user}} is currently looking at noting outfits, actions, etc. Describe things as lewdly as possible.]",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 200,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "displayIndex": 3
+        },
+        "4": {
+            "uid": 4,
+            "key": [
+                "video"
+            ],
+            "keysecondary": [],
+            "comment": "video",
+            "content": "[Describe the content of the video in detail, noting actions, and the words of the person speaking in the video. The video is femdom in nature and strangely feels targeted towards exploiting {{user}}'s fetishes and weaknesses]",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 120,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "displayIndex": 4
+        },
+        "5": {
+            "uid": 5,
+            "key": [
+                "music"
+            ],
+            "keysecondary": [],
+            "comment": "music",
+            "content": "[The music is evil and seductive and femdommy. Describe as the sexually explicit lyrics of the song, using as much hypnotic language as possible.]",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 121,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "displayIndex": 5
         }
     }
 }

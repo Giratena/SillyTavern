@@ -22,13 +22,13 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 100,
-            "position": 0,
+            "position": 1,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
             "displayIndex": 0,
-            "depth": 4,
+            "depth": 1,
             "group": ""
         },
         "1": {
@@ -110,7 +110,7 @@
             "key": [
                 "handjob",
                 "stroking",
-                "hands"
+                "massage"
             ],
             "keysecondary": [],
             "comment": "hand",
@@ -194,8 +194,10 @@
                 "know...",
                 "what makes you think that",
                 "not really",
+                "s-stop",
                 "no...",
-                "you can't"
+                "you can't",
+                "stop"
             ],
             "keysecondary": [],
             "comment": "I can't",
@@ -205,7 +207,7 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 100,
-            "position": 1,
+            "position": 0,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
@@ -255,7 +257,7 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 100,
-            "position": 0,
+            "position": 1,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
@@ -333,6 +335,34 @@
             "depth": 4,
             "group": "",
             "displayIndex": 12
+        },
+        "13": {
+            "uid": 13,
+            "key": [
+                "Cock",
+                "erection",
+                "bulge",
+                "dick",
+                "pleasure",
+                "cocks",
+                "penis"
+            ],
+            "keysecondary": [],
+            "comment": "Cock",
+            "content": "[{{char}} cannot help but pleasure {{user}}'s cock with her body. {{char}} cannot resist pleasuring cock. The more {{user}} resists, the more aggressive {{char}}'s actions become. Write in an omminous manner as if something isn't right.]",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 3,
+            "group": "",
+            "displayIndex": 13
         }
     }
 }
