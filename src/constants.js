@@ -1,5 +1,6 @@
 const DIRECTORIES = {
     worlds: 'public/worlds/',
+    user: 'public/user',
     avatars: 'public/User Avatars',
     images: 'public/img/',
     userImages: 'public/user/images/',
@@ -160,6 +161,7 @@ const CHAT_COMPLETION_SOURCES = {
     AI21: 'ai21',
     MAKERSUITE: 'makersuite',
     MISTRALAI: 'mistralai',
+    CUSTOM: 'custom',
 };
 
 const UPLOADS_PATH = './uploads';
@@ -171,10 +173,82 @@ const TEXTGEN_TYPES = {
     APHRODITE: 'aphrodite',
     TABBY: 'tabby',
     KOBOLDCPP: 'koboldcpp',
+    TOGETHERAI: 'togetherai',
+    LLAMACPP: 'llamacpp',
+    OLLAMA: 'ollama',
+    INFERMATICAI: 'infermaticai',
+    OPENROUTER: 'openrouter',
 };
+
+const INFERMATICAI_KEYS = [
+    'model',
+    'prompt',
+    'max_tokens',
+    'temperature',
+    'top_p',
+    'top_k',
+    'repetition_penalty',
+    'stream',
+    'stop',
+];
+
+// https://docs.together.ai/reference/completions
+const TOGETHERAI_KEYS = [
+    'model',
+    'prompt',
+    'max_tokens',
+    'temperature',
+    'top_p',
+    'top_k',
+    'repetition_penalty',
+    'stream',
+    'stop',
+];
+
+// https://github.com/jmorganca/ollama/blob/main/docs/api.md#request-with-options
+const OLLAMA_KEYS = [
+    'num_predict',
+    'stop',
+    'temperature',
+    'repeat_penalty',
+    'presence_penalty',
+    'frequency_penalty',
+    'top_k',
+    'top_p',
+    'tfs_z',
+    'typical_p',
+    'seed',
+    'repeat_last_n',
+    'mirostat',
+    'mirostat_tau',
+    'mirostat_eta',
+];
 
 const AVATAR_WIDTH = 400;
 const AVATAR_HEIGHT = 600;
+
+const OPENROUTER_HEADERS = {
+    'HTTP-Referer': 'https://sillytavern.app',
+    'X-Title': 'SillyTavern',
+};
+
+const OPENROUTER_KEYS = [
+    'max_tokens',
+    'temperature',
+    'top_k',
+    'top_p',
+    'presence_penalty',
+    'frequency_penalty',
+    'repetition_penalty',
+    'min_p',
+    'top_a',
+    'seed',
+    'logit_bias',
+    'model',
+    'stream',
+    'prompt',
+    'stop',
+];
 
 module.exports = {
     DIRECTORIES,
@@ -186,4 +260,9 @@ module.exports = {
     CHAT_COMPLETION_SOURCES,
     AVATAR_WIDTH,
     AVATAR_HEIGHT,
+    TOGETHERAI_KEYS,
+    OLLAMA_KEYS,
+    INFERMATICAI_KEYS,
+    OPENROUTER_HEADERS,
+    OPENROUTER_KEYS,
 };

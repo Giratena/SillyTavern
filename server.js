@@ -294,6 +294,19 @@ app.post('/savequickreply', jsonParser, (request, response) => {
     return response.sendStatus(200);
 });
 
+app.post('/deletequickreply', jsonParser, (request, response) => {
+    if (!request.body || !request.body.name) {
+        return response.sendStatus(400);
+    }
+
+    const filename = path.join(DIRECTORIES.quickreplies, sanitize(request.body.name) + '.json');
+    if (fs.existsSync(filename)) {
+        fs.unlinkSync(filename);
+    }
+
+    return response.sendStatus(200);
+});
+
 
 app.post('/uploaduseravatar', urlencodedParser, async (request, response) => {
     if (!request.file) return response.sendStatus(400);
@@ -580,6 +593,9 @@ app.use('/api/backends/chat-completions', require('./src/endpoints/backends/chat
 // Scale (alt method)
 app.use('/api/backends/scale-alt', require('./src/endpoints/backends/scale-alt').router);
 
+// Speech (text-to-speech and speech-to-text)
+app.use('/api/speech', require('./src/endpoints/speech').router);
+
 const tavernUrl = new URL(
     (cliArguments.ssl ? 'https://' : 'http://') +
     (listen ? '0.0.0.0' : '127.0.0.1') +
@@ -608,8 +624,13 @@ const setupTasks = async function () {
     await loadTokenizers();
     await statsEndpoint.init();
 
-    const exitProcess = () => {
+    const cleanupPlugins = await loadPlugins();
+
+    const exitProcess = async () => {
         statsEndpoint.onExit();
+        if (typeof cleanupPlugins === 'function') {
+            await cleanupPlugins();
+        }
         process.exit();
     };
 
@@ -621,7 +642,6 @@ const setupTasks = async function () {
         exitProcess();
     });
 
-    await loadPlugins();
 
     console.log('Launching...');
 
@@ -634,13 +654,19 @@ const setupTasks = async function () {
     }
 };
 
+/**
+ * Loads server plugins from a directory.
+ * @returns {Promise<Function>} Function to be run on server exit
+ */
 async function loadPlugins() {
     try {
         const pluginDirectory = path.join(serverDirectory, 'plugins');
         const loader = require('./src/plugin-loader');
-        await loader.loadPlugins(app, pluginDirectory);
+        const cleanupPlugins = await loader.loadPlugins(app, pluginDirectory);
+        return cleanupPlugins;
     } catch {
         console.log('Plugin loading failed.');
+        return () => {};
     }
 }
 

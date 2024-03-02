@@ -1,10 +1,8 @@
 import {
-    Generate,
     characters,
     online_status,
     main_api,
     api_server,
-    api_server_textgenerationwebui,
     is_send_press,
     max_context,
     saveSettingsDebounced,
@@ -19,6 +17,7 @@ import {
     menu_type,
     substituteParams,
     callPopup,
+    sendTextareaMessage,
 } from '../script.js';
 
 import {
@@ -35,7 +34,7 @@ import {
 import { debounce, delay, getStringHash, isValidUrl } from './utils.js';
 import { chat_completion_sources, oai_settings } from './openai.js';
 import { getTokenCount } from './tokenizers.js';
-import { textgen_types, textgenerationwebui_settings as textgen_settings } from './textgen-settings.js';
+import { textgen_types, textgenerationwebui_settings as textgen_settings, getTextGenServer } from './textgen-settings.js';
 
 import Bowser from '../lib/bowser.min.js';
 
@@ -48,8 +47,6 @@ var LeftNavPanel = document.getElementById('left-nav-panel');
 var WorldInfo = document.getElementById('WorldInfo');
 
 var SelectedCharacterTab = document.getElementById('rm_button_selected_ch');
-var AutoConnectCheckbox = document.getElementById('auto-connect-checkbox');
-var AutoLoadChatCheckbox = document.getElementById('auto-load-chat-checkbox');
 
 var connection_made = false;
 var retry_delay = 500;
@@ -63,6 +60,16 @@ const observer = new MutationObserver(function (mutations) {
             RA_checkOnlineStatus();
         } else if (mutation.target.parentNode === SelectedCharacterTab) {
             setTimeout(RA_CountCharTokens, 200);
+        } else if (mutation.target.classList.contains('mes_text')) {
+            if (mutation.target instanceof HTMLElement) {
+                for (const element of mutation.target.getElementsByTagName('math')) {
+                    element.childNodes.forEach(function (child) {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            child.textContent = '';
+                        }
+                    });
+                }
+            }
         }
     });
 });
@@ -369,7 +376,7 @@ function RA_autoconnect(PrevApi) {
         setTimeout(RA_autoconnect, 100);
         return;
     }
-    if (online_status === 'no_connection' && LoadLocalBool('AutoConnectEnabled')) {
+    if (online_status === 'no_connection' && power_user.auto_connect) {
         switch (main_api) {
             case 'kobold':
                 if (api_server && isValidUrl(api_server)) {
@@ -382,10 +389,14 @@ function RA_autoconnect(PrevApi) {
                 }
                 break;
             case 'textgenerationwebui':
-                if (textgen_settings.type === textgen_types.MANCER && secret_state[SECRET_KEYS.MANCER]) {
+                if ((textgen_settings.type === textgen_types.MANCER && secret_state[SECRET_KEYS.MANCER])
+                    || (textgen_settings.type === textgen_types.TOGETHERAI && secret_state[SECRET_KEYS.TOGETHERAI])
+                    || (textgen_settings.type === textgen_types.INFERMATICAI && secret_state[SECRET_KEYS.INFERMATICAI]
+                    || (textgen_settings.type === textgen_types.OPENROUTER && secret_state[SECRET_KEYS.OPENROUTER]))
+                ) {
                     $('#api_button_textgenerationwebui').trigger('click');
                 }
-                else if (api_server_textgenerationwebui && isValidUrl(api_server_textgenerationwebui)) {
+                else if (isValidUrl(getTextGenServer())) {
                     $('#api_button_textgenerationwebui').trigger('click');
                 }
                 break;
@@ -398,6 +409,7 @@ function RA_autoconnect(PrevApi) {
                     || (secret_state[SECRET_KEYS.AI21] && oai_settings.chat_completion_source == chat_completion_sources.AI21)
                     || (secret_state[SECRET_KEYS.MAKERSUITE] && oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE)
                     || (secret_state[SECRET_KEYS.MISTRALAI] && oai_settings.chat_completion_source == chat_completion_sources.MISTRALAI)
+                    || (isValidUrl(oai_settings.custom_url) && oai_settings.chat_completion_source == chat_completion_sources.CUSTOM)
                 ) {
                     $('#api_button_openai').trigger('click');
                 }
@@ -717,21 +729,19 @@ export function initRossMods() {
         RA_checkOnlineStatus();
     }, 100);
 
-    // read the state of AutoConnect and AutoLoadChat.
-    $(AutoConnectCheckbox).prop('checked', LoadLocalBool('AutoConnectEnabled'));
-    $(AutoLoadChatCheckbox).prop('checked', LoadLocalBool('AutoLoadChatEnabled'));
+    if (power_user.auto_load_chat) {
+        RA_autoloadchat();
+    }
 
-    setTimeout(function () {
-        if (LoadLocalBool('AutoLoadChatEnabled') == true) { RA_autoloadchat(); }
-    }, 200);
+    if (power_user.auto_connect) {
+        RA_autoconnect();
+    }
 
-
-    //Autoconnect on page load if enabled, or when api type is changed
-    if (LoadLocalBool('AutoConnectEnabled') == true) { RA_autoconnect(); }
     $('#main_api').change(function () {
         var PrevAPI = main_api;
         setTimeout(() => RA_autoconnect(PrevAPI), 100);
     });
+
     $('#api_button').click(function () { setTimeout(RA_checkOnlineStatus, 100); });
 
     //toggle pin class when lock toggle clicked
@@ -853,10 +863,6 @@ export function initRossMods() {
         OpenNavPanels();
     }, 300);
 
-    //save AutoConnect and AutoLoadChat prefs
-    $(AutoConnectCheckbox).on('change', function () { SaveLocal('AutoConnectEnabled', $(AutoConnectCheckbox).prop('checked')); });
-    $(AutoLoadChatCheckbox).on('change', function () { SaveLocal('AutoLoadChatEnabled', $(AutoLoadChatCheckbox).prop('checked')); });
-
     $(SelectedCharacterTab).click(function () { SaveLocal('SelectedNavTab', 'rm_button_selected_ch'); });
     $('#rm_button_characters').click(function () { SaveLocal('SelectedNavTab', 'rm_button_characters'); });
 
@@ -952,9 +958,9 @@ export function initRossMods() {
         //Enter to send when send_textarea in focus
         if ($(':focus').attr('id') === 'send_textarea') {
             const sendOnEnter = shouldSendOnEnter();
-            if (!event.shiftKey && !event.ctrlKey && !event.altKey && event.key == 'Enter' && is_send_press == false && sendOnEnter) {
+            if (!event.shiftKey && !event.ctrlKey && !event.altKey && event.key == 'Enter' && sendOnEnter) {
                 event.preventDefault();
-                Generate();
+                sendTextareaMessage();
             }
         }
         if ($(':focus').attr('id') === 'dialogue_popup_input' && !isMobile()) {
@@ -1012,7 +1018,7 @@ export function initRossMods() {
                         <input type="checkbox" id="regenerateWithCtrlEnter">
                         Don't ask again
                     </label>`;
-                    callPopup(popupText, 'confirm').then(result =>{
+                    callPopup(popupText, 'confirm').then(result => {
                         if (!result) {
                             return;
                         }
@@ -1128,13 +1134,15 @@ export function initRossMods() {
                 .not('#right-nav-panel')
                 .not('#floatingPrompt')
                 .not('#cfgConfig')
+                .not('#logprobsViewer')
                 .is(':visible')) {
                 let visibleDrawerContent = $('.drawer-content:visible')
                     .not('#WorldInfo')
                     .not('#left-nav-panel')
                     .not('#right-nav-panel')
                     .not('#floatingPrompt')
-                    .not('#cfgConfig');
+                    .not('#cfgConfig')
+                    .not('#logprobsViewer');
                 $(visibleDrawerContent).parent().find('.drawer-icon').trigger('click');
                 return;
             }
@@ -1151,6 +1159,11 @@ export function initRossMods() {
 
             if ($('#cfgConfig').is(':visible')) {
                 $('#CFGClose').trigger('click');
+                return;
+            }
+
+            if ($('#logprobsViewer').is(':visible')) {
+                $('#logprobsViewerClose').trigger('click');
                 return;
             }
 

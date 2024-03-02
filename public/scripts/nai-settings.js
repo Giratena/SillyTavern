@@ -8,15 +8,15 @@ import {
     substituteParams,
 } from '../script.js';
 import { getCfgPrompt } from './cfg-scale.js';
-import { MAX_CONTEXT_DEFAULT, MAX_RESPONSE_DEFAULT } from './power-user.js';
+import { MAX_CONTEXT_DEFAULT, MAX_RESPONSE_DEFAULT, power_user } from './power-user.js';
 import { getTextTokens, tokenizers } from './tokenizers.js';
 import EventSourceStream from './sse-stream.js';
 import {
     getSortableDelay,
     getStringHash,
     onlyUnique,
-    uuidv4,
 } from './utils.js';
+import { BIAS_CACHE, createNewLogitBiasEntry, displayLogitBias, getLogitBiasListResult } from './logit-bias.js';
 
 const default_preamble = '[ Style: chat, complex, sensory, visceral ]';
 const default_order = [1, 5, 0, 2, 3, 4];
@@ -59,7 +59,7 @@ const nai_tiers = {
 
 let novel_data = null;
 let badWordsCache = {};
-let biasCache = undefined;
+const BIAS_KEY = '#novel_api-settings';
 
 export function setNovelData(data) {
     novel_data = data;
@@ -145,7 +145,7 @@ export function loadNovelSettings(settings) {
     //load the rest of the Novel settings without any checks
     nai_settings.model_novel = settings.model_novel;
     $('#model_novel_select').val(nai_settings.model_novel);
-    $(`#model_novel_select option[value=${nai_settings.model_novel}]`).attr('selected', true);
+    $(`#model_novel_select option[value=${nai_settings.model_novel}]`).prop('selected', true);
 
     if (settings.nai_preamble !== undefined) {
         nai_settings.preamble = settings.nai_preamble;
@@ -217,7 +217,7 @@ function loadNovelSettingsUi(ui_settings) {
 
     $('#streaming_novel').prop('checked', ui_settings.streaming_novel);
     sortItemsByOrder(ui_settings.order);
-    displayLogitBias(ui_settings.logit_bias);
+    displayLogitBias(ui_settings.logit_bias, BIAS_KEY);
 }
 
 const sliders = [
@@ -416,10 +416,7 @@ export function getNovelGenerationData(finalPrompt, settings, maxLength, isImper
         cfgValues.negativePrompt = (getCfgPrompt(cfgValues.guidanceScale, true))?.value;
     }
 
-    const clio = nai_settings.model_novel.includes('clio');
-    const kayra = nai_settings.model_novel.includes('kayra');
-
-    const tokenizerType = kayra ? tokenizers.NERD2 : (clio ? tokenizers.NERD : tokenizers.NONE);
+    const tokenizerType = getTokenizerTypeForModel(nai_settings.model_novel);
     const stopSequences = (tokenizerType !== tokenizers.NONE)
         ? getStoppingStrings(isImpersonate, isContinue)
             .map(t => getTextTokens(tokenizerType, t))
@@ -433,8 +430,12 @@ export function getNovelGenerationData(finalPrompt, settings, maxLength, isImper
 
     let logitBias = [];
     if (tokenizerType !== tokenizers.NONE && Array.isArray(nai_settings.logit_bias) && nai_settings.logit_bias.length) {
-        logitBias = biasCache || calculateLogitBias();
-        biasCache = logitBias;
+        logitBias = BIAS_CACHE.get(BIAS_KEY) || calculateLogitBias();
+        BIAS_CACHE.set(BIAS_KEY, logitBias);
+    }
+
+    if (power_user.console_log_prompts) {
+        console.log(finalPrompt);
     }
 
     return {
@@ -467,6 +468,7 @@ export function getNovelGenerationData(finalPrompt, settings, maxLength, isImper
         'return_full_text': false,
         'prefix': prefix,
         'order': nai_settings.order || settings.order || default_order,
+        'num_logprobs': power_user.request_token_probabilities ? 10 : undefined,
     };
 }
 
@@ -485,6 +487,16 @@ function selectPrefix(selected_prefix, finalPrompt) {
     }
 
     return 'vanilla';
+}
+
+function getTokenizerTypeForModel(model) {
+    if (model.includes('clio')) {
+        return tokenizers.NERD;
+    }
+    if (model.includes('kayra')) {
+        return tokenizers.NERD2;
+    }
+    return tokenizers.NONE;
 }
 
 // Sort the samplers by the order array
@@ -525,71 +537,18 @@ function saveSamplingOrder() {
     saveSettingsDebounced();
 }
 
-function displayLogitBias(logit_bias) {
-    if (!Array.isArray(logit_bias)) {
-        console.log('Logit bias set not found');
-        return;
-    }
-
-    $('.novelai_logit_bias_list').empty();
-
-    for (const entry of logit_bias) {
-        if (entry) {
-            createLogitBiasListItem(entry);
-        }
-    }
-
-    biasCache = undefined;
-}
-
-function createNewLogitBiasEntry() {
-    const entry = { id: uuidv4(), text: '', value: 0 };
-    nai_settings.logit_bias.push(entry);
-    biasCache = undefined;
-    createLogitBiasListItem(entry);
-    saveSettingsDebounced();
-}
-
-function createLogitBiasListItem(entry) {
-    const id = entry.id;
-    const template = $('#novelai_logit_bias_template .novelai_logit_bias_form').clone();
-    template.data('id', id);
-    template.find('.novelai_logit_bias_text').val(entry.text).on('input', function () {
-        entry.text = $(this).val();
-        biasCache = undefined;
-        saveSettingsDebounced();
-    });
-    template.find('.novelai_logit_bias_value').val(entry.value).on('input', function () {
-        entry.value = Number($(this).val());
-        biasCache = undefined;
-        saveSettingsDebounced();
-    });
-    template.find('.novelai_logit_bias_remove').on('click', function () {
-        $(this).closest('.novelai_logit_bias_form').remove();
-        const index = nai_settings.logit_bias.indexOf(entry);
-        if (index > -1) {
-            nai_settings.logit_bias.splice(index, 1);
-        }
-        biasCache = undefined;
-        saveSettingsDebounced();
-    });
-    $('.novelai_logit_bias_list').prepend(template);
-}
-
 /**
  * Calculates logit bias for Novel AI
  * @returns {object[]} Array of logit bias objects
  */
 function calculateLogitBias() {
-    const bias_preset = nai_settings.logit_bias;
+    const biasPreset = nai_settings.logit_bias;
 
-    if (!Array.isArray(bias_preset) || bias_preset.length === 0) {
+    if (!Array.isArray(biasPreset) || biasPreset.length === 0) {
         return [];
     }
 
-    const clio = nai_settings.model_novel.includes('clio');
-    const kayra = nai_settings.model_novel.includes('kayra');
-    const tokenizerType = kayra ? tokenizers.NERD2 : (clio ? tokenizers.NERD : tokenizers.NONE);
+    const tokenizerType = getTokenizerTypeForModel(nai_settings.model_novel);
 
     /**
      * Creates a bias object for Novel AI
@@ -605,47 +564,7 @@ function calculateLogitBias() {
         };
     }
 
-    const result = [];
-
-    for (const entry of bias_preset) {
-        if (entry.text?.length > 0) {
-            const text = entry.text.trim();
-
-            // Skip empty lines
-            if (text.length === 0) {
-                continue;
-            }
-
-            // Verbatim text
-            if (text.startsWith('{') && text.endsWith('}')) {
-                const tokens = getTextTokens(tokenizerType, text.slice(1, -1));
-                result.push(getBiasObject(entry.value, tokens));
-            }
-
-            // Raw token ids, JSON serialized
-            else if (text.startsWith('[') && text.endsWith(']')) {
-                try {
-                    const tokens = JSON.parse(text);
-
-                    if (Array.isArray(tokens) && tokens.every(t => Number.isInteger(t))) {
-                        result.push(getBiasObject(entry.value, tokens));
-                    } else {
-                        throw new Error('Not an array of integers');
-                    }
-                } catch (err) {
-                    console.log(`Failed to parse logit bias token list: ${text}`, err);
-                }
-            }
-
-            // Text with a leading space
-            else {
-                const biasText = ` ${text}`;
-                const tokens = getTextTokens(tokenizerType, biasText);
-                result.push(getBiasObject(entry.value, tokens));
-            }
-        }
-    }
-
+    const result = getLogitBiasListResult(biasPreset, tokenizerType, getBiasObject);
     return result;
 }
 
@@ -711,9 +630,66 @@ export async function generateNovelWithStreaming(generate_data, signal) {
                 text += data.token;
             }
 
-            yield { text, swipes: [] };
+            yield { text, swipes: [], logprobs: parseNovelAILogprobs(data.logprobs) };
         }
     };
+}
+
+/**
+ * A single token's ID.
+ * @typedef {[number]} TokenIdEntry
+ */
+/**
+ * A single token's log probabilities. The first element is before repetition
+ * penalties and samplers are applied, the second is after.
+ * @typedef {[number, number]} LogprobsEntry
+ */
+/**
+ * Combination of token ID and its corresponding log probabilities.
+ * @typedef {[TokenIdEntry, LogprobsEntry]} TokenLogprobTuple
+ */
+/**
+ * Represents all logprob data for a single token, including its
+ * before, after, and the ultimately selected token.
+ * @typedef {Object} NAITokenLogprobs
+ * @property {TokenLogprobTuple[]} chosen - always length 1
+ * @property {TokenLogprobTuple[]} before - always `top_logprobs` length
+ * @property {TokenLogprobTuple[]} after - maybe less than `top_logprobs` length
+ */
+/**
+ * parseNovelAILogprobs converts a logprobs object returned from the NovelAI API
+ * for a single token into a TokenLogprobs object used by the Token Probabilities
+ * feature.
+ * @param {NAITokenLogprobs} data - NAI logprobs object for one token
+ * @returns {import('logprobs.js').TokenLogprobs | null} converted logprobs
+ */
+export function parseNovelAILogprobs(data) {
+    if (!data) {
+        return null;
+    }
+    const befores = data.before.map(([[tokenId], [before, _]]) => [tokenId, before]);
+    const afters = data.after.map(([[tokenId], [_, after]]) => [tokenId, after]);
+
+    // Find any tokens in `befores` that are missing from `afters`. Then add
+    // them with a logprob of -Infinity (0% probability)
+    const notInAfter = befores
+        .filter(([id]) => !afters.some(([aid]) => aid === id))
+        .map(([id]) => [id, -Infinity]);
+    const merged = afters.concat(notInAfter);
+
+    // Add the chosen token to `merged` if it's not already there. This can
+    // happen if the chosen token was not among the top 10 most likely ones.
+    const [[chosenId], [_, chosenAfter]] = data.chosen[0];
+    if (!merged.some(([id]) => id === chosenId)) {
+        merged.push([chosenId, chosenAfter]);
+    }
+
+    // nb: returned logprobs are provided alongside token IDs, not decoded text.
+    // We don't want to send an API call for every streaming tick to decode the
+    // text so we will use the IDs instead and bulk decode them in
+    // StreamingProcessor. JSDoc typechecking may complain about this, but it's
+    // intentional.
+    return { token: chosenId, topLogprobs: merged };
 }
 
 $('#nai_preamble_textarea').on('input', function () {
@@ -778,5 +754,5 @@ jQuery(function () {
         saveSamplingOrder();
     });
 
-    $('#novelai_logit_bias_new_entry').on('click', createNewLogitBiasEntry);
+    $('#novelai_logit_bias_new_entry').on('click', () => createNewLogitBiasEntry(nai_settings.logit_bias, BIAS_KEY));
 });

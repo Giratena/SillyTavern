@@ -106,6 +106,21 @@ function delay(ms) {
 }
 
 /**
+ * Generates a random hex string of the given length.
+ * @param {number} length String length
+ * @returns {string} Random hex string
+ * @example getHexString(8) // 'a1b2c3d4'
+ */
+function getHexString(length) {
+    const chars = '0123456789abcdef';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return result;
+}
+
+/**
  * Extracts a file with given extension from an ArrayBuffer containing a ZIP archive.
  * @param {ArrayBuffer} archiveBuffer Buffer containing a ZIP archive
  * @param {string} fileExtension File extension to look for
@@ -350,7 +365,7 @@ function getImages(path) {
 /**
  * Pipe a fetch() response to an Express.js Response, including status code.
  * @param {import('node-fetch').Response} from The Fetch API response to pipe from.
- * @param {Express.Response} to The Express response to pipe to.
+ * @param {import('express').Response} to The Express response to pipe to.
  */
 function forwardFetchResponse(from, to) {
     let statusCode = from.status;
@@ -384,6 +399,187 @@ function forwardFetchResponse(from, to) {
     });
 }
 
+/**
+ * Makes an HTTP/2 request to the specified endpoint.
+ *
+ * @deprecated Use `node-fetch` if possible.
+ * @param {string} endpoint URL to make the request to
+ * @param {string} method HTTP method to use
+ * @param {string} body Request body
+ * @param {object} headers Request headers
+ * @returns {Promise<string>} Response body
+ */
+function makeHttp2Request(endpoint, method, body, headers) {
+    return new Promise((resolve, reject) => {
+        try {
+            const http2 = require('http2');
+            const url = new URL(endpoint);
+            const client = http2.connect(url.origin);
+
+            const req = client.request({
+                ':method': method,
+                ':path': url.pathname,
+                ...headers,
+            });
+            req.setEncoding('utf8');
+
+            req.on('response', (headers) => {
+                const status = Number(headers[':status']);
+
+                if (status < 200 || status >= 300) {
+                    reject(new Error(`Request failed with status ${status}`));
+                }
+
+                let data = '';
+
+                req.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                req.on('end', () => {
+                    console.log(data);
+                    resolve(data);
+                });
+            });
+
+            req.on('error', (err) => {
+                reject(err);
+            });
+
+            if (body) {
+                req.write(body);
+            }
+
+            req.end();
+        } catch (e) {
+            reject(e);
+        }
+    });
+}
+
+/**
+ * Adds YAML-serialized object to the object.
+ * @param {object} obj Object
+ * @param {string} yamlString YAML-serialized object
+ * @returns
+ */
+function mergeObjectWithYaml(obj, yamlString) {
+    if (!yamlString) {
+        return;
+    }
+
+    try {
+        const parsedObject = yaml.parse(yamlString);
+
+        if (Array.isArray(parsedObject)) {
+            for (const item of parsedObject) {
+                if (typeof item === 'object' && item && !Array.isArray(item)) {
+                    Object.assign(obj, item);
+                }
+            }
+        }
+        else if (parsedObject && typeof parsedObject === 'object') {
+            Object.assign(obj, parsedObject);
+        }
+    } catch {
+        // Do nothing
+    }
+}
+
+/**
+ * Removes keys from the object by YAML-serialized array.
+ * @param {object} obj Object
+ * @param {string} yamlString YAML-serialized array
+ * @returns {void} Nothing
+ */
+function excludeKeysByYaml(obj, yamlString) {
+    if (!yamlString) {
+        return;
+    }
+
+    try {
+        const parsedObject = yaml.parse(yamlString);
+
+        if (Array.isArray(parsedObject)) {
+            parsedObject.forEach(key => {
+                delete obj[key];
+            });
+        } else if (typeof parsedObject === 'object') {
+            Object.keys(parsedObject).forEach(key => {
+                delete obj[key];
+            });
+        } else if (typeof parsedObject === 'string') {
+            delete obj[parsedObject];
+        }
+    } catch {
+        // Do nothing
+    }
+}
+
+/**
+ * Removes trailing slash and /v1 from a string.
+ * @param {string} str Input string
+ * @returns {string} Trimmed string
+ */
+function trimV1(str) {
+    return String(str ?? '').replace(/\/$/, '').replace(/\/v1$/, '');
+}
+
+/**
+ * Simple TTL memory cache.
+ */
+class Cache {
+    /**
+     * @param {number} ttl Time to live in milliseconds
+     */
+    constructor(ttl) {
+        this.cache = new Map();
+        this.ttl = ttl;
+    }
+
+    /**
+     * Gets a value from the cache.
+     * @param {string} key Cache key
+     */
+    get(key) {
+        const value = this.cache.get(key);
+        if (value?.expiry > Date.now()) {
+            return value.value;
+        }
+
+        // Cache miss or expired, remove the key
+        this.cache.delete(key);
+        return null;
+    }
+
+    /**
+     * Sets a value in the cache.
+     * @param {string} key Key
+     * @param {object} value Value
+     */
+    set(key, value) {
+        this.cache.set(key, {
+            value: value,
+            expiry: Date.now() + this.ttl,
+        });
+    }
+
+    /**
+     * Removes a value from the cache.
+     * @param {string} key Key
+     */
+    remove(key) {
+        this.cache.delete(key);
+    }
+
+    /**
+     * Clears the cache.
+     */
+    clear() {
+        this.cache.clear();
+    }
+}
+
 module.exports = {
     getConfig,
     getConfigValue,
@@ -404,4 +600,10 @@ module.exports = {
     removeOldBackups,
     getImages,
     forwardFetchResponse,
+    getHexString,
+    mergeObjectWithYaml,
+    excludeKeysByYaml,
+    trimV1,
+    Cache,
+    makeHttp2Request,
 };

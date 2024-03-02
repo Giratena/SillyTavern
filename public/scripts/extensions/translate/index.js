@@ -11,7 +11,8 @@ import {
     updateMessageBlock,
 } from '../../../script.js';
 import { extension_settings, getContext } from '../../extensions.js';
-import { secret_state, writeSecret } from '../../secrets.js';
+import { findSecret, secret_state, writeSecret } from '../../secrets.js';
+import { splitRecursive } from '../../utils.js';
 
 export const autoModeOptions = {
     NONE: 'none',
@@ -138,7 +139,7 @@ const languageCodes = {
 };
 
 const KEY_REQUIRED = ['deepl', 'libre'];
-const LOCAL_URL = ['libre', 'oneringtranslator', 'deeplx'];
+const LOCAL_URL = ['libre', 'oneringtranslator', 'deeplx', 'lingva'];
 
 function showKeysButton() {
     const providerRequiresKey = KEY_REQUIRED.includes(extension_settings.translate.provider);
@@ -249,6 +250,27 @@ async function translateProviderGoogle(text, lang) {
 }
 
 /**
+ * Translates text using an instance of the Lingva Translate
+ * @param {string} text Text to translate
+ * @param {string} lang Target language code
+ * @returns {Promise<string>} Translated text
+ */
+async function translateProviderLingva(text, lang) {
+    const response = await fetch('/api/translate/lingva', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        body: JSON.stringify({ text: text, lang: lang }),
+    });
+
+    if (response.ok) {
+        const result = await response.text();
+        return result;
+    }
+
+    throw new Error(response.statusText);
+}
+
+/**
  * Translates text using the DeepL API
  * @param {string} text Text to translate
  * @param {string} lang Target language code
@@ -316,6 +338,28 @@ async function translateProviderBing(text, lang) {
 }
 
 /**
+ * Splits text into chunks and translates each chunk separately
+ * @param {string} text Text to translate
+ * @param {string} lang Target language code
+ * @param {(text: string, lang: string) => Promise<string>} translateFn Function to translate a single chunk (must return a Promise)
+ * @param {number} chunkSize Maximum chunk size
+ * @returns {Promise<string>} Translated text
+ */
+async function chunkedTranslate(text, lang, translateFn, chunkSize = 5000) {
+    if (text.length <= chunkSize) {
+        return await translateFn(text, lang);
+    }
+
+    const chunks = splitRecursive(text, chunkSize);
+
+    let result = '';
+    for (const chunk of chunks) {
+        result += await translateFn(chunk, lang);
+    }
+    return result;
+}
+
+/**
  * Translates text using the selected translation provider
  * @param {string} text Text to translate
  * @param {string} lang Target language code
@@ -331,15 +375,17 @@ async function translate(text, lang) {
             case 'libre':
                 return await translateProviderLibre(text, lang);
             case 'google':
-                return await translateProviderGoogle(text, lang);
+                return await chunkedTranslate(text, lang, translateProviderGoogle, 5000);
+            case 'lingva':
+                return await chunkedTranslate(text, lang, translateProviderLingva, 5000);
             case 'deepl':
                 return await translateProviderDeepl(text, lang);
             case 'deeplx':
-                return await translateProviderDeepLX(text, lang);
+                return await chunkedTranslate(text, lang, translateProviderDeepLX, 1500);
             case 'oneringtranslator':
                 return await translateProviderOneRing(text, lang);
             case 'bing':
-                return await translateProviderBing(text, lang);
+                return await chunkedTranslate(text, lang, translateProviderBing, 1000);
             default:
                 console.error('Unknown translation provider', extension_settings.translate.provider);
                 return text;
@@ -484,6 +530,7 @@ jQuery(() => {
                     <select id="translation_provider" name="provider" class="margin0">
                         <option value="libre">Libre</option>
                         <option value="google">Google</option>
+                        <option value="lingva">Lingva</option>
                         <option value="deepl">DeepL</option>
                         <option value="deeplx">DeepLX</option>
                         <option value="bing">Bing</option>
@@ -546,17 +593,23 @@ jQuery(() => {
         const optionText = $('#translation_provider option:selected').text();
         const exampleURLs = {
             'libre': 'http://127.0.0.1:5000/translate',
+            'lingva': 'https://lingva.ml/api/v1',
             'oneringtranslator': 'http://127.0.0.1:4990/translate',
             'deeplx': 'http://127.0.0.1:1188/translate',
         };
         const popupText = `<h3>${optionText} API URL</h3><i>Example: <tt>${String(exampleURLs[extension_settings.translate.provider])}</tt></i>`;
-        const url = await callPopup(popupText, 'input');
 
-        if (url == false) {
+        const secretKey = extension_settings.translate.provider + '_url';
+        const savedUrl = secret_state[secretKey] ? await findSecret(secretKey) : '';
+
+        const url = await callPopup(popupText, 'input', savedUrl);
+
+        if (url == false || url == '') {
             return;
         }
 
-        await writeSecret(extension_settings.translate.provider + '_url', url);
+        await writeSecret(secretKey, url);
+
         toastr.success('API URL saved');
         $('#translate_url_button').addClass('success');
     });

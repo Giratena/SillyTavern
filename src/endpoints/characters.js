@@ -4,11 +4,9 @@ const readline = require('readline');
 const express = require('express');
 const sanitize = require('sanitize-filename');
 const writeFileAtomicSync = require('write-file-atomic').sync;
+const yaml = require('yaml');
 const _ = require('lodash');
 
-const encode = require('png-chunks-encode');
-const extract = require('png-chunks-extract');
-const PNGtext = require('png-chunk-text');
 const jimp = require('jimp');
 
 const { DIRECTORIES, UPLOADS_PATH, AVATAR_WIDTH, AVATAR_HEIGHT } = require('../constants');
@@ -19,6 +17,7 @@ const characterCardParser = require('../character-card-parser.js');
 const { readWorldInfoFile } = require('./worldinfo');
 const { invalidateThumbnail } = require('./thumbnails');
 const { importRisuSprites } = require('./sprites');
+const defaultAvatarPath = './public/img/ai4.png';
 
 let characters = {};
 
@@ -31,7 +30,7 @@ const characterDataCache = new Map();
  * @param {string} input_format - 'png'
  * @returns {Promise<string | undefined>} - Character card data
  */
-async function charaRead(img_url, input_format) {
+async function charaRead(img_url, input_format = 'png') {
     const stat = fs.statSync(img_url);
     const cacheKey = `${img_url}-${stat.mtimeMs}`;
     if (characterDataCache.has(cacheKey)) {
@@ -57,22 +56,12 @@ async function charaWrite(img_url, data, target_img, response = undefined, mes =
             }
         }
         // Read the image, resize, and save it as a PNG into the buffer
-        const image = await tryReadImage(img_url, crop);
+        const inputImage = await tryReadImage(img_url, crop);
 
         // Get the chunks
-        const chunks = extract(image);
-        const tEXtChunks = chunks.filter(chunk => chunk.name === 'tEXt');
+        const outputImage = characterCardParser.write(inputImage, data);
 
-        // Remove all existing tEXt chunks
-        for (let tEXtChunk of tEXtChunks) {
-            chunks.splice(chunks.indexOf(tEXtChunk), 1);
-        }
-        // Add new chunks before the IEND chunk
-        const base64EncodedData = Buffer.from(data, 'utf8').toString('base64');
-        chunks.splice(-1, 0, PNGtext.encode('chara', base64EncodedData));
-        //chunks.splice(-1, 0, text.encode('lorem', 'ipsum'));
-
-        writeFileAtomicSync(DIRECTORIES.characters + target_img + '.png', Buffer.from(encode(chunks)));
+        writeFileAtomicSync(DIRECTORIES.characters + target_img + '.png', outputImage);
         if (response !== undefined) response.send(mes);
         return true;
     } catch (err) {
@@ -150,13 +139,13 @@ const processCharacter = async (item, i) => {
         const img_data = await charaRead(DIRECTORIES.characters + item);
         if (img_data === undefined) throw new Error('Failed to read character file');
 
-        let jsonObject = getCharaCardV2(JSON.parse(img_data));
+        let jsonObject = getCharaCardV2(JSON.parse(img_data), false);
         jsonObject.avatar = item;
         characters[i] = jsonObject;
         characters[i]['json_data'] = img_data;
         const charStat = fs.statSync(path.join(DIRECTORIES.characters, item));
-        characters[i]['date_added'] = charStat.birthtimeMs;
-        characters[i]['create_date'] = jsonObject['create_date'] || humanizedISO8601DateTime(charStat.birthtimeMs);
+        characters[i]['date_added'] = charStat.ctimeMs;
+        characters[i]['create_date'] = jsonObject['create_date'] || humanizedISO8601DateTime(charStat.ctimeMs);
         const char_dir = path.join(DIRECTORIES.chats, item.replace('.png', ''));
 
         const { chatSize, dateLastChat } = calculateChatSize(char_dir);
@@ -181,15 +170,30 @@ const processCharacter = async (item, i) => {
     }
 };
 
-function getCharaCardV2(jsonObject) {
+/**
+ * Convert a character object to Spec V2 format.
+ * @param {object} jsonObject Character object
+ * @param {boolean} hoistDate Will set the chat and create_date fields to the current date if they are missing
+ * @returns {object} Character object in Spec V2 format
+ */
+function getCharaCardV2(jsonObject, hoistDate = true) {
     if (jsonObject.spec === undefined) {
         jsonObject = convertToV2(jsonObject);
+
+        if (hoistDate && !jsonObject.create_date) {
+            jsonObject.create_date = humanizedISO8601DateTime();
+        }
     } else {
         jsonObject = readFromV2(jsonObject);
     }
     return jsonObject;
 }
 
+/**
+ * Convert a character object to Spec V2 format.
+ * @param {object} char Character object
+ * @returns {object} Character object in Spec V2 format
+ */
 function convertToV2(char) {
     // Simulate incoming data from frontend form
     const result = charaFormatData({
@@ -210,7 +214,8 @@ function convertToV2(char) {
     });
 
     result.chat = char.chat ?? humanizedISO8601DateTime();
-    result.create_date = char.create_date ?? humanizedISO8601DateTime();
+    result.create_date = char.create_date;
+
     return result;
 }
 
@@ -298,6 +303,7 @@ function charaFormatData(data) {
     _.set(char, 'chat', data.ch_name + ' - ' + humanizedISO8601DateTime());
     _.set(char, 'talkativeness', data.talkativeness);
     _.set(char, 'fav', data.fav == 'true');
+    _.set(char, 'tags', typeof data.tags == 'string' ? (data.tags.split(',').map(x => x.trim()).filter(x => x)) : data.tags || []);
 
     // Spec V2 fields
     _.set(char, 'spec', 'chara_card_v2');
@@ -334,7 +340,7 @@ function charaFormatData(data) {
 
     if (data.world) {
         try {
-            const file = readWorldInfoFile(data.world);
+            const file = readWorldInfoFile(data.world, false);
 
             // File was imported - save it to the character book
             if (file && file.originalData) {
@@ -385,6 +391,11 @@ function convertWorldInfoToCharacterBook(name, entries) {
                 depth: entry.depth ?? 4,
                 selectiveLogic: entry.selectiveLogic ?? 0,
                 group: entry.group ?? '',
+                prevent_recursion: entry.preventRecursion ?? false,
+                scan_depth: entry.scanDepth ?? null,
+                match_whole_words: entry.matchWholeWords ?? null,
+                case_sensitive: entry.caseSensitive ?? null,
+                automation_id: entry.automationId ?? '',
             },
         };
 
@@ -392,6 +403,36 @@ function convertWorldInfoToCharacterBook(name, entries) {
     }
 
     return result;
+}
+
+/**
+ * Import a character from a YAML file.
+ * @param {string} uploadPath Path to the uploaded file
+ * @param {import('express').Response} response Express response object
+ */
+function importFromYaml(uploadPath, response) {
+    const fileText = fs.readFileSync(uploadPath, 'utf8');
+    fs.rmSync(uploadPath);
+    const yamlData = yaml.parse(fileText);
+    console.log('importing from yaml');
+    yamlData.name = sanitize(yamlData.name);
+    const fileName = getPngName(yamlData.name);
+    let char = convertToV2({
+        'name': yamlData.name,
+        'description': yamlData.context ?? '',
+        'first_mes': yamlData.greeting ?? '',
+        'create_date': humanizedISO8601DateTime(),
+        'chat': `${yamlData.name} - ${humanizedISO8601DateTime()}`,
+        'personality': '',
+        'creatorcomment': '',
+        'avatar': 'none',
+        'mes_example': '',
+        'scenario': '',
+        'talkativeness': 0.5,
+        'creator': '',
+        'tags': '',
+    });
+    charaWrite(defaultAvatarPath, JSON.stringify(char), fileName, response, { file_name: fileName });
 }
 
 const router = express.Router();
@@ -759,145 +800,160 @@ function getPngName(file) {
     return file;
 }
 
-router.post('/import', urlencodedParser, async function (request, response) {
+/**
+ * Gets the preserved name for the uploaded file if the request is valid.
+ * @param {import("express").Request} request - Express request object
+ * @returns {string | undefined} - The preserved name if the request is valid, otherwise undefined
+ */
+function getPreservedName(request) {
+    return request.body.file_type === 'png' && request.body.preserve_file_name === 'true' && request.file?.originalname
+        ? path.parse(request.file.originalname).name
+        : undefined;
+}
 
-    if (!request.body || request.file === undefined) return response.sendStatus(400);
+router.post('/import', urlencodedParser, async function (request, response) {
+    if (!request.body || !request.file) return response.sendStatus(400);
 
     let png_name = '';
     let filedata = request.file;
     let uploadPath = path.join(UPLOADS_PATH, filedata.filename);
-    var format = request.body.file_type;
-    const defaultAvatarPath = './public/img/ai4.png';
-    //console.log(format);
-    if (filedata) {
-        if (format == 'json') {
-            fs.readFile(uploadPath, 'utf8', async (err, data) => {
-                fs.unlinkSync(uploadPath);
+    let format = request.body.file_type;
+    const preservedFileName = getPreservedName(request);
 
-                if (err) {
-                    console.log(err);
-                    response.send({ error: true });
-                }
+    if (format == 'yaml' || format == 'yml') {
+        try {
+            importFromYaml(uploadPath, response);
+        } catch (err) {
+            console.log(err);
+            response.send({ error: true });
+        }
+    } else if (format == 'json') {
+        fs.readFile(uploadPath, 'utf8', async (err, data) => {
+            fs.unlinkSync(uploadPath);
 
-                let jsonData = JSON.parse(data);
-
-                if (jsonData.spec !== undefined) {
-                    console.log('importing from v2 json');
-                    importRisuSprites(jsonData);
-                    unsetFavFlag(jsonData);
-                    jsonData = readFromV2(jsonData);
-                    jsonData['create_date'] = humanizedISO8601DateTime();
-                    png_name = getPngName(jsonData.data?.name || jsonData.name);
-                    let char = JSON.stringify(jsonData);
-                    charaWrite(defaultAvatarPath, char, png_name, response, { file_name: png_name });
-                } else if (jsonData.name !== undefined) {
-                    console.log('importing from v1 json');
-                    jsonData.name = sanitize(jsonData.name);
-                    if (jsonData.creator_notes) {
-                        jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
-                    }
-                    png_name = getPngName(jsonData.name);
-                    let char = {
-                        'name': jsonData.name,
-                        'description': jsonData.description ?? '',
-                        'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
-                        'personality': jsonData.personality ?? '',
-                        'first_mes': jsonData.first_mes ?? '',
-                        'avatar': 'none',
-                        'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
-                        'mes_example': jsonData.mes_example ?? '',
-                        'scenario': jsonData.scenario ?? '',
-                        'create_date': humanizedISO8601DateTime(),
-                        'talkativeness': jsonData.talkativeness ?? 0.5,
-                        'creator': jsonData.creator ?? '',
-                        'tags': jsonData.tags ?? '',
-                    };
-                    char = convertToV2(char);
-                    let charJSON = JSON.stringify(char);
-                    charaWrite(defaultAvatarPath, charJSON, png_name, response, { file_name: png_name });
-                } else if (jsonData.char_name !== undefined) {//json Pygmalion notepad
-                    console.log('importing from gradio json');
-                    jsonData.char_name = sanitize(jsonData.char_name);
-                    if (jsonData.creator_notes) {
-                        jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
-                    }
-                    png_name = getPngName(jsonData.char_name);
-                    let char = {
-                        'name': jsonData.char_name,
-                        'description': jsonData.char_persona ?? '',
-                        'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
-                        'personality': '',
-                        'first_mes': jsonData.char_greeting ?? '',
-                        'avatar': 'none',
-                        'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
-                        'mes_example': jsonData.example_dialogue ?? '',
-                        'scenario': jsonData.world_scenario ?? '',
-                        'create_date': humanizedISO8601DateTime(),
-                        'talkativeness': jsonData.talkativeness ?? 0.5,
-                        'creator': jsonData.creator ?? '',
-                        'tags': jsonData.tags ?? '',
-                    };
-                    char = convertToV2(char);
-                    let charJSON = JSON.stringify(char);
-                    charaWrite(defaultAvatarPath, charJSON, png_name, response, { file_name: png_name });
-                } else {
-                    console.log('Incorrect character format .json');
-                    response.send({ error: true });
-                }
-            });
-        } else {
-            try {
-                var img_data = await charaRead(uploadPath, format);
-                if (img_data === undefined) throw new Error('Failed to read character data');
-
-                let jsonData = JSON.parse(img_data);
-
-                jsonData.name = sanitize(jsonData.data?.name || jsonData.name);
-                png_name = getPngName(jsonData.name);
-
-                if (jsonData.spec !== undefined) {
-                    console.log('Found a v2 character file.');
-                    importRisuSprites(jsonData);
-                    unsetFavFlag(jsonData);
-                    jsonData = readFromV2(jsonData);
-                    jsonData['create_date'] = humanizedISO8601DateTime();
-                    const char = JSON.stringify(jsonData);
-                    await charaWrite(uploadPath, char, png_name, response, { file_name: png_name });
-                    fs.unlinkSync(uploadPath);
-                } else if (jsonData.name !== undefined) {
-                    console.log('Found a v1 character file.');
-
-                    if (jsonData.creator_notes) {
-                        jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
-                    }
-
-                    let char = {
-                        'name': jsonData.name,
-                        'description': jsonData.description ?? '',
-                        'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
-                        'personality': jsonData.personality ?? '',
-                        'first_mes': jsonData.first_mes ?? '',
-                        'avatar': 'none',
-                        'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
-                        'mes_example': jsonData.mes_example ?? '',
-                        'scenario': jsonData.scenario ?? '',
-                        'create_date': humanizedISO8601DateTime(),
-                        'talkativeness': jsonData.talkativeness ?? 0.5,
-                        'creator': jsonData.creator ?? '',
-                        'tags': jsonData.tags ?? '',
-                    };
-                    char = convertToV2(char);
-                    const charJSON = JSON.stringify(char);
-                    await charaWrite(uploadPath, charJSON, png_name, response, { file_name: png_name });
-                    fs.unlinkSync(uploadPath);
-                } else {
-                    console.log('Unknown character card format');
-                    response.send({ error: true });
-                }
-            } catch (err) {
+            if (err) {
                 console.log(err);
                 response.send({ error: true });
             }
+
+            let jsonData = JSON.parse(data);
+
+            if (jsonData.spec !== undefined) {
+                console.log('importing from v2 json');
+                importRisuSprites(jsonData);
+                unsetFavFlag(jsonData);
+                jsonData = readFromV2(jsonData);
+                jsonData['create_date'] = humanizedISO8601DateTime();
+                png_name = getPngName(jsonData.data?.name || jsonData.name);
+                let char = JSON.stringify(jsonData);
+                charaWrite(defaultAvatarPath, char, png_name, response, { file_name: png_name });
+            } else if (jsonData.name !== undefined) {
+                console.log('importing from v1 json');
+                jsonData.name = sanitize(jsonData.name);
+                if (jsonData.creator_notes) {
+                    jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
+                }
+                png_name = getPngName(jsonData.name);
+                let char = {
+                    'name': jsonData.name,
+                    'description': jsonData.description ?? '',
+                    'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
+                    'personality': jsonData.personality ?? '',
+                    'first_mes': jsonData.first_mes ?? '',
+                    'avatar': 'none',
+                    'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
+                    'mes_example': jsonData.mes_example ?? '',
+                    'scenario': jsonData.scenario ?? '',
+                    'create_date': humanizedISO8601DateTime(),
+                    'talkativeness': jsonData.talkativeness ?? 0.5,
+                    'creator': jsonData.creator ?? '',
+                    'tags': jsonData.tags ?? '',
+                };
+                char = convertToV2(char);
+                let charJSON = JSON.stringify(char);
+                charaWrite(defaultAvatarPath, charJSON, png_name, response, { file_name: png_name });
+            } else if (jsonData.char_name !== undefined) {//json Pygmalion notepad
+                console.log('importing from gradio json');
+                jsonData.char_name = sanitize(jsonData.char_name);
+                if (jsonData.creator_notes) {
+                    jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
+                }
+                png_name = getPngName(jsonData.char_name);
+                let char = {
+                    'name': jsonData.char_name,
+                    'description': jsonData.char_persona ?? '',
+                    'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
+                    'personality': '',
+                    'first_mes': jsonData.char_greeting ?? '',
+                    'avatar': 'none',
+                    'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
+                    'mes_example': jsonData.example_dialogue ?? '',
+                    'scenario': jsonData.world_scenario ?? '',
+                    'create_date': humanizedISO8601DateTime(),
+                    'talkativeness': jsonData.talkativeness ?? 0.5,
+                    'creator': jsonData.creator ?? '',
+                    'tags': jsonData.tags ?? '',
+                };
+                char = convertToV2(char);
+                let charJSON = JSON.stringify(char);
+                charaWrite(defaultAvatarPath, charJSON, png_name, response, { file_name: png_name });
+            } else {
+                console.log('Incorrect character format .json');
+                response.send({ error: true });
+            }
+        });
+    } else {
+        try {
+            var img_data = await charaRead(uploadPath, format);
+            if (img_data === undefined) throw new Error('Failed to read character data');
+
+            let jsonData = JSON.parse(img_data);
+
+            jsonData.name = sanitize(jsonData.data?.name || jsonData.name);
+            png_name = preservedFileName || getPngName(jsonData.name);
+
+            if (jsonData.spec !== undefined) {
+                console.log('Found a v2 character file.');
+                importRisuSprites(jsonData);
+                unsetFavFlag(jsonData);
+                jsonData = readFromV2(jsonData);
+                jsonData['create_date'] = humanizedISO8601DateTime();
+                const char = JSON.stringify(jsonData);
+                await charaWrite(uploadPath, char, png_name, response, { file_name: png_name });
+                fs.unlinkSync(uploadPath);
+            } else if (jsonData.name !== undefined) {
+                console.log('Found a v1 character file.');
+
+                if (jsonData.creator_notes) {
+                    jsonData.creator_notes = jsonData.creator_notes.replace('Creator\'s notes go here.', '');
+                }
+
+                let char = {
+                    'name': jsonData.name,
+                    'description': jsonData.description ?? '',
+                    'creatorcomment': jsonData.creatorcomment ?? jsonData.creator_notes ?? '',
+                    'personality': jsonData.personality ?? '',
+                    'first_mes': jsonData.first_mes ?? '',
+                    'avatar': 'none',
+                    'chat': jsonData.name + ' - ' + humanizedISO8601DateTime(),
+                    'mes_example': jsonData.mes_example ?? '',
+                    'scenario': jsonData.scenario ?? '',
+                    'create_date': humanizedISO8601DateTime(),
+                    'talkativeness': jsonData.talkativeness ?? 0.5,
+                    'creator': jsonData.creator ?? '',
+                    'tags': jsonData.tags ?? '',
+                };
+                char = convertToV2(char);
+                const charJSON = JSON.stringify(char);
+                await charaWrite(uploadPath, charJSON, png_name, response, { file_name: png_name });
+                fs.unlinkSync(uploadPath);
+            } else {
+                console.log('Unknown character card format');
+                response.send({ error: true });
+            }
+        } catch (err) {
+            console.log(err);
+            response.send({ error: true });
         }
     }
 });
@@ -968,7 +1024,7 @@ router.post('/export', jsonParser, async function (request, response) {
                 let json = await charaRead(filename);
                 if (json === undefined) return response.sendStatus(400);
                 let jsonObject = getCharaCardV2(JSON.parse(json));
-                return response.type('json').send(jsonObject);
+                return response.type('json').send(JSON.stringify(jsonObject, null, 4));
             }
             catch {
                 return response.sendStatus(400);
