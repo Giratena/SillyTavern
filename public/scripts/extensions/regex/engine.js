@@ -17,6 +17,8 @@ const regex_placement = {
     USER_INPUT: 1,
     AI_OUTPUT: 2,
     SLASH_COMMAND: 3,
+    // 4 - sendAs (legacy)
+    WORLD_INFO: 5,
 };
 
 /**
@@ -118,7 +120,7 @@ function runRegexScript(regexScript, rawString, { characterOverride } = {}) {
     newString = rawString.replace(findRegex, function(match) {
         const args = [...arguments];
         const replaceString = regexScript.replaceString.replace(/{{match}}/gi, '$0');
-        const replaceWithGroups = replaceString.replaceAll(/\$(\d)+/g, (_, num) => {
+        const replaceWithGroups = replaceString.replaceAll(/\$(\d+)/g, (_, num) => {
             // Get a full match or a capture group
             const match = args[Number(num)];
 

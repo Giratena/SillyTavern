@@ -39,3 +39,14 @@ deepl:
   formality: default
 enableServerPlugins: false
 avatarThumbnailsPng: false
+dataRoot: ./data
+enableForwardedWhitelist: true
+enableUserAccounts: false
+enableDiscreetLogin: false
+cookieSecret: Ai/xWHU71drsRy6UfTm+CIvGeYFeB8GJVGo2GSqGB9Qa2hj7lcXrg4Bf72oxP/NBHTJa/sfU/y+qyRfF5kKncg==
+disableCsrfProtection: false
+whitelistImportDomains:
+  - localhost
+  - cdn.discordapp.com
+  - files.catbox.moe
+  - raw.githubusercontent.com
