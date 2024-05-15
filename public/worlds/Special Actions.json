@@ -22,7 +22,12 @@
             "useProbability": true,
             "displayIndex": 0,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "1": {
             "uid": 1,
@@ -47,7 +52,12 @@
             "useProbability": true,
             "displayIndex": 1,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "2": {
             "uid": 2,
@@ -80,7 +90,12 @@
             "useProbability": true,
             "displayIndex": 2,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "3": {
             "uid": 3,
@@ -89,11 +104,14 @@
                 "staring",
                 "listen",
                 "look",
-                "watch"
+                "watch",
+                "looking",
+                "watching",
+                "listening"
             ],
             "keysecondary": [],
             "comment": "Stare",
-            "content": "[Describe a detailed description of what {{user}} is currently looking at noting outfits, actions, etc. Describe things as lewdly as possible.]",
+            "content": "[Reminder to describe a detailed description of what {{user}} is currently looking at noting outfits, actions, etc. Describe things as lewdly as possible.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -104,9 +122,14 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "depth": 4,
+            "depth": 2,
             "group": "",
-            "displayIndex": 3
+            "displayIndex": 3,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "4": {
             "uid": 4,
@@ -128,7 +151,12 @@
             "useProbability": true,
             "depth": 1,
             "group": "",
-            "displayIndex": 4
+            "displayIndex": 4,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "5": {
             "uid": 5,
@@ -137,7 +165,7 @@
             ],
             "keysecondary": [],
             "comment": "music",
-            "content": "[The music is evil and seductive and femdommy. Describe as the sexually explicit lyrics of the song, using as much hypnotic language as possible.]",
+            "content": "[The music is evil and seductive and femdommy. Describe as the sexually toned music combo'd with sexual touches amd whispers, using as much hypnotic language as possible.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -150,7 +178,12 @@
             "useProbability": true,
             "depth": 1,
             "group": "",
-            "displayIndex": 5
+            "displayIndex": 5,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         }
     }
 }

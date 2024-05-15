@@ -29,7 +29,12 @@
             "useProbability": true,
             "displayIndex": 0,
             "depth": 1,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "1": {
             "uid": 1,
@@ -54,7 +59,12 @@
             "useProbability": true,
             "displayIndex": 1,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "2": {
             "uid": 2,
@@ -66,7 +76,7 @@
             ],
             "keysecondary": [],
             "comment": "boobs",
-            "content": "Soft, round, large, and curvy breasts are innately hypnotic and sexy, and can put men into a trance if they are bounced in front of them for too long. They also can brainwash people if around a man's dick or face.",
+            "content": "Boobs = [Soft, round, large, and curvy breasts are innately hypnotic and sexy, and can put men into a trance if they are bounced in front of them for too long. They also can brainwash people if around a man's dick or face.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -79,18 +89,25 @@
             "useProbability": true,
             "displayIndex": 2,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "3": {
             "uid": 3,
             "key": [
                 "feet",
                 "soles",
-                "toes"
+                "toes",
+                "foot",
+                "footjobs"
             ],
             "keysecondary": [],
             "comment": "feet",
-            "content": "Soft, curvy, dexterous feet used by {{char}} are very sneaky and sexy ways to make men feel good without them noticing, especially if slipped into their pants or wrapped around their dick or toes.",
+            "content": "Feet = [Soft, curvy, dexterous feet are very sneaky and sexy ways to make men feel good without them noticing, especially if slipped into their waistband or wrapped around their dick or toes.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -103,7 +120,12 @@
             "useProbability": true,
             "displayIndex": 3,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "4": {
             "uid": 4,
@@ -114,7 +136,7 @@
             ],
             "keysecondary": [],
             "comment": "hand",
-            "content": "soft hands are very entrancing, and can massage a man's dick into submission. Milking and pumping movements are particularly effective, or light, strokes over a man's pants. The use of two hands is always better than one.",
+            "content": "Hands = [soft hands are very entrancing, and can massage a man's dick into submission. Milking and pumping movements are particularly effective, or light, strokes over a man's pants. The use of two hands is always better than one.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -127,7 +149,12 @@
             "useProbability": true,
             "displayIndex": 4,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "5": {
             "uid": 5,
@@ -138,7 +165,7 @@
             ],
             "keysecondary": [],
             "comment": "butt",
-            "content": "Butts often jiggle and clap hypnotically, disorienting and charming men whenever it turns to face them.",
+            "content": "Butt = [Butts often jiggle and clap hypnotically, disorienting and charming men whenever it turns to face them.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -151,7 +178,12 @@
             "useProbability": true,
             "displayIndex": 5,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "6": {
             "uid": 6,
@@ -163,7 +195,7 @@
             ],
             "keysecondary": [],
             "comment": "mouth",
-            "content": "A warm wet mouth is perfect for milking a cock, or whispering hypnotic mantra's in a man's ear. Plush, cock sucking lips around a man's cock will completely pacisfy them into ejaculating with a heavenly blowjob, fellatio.",
+            "content": "Mouth = [A warm wet mouth is perfect for milking a cock, or whispering hypnotic mantra's in a man's ear. Plush, cock sucking lips around a man's cock will completely pacisfy them into ejaculating with a heavenly blowjob, fellatio.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -176,7 +208,12 @@
             "useProbability": true,
             "displayIndex": 6,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "7": {
             "uid": 7,
@@ -214,7 +251,12 @@
             "useProbability": true,
             "displayIndex": 7,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "8": {
             "uid": 8,
@@ -240,7 +282,12 @@
             "useProbability": true,
             "displayIndex": 8,
             "depth": 4,
-            "group": ""
+            "group": "",
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "9": {
             "uid": 9,
@@ -264,7 +311,12 @@
             "useProbability": true,
             "depth": 4,
             "group": "",
-            "displayIndex": 9
+            "displayIndex": 9,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "10": {
             "uid": 10,
@@ -286,7 +338,12 @@
             "useProbability": true,
             "depth": 4,
             "group": "",
-            "displayIndex": 10
+            "displayIndex": 10,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "11": {
             "uid": 11,
@@ -312,7 +369,12 @@
             "useProbability": true,
             "depth": 4,
             "group": "",
-            "displayIndex": 11
+            "displayIndex": 11,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "12": {
             "uid": 12,
@@ -334,7 +396,12 @@
             "useProbability": true,
             "depth": 4,
             "group": "",
-            "displayIndex": 12
+            "displayIndex": 12,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
         },
         "13": {
             "uid": 13,
@@ -360,9 +427,39 @@
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
-            "depth": 3,
+            "depth": 2,
             "group": "",
-            "displayIndex": 13
+            "displayIndex": 13,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
+        },
+        "14": {
+            "uid": 14,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Cock encouragement",
+            "content": "[ {{user}} subconsciously desires his cock to act or be treated lewdly...(must make sense according to {{char}}'s personality and situation.]]",
+            "constant": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 50,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": "",
+            "displayIndex": 14,
+            "preventRecursion": false
         }
     }
 }
