@@ -1,11 +1,13 @@
 import { chat_metadata, getCurrentChatId, saveSettingsDebounced, sendSystemMessage, system_message_types } from '../script.js';
 import { extension_settings, saveMetadataDebounced } from './extensions.js';
-import { executeSlashCommands } from './slash-commands.js';
+import { executeSlashCommands, executeSlashCommandsWithOptions } from './slash-commands.js';
 import { SlashCommand } from './slash-commands/SlashCommand.js';
+import { SlashCommandAbortController } from './slash-commands/SlashCommandAbortController.js';
 import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from './slash-commands/SlashCommandArgument.js';
 import { SlashCommandClosure } from './slash-commands/SlashCommandClosure.js';
+import { SlashCommandClosureResult } from './slash-commands/SlashCommandClosureResult.js';
 import { SlashCommandEnumValue } from './slash-commands/SlashCommandEnumValue.js';
-import { SlashCommandParser } from './slash-commands/SlashCommandParser.js';
+import { PARSER_FLAG, SlashCommandParser } from './slash-commands/SlashCommandParser.js';
 import { SlashCommandScope } from './slash-commands/SlashCommandScope.js';
 import { isFalseBoolean } from './utils.js';
 
@@ -314,61 +316,117 @@ function listVariablesCallback() {
     sendSystemMessage(system_message_types.GENERIC, htmlMessage);
 }
 
-async function whileCallback(args, command) {
+/**
+ *
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+ * @param {(string|SlashCommandClosure)[]} value
+ */
+async function whileCallback(args, value) {
     const isGuardOff = isFalseBoolean(args.guard);
     const iterations = isGuardOff ? Number.MAX_SAFE_INTEGER : MAX_LOOPS;
+    /**@type {string|SlashCommandClosure} */
+    let command;
+    if (value) {
+        if (value[0] instanceof SlashCommandClosure) {
+            command = value[0];
+        } else {
+            command = value.join(' ');
+        }
+    }
 
+    let commandResult;
     for (let i = 0; i < iterations; i++) {
         const { a, b, rule } = parseBooleanOperands(args);
         const result = evalBoolean(rule, a, b);
 
         if (result && command) {
-            if (command instanceof SlashCommandClosure) await command.execute();
-            else await executeSubCommands(command, args._scope, args._parserFlags);
+            if (command instanceof SlashCommandClosure) {
+                commandResult = await command.execute();
+            } else {
+                commandResult = await executeSubCommands(command, args._scope, args._parserFlags, args._abortController);
+            }
+            if (commandResult.isAborted) break;
         } else {
             break;
         }
     }
 
+    if (commandResult) {
+        return commandResult.pipe;
+    }
+
     return '';
 }
 
+/**
+ *
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+ * @param {import('./slash-commands/SlashCommand.js').UnnamedArguments} value
+ * @returns
+ */
 async function timesCallback(args, value) {
     let repeats;
     let command;
     if (Array.isArray(value)) {
-        [repeats, command] = value;
+        [repeats, ...command] = value;
+        if (command[0] instanceof SlashCommandClosure) {
+            command = command[0];
+        } else {
+            command = command.join(' ');
+        }
     } else {
-        [repeats, ...command] = value.split(' ');
+        [repeats, ...command] = /**@type {string}*/(value).split(' ');
         command = command.join(' ');
     }
     const isGuardOff = isFalseBoolean(args.guard);
     const iterations = Math.min(Number(repeats), isGuardOff ? Number.MAX_SAFE_INTEGER : MAX_LOOPS);
+    let result;
     for (let i = 0; i < iterations; i++) {
+        /**@type {SlashCommandClosureResult}*/
         if (command instanceof SlashCommandClosure) {
             command.scope.setMacro('timesIndex', i);
-            await command.execute();
+            result = await command.execute();
         }
         else {
-            await executeSubCommands(command.replace(/\{\{timesIndex\}\}/g, i), args._scope, args._parserFlags);
+            result = await executeSubCommands(command.replace(/\{\{timesIndex\}\}/g, i.toString()), args._scope, args._parserFlags, args._abortController);
         }
+        if (result.isAborted) break;
     }
 
-    return '';
+    return result?.pipe ?? '';
 }
 
-async function ifCallback(args, command) {
+/**
+ *
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+ * @param {(string|SlashCommandClosure)[]} value
+ */
+async function ifCallback(args, value) {
     const { a, b, rule } = parseBooleanOperands(args);
     const result = evalBoolean(rule, a, b);
 
-    if (result && command) {
-        if (command instanceof SlashCommandClosure) return (await command.execute()).pipe;
-        return await executeSubCommands(command, args._scope, args._parserFlags);
-    } else if (!result && args.else && ((typeof args.else === 'string' && args.else !== '') || args.else instanceof SlashCommandClosure)) {
-        if (args.else instanceof SlashCommandClosure) return (await args.else.execute(args._scope)).pipe;
-        return await executeSubCommands(args.else, args._scope, args._parserFlags);
+    /**@type {string|SlashCommandClosure} */
+    let command;
+    if (value) {
+        if (value[0] instanceof SlashCommandClosure) {
+            command = value[0];
+        } else {
+            command = value.join(' ');
+        }
     }
 
+    let commandResult;
+    if (result && command) {
+        if (command instanceof SlashCommandClosure) return (await command.execute()).pipe;
+        commandResult = await executeSubCommands(command, args._scope, args._parserFlags, args._abortController);
+    } else if (!result && args.else && ((typeof args.else === 'string' && args.else !== '') || args.else instanceof SlashCommandClosure)) {
+        if (args.else instanceof SlashCommandClosure) return (await args.else.execute()).pipe;
+        commandResult = await executeSubCommands(args.else, args._scope, args._parserFlags, args._abortController);
+    }
+
+    if (commandResult) {
+        return commandResult.pipe;
+    }
     return '';
 }
 
@@ -511,20 +569,25 @@ function evalBoolean(rule, a, b) {
 /**
  * Executes a slash command from a string (may be enclosed in quotes) and returns the result.
  * @param {string} command Command to execute. May contain escaped macro and batch separators.
- * @returns {Promise<string>} Pipe result
+ * @param {SlashCommandScope} [scope] The scope to use.
+ * @param {{[id:PARSER_FLAG]:boolean}} [parserFlags] The parser flags to use.
+ * @param {SlashCommandAbortController} [abortController] The abort controller to use.
+ * @returns {Promise<SlashCommandClosureResult>} Closure execution result
  */
-async function executeSubCommands(command, scope = null, parserFlags = null) {
+async function executeSubCommands(command, scope = null, parserFlags = null, abortController = null) {
     if (command.startsWith('"') && command.endsWith('"')) {
         command = command.slice(1, -1);
     }
 
-    const result = await executeSlashCommands(command, true, scope, true, parserFlags);
+    const result = await executeSlashCommandsWithOptions(command, {
+        handleExecutionErrors: false,
+        handleParserErrors: false,
+        parserFlags,
+        scope,
+        abortController: abortController ?? new SlashCommandAbortController(),
+    });
 
-    if (!result || typeof result !== 'object') {
-        return '';
-    }
-
-    return result?.pipe || '';
+    return result;
 }
 
 /**
@@ -732,27 +795,54 @@ function letCallback(args, value) {
 
 /**
  * Set or retrieve a variable in the current scope or nearest ancestor scope.
- * @param {{_scope:SlashCommandScope, key?:string, index?:String|Number}} args Named arguments.
- * @param {String|[String, SlashCommandClosure]} value Name and optional value for the variable.
+ * @param {{_hasUnnamedArgument:boolean, _scope:SlashCommandScope, key?:string, index?:string|number}} args Named arguments.
+ * @param {string|SlashCommandClosure|(string|SlashCommandClosure)[]} value Name and optional value for the variable.
  * @returns The variable's value
  */
 function varCallback(args, value) {
-    if (Array.isArray(value)) {
-        args._scope.setVariable(value[0], typeof value[1] == 'string' ? value.slice(1).join(' ') : value[1], args.index);
-        return value[1];
-    }
+    if (!Array.isArray(value)) value = [value];
     if (args.key !== undefined) {
         const key = args.key;
-        const val = value;
-        args._scope.setVariable(key, val, args.index);
-        return val;
-    } else if (value.includes(' ')) {
-        const key = value.split(' ')[0];
-        const val = value.split(' ').slice(1).join(' ');
-        args._scope.setVariable(key, val, args.index);
-        return val;
+        if (args._hasUnnamedArgument) {
+            const val = value.join(' ');
+            args._scope.setVariable(key, val, args.index);
+            return val;
+        } else {
+            return args._scope.getVariable(key, args.index);
+        }
     }
-    return args._scope.getVariable(args.key ?? value, args.index);
+    const key = value.shift();
+    if (value.length > 0) {
+        const val = value.join(' ');
+        args._scope.setVariable(key, val, args.index);
+        return val;
+    } else {
+        return args._scope.getVariable(key, args.index);
+    }
+}
+
+/**
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+ * @param {SlashCommandClosure} value
+ * @returns {string}
+ */
+function closureSerializeCallback(args, value) {
+    if (!(value instanceof SlashCommandClosure)) {
+        throw new Error('unnamed argument must be a closure');
+    }
+    return value.rawText;
+}
+
+/**
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+ * @param {import('./slash-commands/SlashCommand.js').UnnamedArguments} value
+ * @returns {SlashCommandClosure}
+ */
+function closureDeserializeCallback(args, value) {
+    const parser = new SlashCommandParser();
+    const closure = parser.parse(value, true, args._parserFlags, args._abortController);
+    closure.scope.parent = args._scope;
+    return closure;
 }
 
 export function registerVariableCommands() {
@@ -1066,6 +1156,7 @@ export function registerVariableCommands() {
                 'command to execute if true', [ARGUMENT_TYPE.CLOSURE, ARGUMENT_TYPE.SUBCOMMAND], true,
             ),
         ],
+        splitUnnamedArgument: true,
         helpString: `
             <div>
                 Compares the value of the left operand <code>a</code> with the value of the right operand <code>b</code>,
@@ -1132,6 +1223,7 @@ export function registerVariableCommands() {
                 'command to execute while true', [ARGUMENT_TYPE.CLOSURE, ARGUMENT_TYPE.SUBCOMMAND], true,
             ),
         ],
+        splitUnnamedArgument: true,
         helpString: `
             <div>
                 Compares the value of the left operand <code>a</code> with the value of the right operand <code>b</code>,
@@ -1184,6 +1276,7 @@ export function registerVariableCommands() {
                 true,
             ),
         ],
+        splitUnnamedArgument: true,
         helpString: `
             <div>
                 Execute any valid slash command enclosed in quotes <code>repeats</code> number of times.
@@ -1592,7 +1685,7 @@ export function registerVariableCommands() {
         returns: 'length of the provided value',
         unnamedArgumentList: [
             new SlashCommandArgument(
-                'value', [ARGUMENT_TYPE.STRING, ARGUMENT_TYPE.VARIABLE_NAME], true
+                'value', [ARGUMENT_TYPE.STRING, ARGUMENT_TYPE.VARIABLE_NAME], true,
             ),
         ],
         helpString: `
@@ -1667,7 +1760,7 @@ export function registerVariableCommands() {
         returns: 'the variable value',
         namedArgumentList: [
             new SlashCommandNamedArgument(
-                'key', 'variable name', [ARGUMENT_TYPE.VARIABLE_NAME], false,
+                'key', 'variable name; forces setting the variable, even if no value is provided', [ARGUMENT_TYPE.VARIABLE_NAME], false,
             ),
             new SlashCommandNamedArgument(
                 'index',
@@ -1703,7 +1796,7 @@ export function registerVariableCommands() {
                         <pre><code class="language-stscript">/let x foo | /var x foo bar | /var x | /echo</code></pre>
                     </li>
                     <li>
-                        <pre><code class="language-stscript">/let x foo | /var key=x foo bar | /var key=x | /echo</code></pre>
+                        <pre><code class="language-stscript">/let x foo | /var key=x foo bar | /var x | /echo</code></pre>
                     </li>
                 </ul>
             </div>
@@ -1741,6 +1834,63 @@ export function registerVariableCommands() {
                     </li>
                     <li>
                         <pre><code class="language-stscript">/let y</code></pre>
+                    </li>
+                </ul>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'closure-serialize',
+        /**
+         *
+         * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+         * @param {SlashCommandClosure} value
+         * @returns {string}
+         */
+        callback: (args, value)=>closureSerializeCallback(args, value),
+        unnamedArgumentList: [
+            SlashCommandArgument.fromProps({ description: 'the closure to serialize',
+                typeList: [ARGUMENT_TYPE.CLOSURE],
+                isRequired: true,
+            }),
+        ],
+        returns: 'serialized closure as string',
+        helpString: `
+            <div>
+                Serialize a closure as text that can be stored in global and chat variables.
+            </div>
+            <div>
+                <strong>Examples:</strong>
+                <ul>
+                    <li>
+                        <pre><code class="language-stscript">/closure-serialize {: x=1 /echo x is {{var::x}} and y is {{var::y}} :} |\n/setvar key=myClosure</code></pre>
+                    </li>
+                </ul>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'closure-deserialize',
+        /**
+         * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args
+         * @param {import('./slash-commands/SlashCommand.js').UnnamedArguments} value
+         * @returns {SlashCommandClosure}
+         */
+        callback: (args, value)=>closureDeserializeCallback(args, value),
+        unnamedArgumentList: [
+            SlashCommandArgument.fromProps({ description: 'serialized closure',
+                typeList: [ARGUMENT_TYPE.STRING],
+                isRequired: true,
+            }),
+        ],
+        returns: 'deserialized closure',
+        helpString: `
+            <div>
+                Deserialize a closure from text.
+            </div>
+            <div>
+                <strong>Examples:</strong>
+                <ul>
+                    <li>
+                        <pre><code class="language-stscript">/closure-deserialize {{getvar::myClosure}} |\n/let myClosure {{pipe}} |\n/let y bar |\n/:myClosure x=foo</code></pre>
                     </li>
                 </ul>
             </div>

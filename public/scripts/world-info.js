@@ -1,5 +1,5 @@
 import { saveSettings, callPopup, substituteParams, getRequestHeaders, chat_metadata, this_chid, characters, saveCharacterDebounced, menu_type, eventSource, event_types, getExtensionPromptByName, saveMetadata, getCurrentChatId, extension_prompt_roles } from '../script.js';
-import { download, debounce, initScrollHeight, resetScrollHeight, parseJsonFile, extractDataFromPng, getFileBuffer, getCharaFilename, getSortableDelay, escapeRegex, PAGINATION_TEMPLATE, navigation_option, waitUntilCondition, isTrueBoolean, setValueByPath, flashHighlight } from './utils.js';
+import { download, debounce, initScrollHeight, resetScrollHeight, parseJsonFile, extractDataFromPng, getFileBuffer, getCharaFilename, getSortableDelay, escapeRegex, PAGINATION_TEMPLATE, navigation_option, waitUntilCondition, isTrueBoolean, setValueByPath, flashHighlight, select2ModifyOptions, getSelect2OptionId, dynamicSelect2DataViaAjax, highlightRegex, select2ChoiceClickSubscribe, isFalseBoolean, equalsIgnoreCaseAndAccents, getSanitizedFilename, checkOverwriteExistingData } from './utils.js';
 import { extension_settings, getContext } from './extensions.js';
 import { NOTE_MODULE_NAME, metadata_keys, shouldWIAddPrompt } from './authors-note.js';
 import { isMobile } from './RossAscends-mods.js';
@@ -50,6 +50,7 @@ const WI_ENTRY_EDIT_TEMPLATE = $('#entry_edit_template .world_entry');
 
 let world_info = {};
 let selected_world_info = [];
+/** @type {string[]} */
 let world_names;
 let world_info_depth = 2;
 let world_info_min_activations = 0; // if > 0, will continue seeking chat until minimum world infos are activated
@@ -69,7 +70,7 @@ const saveSettingsDebounced = debounce(() => {
     saveSettings();
 }, debounce_timeout.relaxed);
 const sortFn = (a, b) => b.order - a.order;
-let updateEditor = (navigation) => { console.debug('Triggered WI navigation', navigation); };
+let updateEditor = (navigation, flashOnNav = true) => { console.debug('Triggered WI navigation', navigation, flashOnNav); };
 
 // Do not optimize. updateEditor is a function that is updated by the displayWorldEntries with new data.
 const worldInfoFilter = new FilterHelper(() => updateEditor());
@@ -186,7 +187,7 @@ class WorldInfoBuffer {
             result += '\n' + this.#recurseBuffer.join('\n');
         }
 
-        return this.#transformString(result, entry);
+        return result;
     }
 
     /**
@@ -197,6 +198,14 @@ class WorldInfoBuffer {
      * @returns {boolean} True if the string was found in the buffer
      */
     matchKeys(haystack, needle, entry) {
+        // If the needle is a regex, we do regex pattern matching and override all the other options
+        const keyRegex = parseRegexFromString(needle);
+        if (keyRegex) {
+            return keyRegex.test(haystack);
+        }
+
+        // Otherwise we do normal matching of plaintext with the chosen entry settings
+        haystack = this.#transformString(haystack, entry);
         const transformedString = this.#transformString(needle, entry);
         const matchWholeWords = entry.matchWholeWords ?? world_info_match_whole_words;
 
@@ -541,6 +550,19 @@ function registerWorldInfoSlashCommands() {
             return '';
         }
 
+        if (typeof newEntryTemplate[field] === 'boolean') {
+            const isTrue = isTrueBoolean(value);
+            const isFalse = isFalseBoolean(value);
+
+            if (isTrue) {
+                value = String(true);
+            }
+
+            if (isFalse) {
+                value = String(false);
+            }
+        }
+
         const fuse = new Fuse(entries, {
             keys: [{ name: field, weight: 1 }],
             includeScore: true,
@@ -623,7 +645,7 @@ function registerWorldInfoSlashCommands() {
         await saveWorldInfo(file, data, true);
         reloadEditor(file);
 
-        return entry.uid;
+        return String(entry.uid);
     }
 
     async function setEntryFieldCallback(args, value) {
@@ -984,8 +1006,39 @@ function nullWorldInfo() {
     toastr.info('Create or import a new World Info file first.', 'World Info is not set', { timeOut: 10000, preventDuplicates: true });
 }
 
-function displayWorldEntries(name, data, navigation = navigation_option.none) {
-    updateEditor = (navigation) => displayWorldEntries(name, data, navigation);
+/** @type {Select2Option[]} Cache all keys as selectable dropdown option */
+const worldEntryKeyOptionsCache = [];
+
+/**
+ * Update the cache and all select options for the keys with new values to display
+ * @param {string[]|Select2Option[]} keyOptions - An array of options to update
+ * @param {object} options - Optional arguments
+ * @param {boolean?} [options.remove=false] - Whether the option was removed, so the count should be reduced - otherwise it'll be increased
+ * @param {boolean?} [options.reset=false] - Whether the cache should be reset. Reset will also not trigger update of the controls, as we expect them to be redrawn anyway
+ */
+function updateWorldEntryKeyOptionsCache(keyOptions, { remove = false, reset = false } = {}) {
+    if (!keyOptions.length) return;
+    /** @type {Select2Option[]} */
+    const options = keyOptions.map(x => typeof x === 'string' ? { id: getSelect2OptionId(x), text: x } : x);
+    if (reset) worldEntryKeyOptionsCache.length = 0;
+    options.forEach(option => {
+        // Update the cache list
+        let cachedEntry = worldEntryKeyOptionsCache.find(x => x.id == option.id);
+        if (cachedEntry) {
+            cachedEntry.count += !remove ? 1 : -1;
+        } else if (!remove) {
+            worldEntryKeyOptionsCache.push(option);
+            cachedEntry = option;
+            cachedEntry.count = 1;
+        }
+    });
+
+    // Sort by count DESC and then alphabetically
+    worldEntryKeyOptionsCache.sort((a, b) => b.count - a.count || a.text.localeCompare(b.text));
+}
+
+function displayWorldEntries(name, data, navigation = navigation_option.none, flashOnNav = true) {
+    updateEditor = (navigation, flashOnNav = true) => displayWorldEntries(name, data, navigation, flashOnNav);
 
     const worldEntriesList = $('#world_popup_entries_list');
 
@@ -1005,6 +1058,34 @@ function displayWorldEntries(name, data, navigation = navigation_option.none) {
         return;
     }
 
+    // Regardless of whether success is displayed or not. Make sure the delete button is available.
+    // Do not put this code behind.
+    $('#world_popup_delete').off('click').on('click', async () => {
+        const confirmation = await callPopup(`<h3>Delete the World/Lorebook: "${name}"?</h3>This action is irreversible!`, 'confirm');
+
+        if (!confirmation) {
+            return;
+        }
+
+        if (world_info.charLore) {
+            world_info.charLore.forEach((charLore, index) => {
+                if (charLore.extraBooks?.includes(name)) {
+                    const tempCharLore = charLore.extraBooks.filter((e) => e !== name);
+                    if (tempCharLore.length === 0) {
+                        world_info.charLore.splice(index, 1);
+                    } else {
+                        charLore.extraBooks = tempCharLore;
+                    }
+                }
+            });
+
+            saveSettingsDebounced();
+        }
+
+        // Selected world_info automatically refreshes
+        await deleteWorldInfo(name);
+    });
+
     // Before printing the WI, we check if we should enable/disable search sorting
     verifyWorldInfoSearchSortRule();
 
@@ -1019,6 +1100,10 @@ function displayWorldEntries(name, data, navigation = navigation_option.none) {
         // Apply the filter and do the chosen sorting
         entriesArray = worldInfoFilter.applyFilters(entriesArray);
         entriesArray = sortEntries(entriesArray);
+
+        // Cache keys
+        const keys = entriesArray.flatMap(entry => [...entry.key, ...entry.keysecondary]);
+        updateWorldEntryKeyOptionsCache(keys, { reset: true });
 
         // Run the callback for printing this
         typeof callback === 'function' && callback(entriesArray);
@@ -1114,7 +1199,7 @@ function displayWorldEntries(name, data, navigation = navigation_option.none) {
             const parentOffset = element.parent().offset();
             const scrollOffset = elementOffset.top - parentOffset.top;
             $('#WorldInfo').scrollTop(scrollOffset);
-            flashHighlight(element);
+            if (flashOnNav) flashHighlight(element);
         });
     }
 
@@ -1169,32 +1254,6 @@ function displayWorldEntries(name, data, navigation = navigation_option.none) {
         }
     });
 
-    $('#world_popup_delete').off('click').on('click', async () => {
-        const confirmation = await callPopup(`<h3>Delete the World/Lorebook: "${name}"?</h3>This action is irreversible!`, 'confirm');
-
-        if (!confirmation) {
-            return;
-        }
-
-        if (world_info.charLore) {
-            world_info.charLore.forEach((charLore, index) => {
-                if (charLore.extraBooks?.includes(name)) {
-                    const tempCharLore = charLore.extraBooks.filter((e) => e !== name);
-                    if (tempCharLore.length === 0) {
-                        world_info.charLore.splice(index, 1);
-                    } else {
-                        charLore.extraBooks = tempCharLore;
-                    }
-                }
-            });
-
-            saveSettingsDebounced();
-        }
-
-        // Selected world_info automatically refreshes
-        await deleteWorldInfo(name);
-    });
-
     // Check if a sortable instance exists
     if (worldEntriesList.sortable('instance') !== undefined) {
         // Destroy the instance
@@ -1202,9 +1261,10 @@ function displayWorldEntries(name, data, navigation = navigation_option.none) {
     }
 
     worldEntriesList.sortable({
+        items: '.world_entry',
         delay: getSortableDelay(),
         handle: '.drag-handle',
-        stop: async function (event, ui) {
+        stop: async function (_event, _ui) {
             const firstEntryUid = $('#world_popup_entries_list .world_entry').first().data('uid');
             const minDisplayIndex = data?.entries[firstEntryUid]?.displayIndex ?? 0;
             $('#world_popup_entries_list .world_entry').each(function (index) {
@@ -1300,6 +1360,147 @@ function deleteOriginalDataValue(data, uid) {
     }
 }
 
+/** @typedef {import('./utils.js').Select2Option} Select2Option */
+
+/**
+ * Splits a given input string that contains one or more keywords or regexes, separated by commas.
+ *
+ * Each part can be a valid regex following the pattern `/myregex/flags` with optional flags. Commmas inside the regex are allowed, slashes have to be escaped like this: `\/`
+ * If a regex doesn't stand alone, it is not treated as a regex.
+ *
+ * @param {string} input - One or multiple keywords or regexes, separated by commas
+ * @returns {string[]} An array of keywords and regexes
+ */
+function splitKeywordsAndRegexes(input) {
+    /** @type {string[]} */
+    let keywordsAndRegexes = [];
+
+    // We can make this easy. Instead of writing another function to find and parse regexes,
+    // we gonna utilize the custom tokenizer that also handles the input.
+    // No need for validation here
+    const addFindCallback = (/** @type {Select2Option} */ item) => {
+        keywordsAndRegexes.push(item.text);
+    };
+
+    const { term } = customTokenizer({ _type: 'custom_call', term: input }, undefined, addFindCallback);
+    const finalTerm = term.trim();
+    if (finalTerm) {
+        addFindCallback({ id: getSelect2OptionId(finalTerm), text: finalTerm });
+    }
+
+    return keywordsAndRegexes;
+}
+
+/**
+ * Tokenizer parsing input and splitting it into keywords and regexes
+ *
+ * @param {{_type: string, term: string}} input - The typed input
+ * @param {{options: object}} _selection - The selection even object (?)
+ * @param {function(Select2Option):void} callback - The original callback function to call if an item should be inserted
+ * @returns {{term: string}} - The remaining part that is untokenized in the textbox
+ */
+function customTokenizer(input, _selection, callback) {
+    let current = input.term;
+
+    let insideRegex = false, regexClosed = false;
+
+    // Go over the input and check the current state, if we can get a token
+    for (let i = 0; i < current.length; i++) {
+        let char = current[i];
+
+        // If we find an unascaped slash, set the current regex state
+        if (char === '/' && (i === 0 || current[i - 1] !== '\\')) {
+            if (!insideRegex) insideRegex = true;
+            else if (!regexClosed) regexClosed = true;
+        }
+
+        // If a comma is typed, we tokenize the input.
+        // unless we are inside a possible regex, which would allow commas inside
+        if (char === ',') {
+            // We take everything up till now and consider this a token
+            const token = current.slice(0, i).trim();
+
+            // Now how we test if this is a regex? And not a finished one, but a half-finished one?
+            // We use the state remembered from above to check whether the delimiter was opened but not closed yet.
+            // We don't check validity here if we are inside a regex, because it might only get valid after its finished. (Closing brackets, etc)
+            // Validity will be finally checked when the next comma is typed.
+            if (insideRegex && !regexClosed) {
+                continue;
+            }
+
+            // So now the comma really means the token is done.
+            // We take the token up till now, and insert it. Empty will be skipped.
+            if (token) {
+                const isRegex = isValidRegex(token);
+
+                // Last chance to check for valid regex again. Because it might have been valid while typing, but now is not valid anymore and contains commas we need to split.
+                if (token.startsWith('/') && !isRegex) {
+                    const tokens = token.split(',').map(x => x.trim());
+                    tokens.forEach(x => callback({ id: getSelect2OptionId(x), text: x }));
+                } else {
+                    callback({ id: getSelect2OptionId(token), text: token });
+                }
+            }
+
+            // Now remove the token from the current input, and the comma too
+            current = current.slice(i + 1);
+            insideRegex = false, regexClosed = false;
+            i = 0;
+        }
+    }
+
+    // At the end, just return the left-over input
+    return { term: current };
+}
+
+/**
+ * Validates if a string is a valid slash-delimited regex, that can be parsed and executed
+ *
+ * This is a wrapper around `parseRegexFromString`
+ *
+ * @param {string} input - A delimited regex string
+ * @returns {boolean} Whether this would be a valid regex that can be parsed and executed
+ */
+function isValidRegex(input) {
+    return parseRegexFromString(input) !== null;
+}
+
+/**
+ * Gets a real regex object from a slash-delimited regex string
+ *
+ * This function works with `/` as delimiter, and each occurance of it inside the regex has to be escaped.
+ * Flags are optional, but can only be valid flags supported by JavaScript's `RegExp` (`g`, `i`, `m`, `s`, `u`, `y`).
+ *
+ * @param {string} input - A delimited regex string
+ * @returns {RegExp|null} The regex object, or null if not a valid regex
+ */
+function parseRegexFromString(input) {
+    // Extracting the regex pattern and flags
+    let match = input.match(/^\/([\w\W]+?)\/([gimsuy]*)$/);
+    if (!match) {
+        return null; // Not a valid regex format
+    }
+
+    let [, pattern, flags] = match;
+
+    // If we find any unescaped slash delimiter, we also exit out.
+    // JS doesn't care about delimiters inside regex patterns, but for this to be a valid regex outside of our implementation,
+    // we have to make sure that our delimiter is correctly escaped. Or every other engine would fail.
+    if (pattern.match(/(^|[^\\])\//)) {
+        return null;
+    }
+
+    // Now we need to actually unescape the slash delimiters, because JS doesn't care about delimiters
+    pattern = pattern.replace('\\/', '/');
+
+    // Then we return the regex. If it fails, it was invalid syntax.
+    try {
+        return new RegExp(pattern, flags);
+    } catch (e) {
+        return null;
+    }
+}
+
 function getWorldEntry(name, data, entry) {
     if (!data.entries[entry.uid]) {
         return;
@@ -1309,28 +1510,125 @@ function getWorldEntry(name, data, entry) {
     template.data('uid', entry.uid);
     template.attr('uid', entry.uid);
 
+    // Init default state of WI Key toggle (=> true)
+    if (typeof power_user.wi_key_input_plaintext === 'undefined') power_user.wi_key_input_plaintext = true;
+
+    /** Function to build the keys input controls @param {string} entryPropName @param {string} originalDataValueName */
+    function enableKeysInput(entryPropName, originalDataValueName) {
+        const isFancyInput = !isMobile() && !power_user.wi_key_input_plaintext;
+        const input = isFancyInput ? template.find(`select[name="${entryPropName}"]`) : template.find(`textarea[name="${entryPropName}"]`);
+        input.data('uid', entry.uid);
+        input.on('click', function (event) {
+            // Prevent closing the drawer on clicking the input
+            event.stopPropagation();
+        });
+
+        function templateStyling(/** @type {Select2Option} */ item, { searchStyle = false } = {}) {
+            const content = $('<span>').addClass('item').text(item.text).attr('title', `${item.text}\n\nClick to edit`);
+            const isRegex = isValidRegex(item.text);
+            if (isRegex) {
+                content.html(highlightRegex(item.text));
+                content.addClass('regex_item').prepend($('<span>').addClass('regex_icon').text('•*').attr('title', 'Regex'));
+            }
+
+            if (searchStyle && item.count) {
+                // Build a wrapping element
+                const wrapper = $('<span>').addClass('result_block')
+                    .append(content);
+                wrapper.append($('<span>').addClass('item_count').text(item.count).attr('title', `Used as a key ${item.count} ${item.count != 1 ? 'times' : 'time'} in this lorebook`));
+                return wrapper;
+            }
+
+            return content;
+        }
+
+        if (isFancyInput) {
+            input.select2({
+                ajax: dynamicSelect2DataViaAjax(() => worldEntryKeyOptionsCache),
+                tags: true,
+                tokenSeparators: [','],
+                tokenizer: customTokenizer,
+                placeholder: input.attr('placeholder'),
+                templateResult: item => templateStyling(item, { searchStyle: true }),
+                templateSelection: item => templateStyling(item),
+            });
+            input.on('change', function (_, { skipReset, noSave } = {}) {
+                const uid = $(this).data('uid');
+                /** @type {string[]} */
+                const keys = ($(this).select2('data')).map(x => x.text);
+
+                !skipReset && resetScrollHeight(this);
+                if (!noSave) {
+                    data.entries[uid][entryPropName] = keys;
+                    setOriginalDataValue(data, uid, originalDataValueName, data.entries[uid][entryPropName]);
+                    saveWorldInfo(name, data);
+                }
+            });
+            input.on('select2:select', /** @type {function(*):void} */ event => updateWorldEntryKeyOptionsCache([event.params.data]));
+            input.on('select2:unselect', /** @type {function(*):void} */ event => updateWorldEntryKeyOptionsCache([event.params.data], { remove: true }));
+
+            select2ChoiceClickSubscribe(input, target => {
+                const key = $(target).text();
+                console.debug('Editing WI key', key);
+
+                // Remove the current key from the actual selection
+                const selected = input.val();
+                if (!Array.isArray(selected)) return;
+                var index = selected.indexOf(getSelect2OptionId(key));
+                if (index > -1) selected.splice(index, 1);
+                input.val(selected).trigger('change');
+                // Manually update the cache, that change event is not gonna trigger it
+                updateWorldEntryKeyOptionsCache([key], { remove: true });
+
+                // We need to "hack" the actual text input into the currently open textarea
+                input.next('span.select2-container').find('textarea')
+                    .val(key).trigger('input');
+            }, { openDrawer: true });
+
+            select2ModifyOptions(input, entry[entryPropName], { select: true, changeEventArgs: { skipReset: true, noSave: true } });
+        }
+        else {
+            // Compatibility with mobile devices. On mobile we need a text input field, not a select option control, so we need its own event handlers
+            template.find(`select[name="${entryPropName}"]`).hide();
+            input.show();
+
+            input.on('input', function (_, { skipReset, noSave } = {}) {
+                const uid = $(this).data('uid');
+                const value = String($(this).val());
+                !skipReset && resetScrollHeight(this);
+                if (!noSave) {
+                    data.entries[uid][entryPropName] = splitKeywordsAndRegexes(value);
+                    setOriginalDataValue(data, uid, originalDataValueName, data.entries[uid][entryPropName]);
+                    saveWorldInfo(name, data);
+                }
+            });
+            input.val(entry[entryPropName].join(', ')).trigger('input', { skipReset: true });
+        }
+        return { isFancy: isFancyInput, control: input };
+    }
+
     // key
-    const keyInput = template.find('textarea[name="key"]');
-    keyInput.data('uid', entry.uid);
-    keyInput.on('click', function (event) {
-        // Prevent closing the drawer on clicking the input
-        event.stopPropagation();
-    });
+    const keyInput = enableKeysInput('key', 'keys');
 
-    keyInput.on('input', function (_, { skipReset } = {}) {
-        const uid = $(this).data('uid');
-        const value = String($(this).val());
-        !skipReset && resetScrollHeight(this);
-        data.entries[uid].key = value
-            .split(',')
-            .map((x) => x.trim())
-            .filter((x) => x);
+    // keysecondary
+    const keySecondaryInput = enableKeysInput('keysecondary', 'secondary_keys');
 
-        setOriginalDataValue(data, uid, 'keys', data.entries[uid].key);
-        saveWorldInfo(name, data);
+    // draw key input switch button
+    template.find('.switch_input_type_icon').on('click', function () {
+        power_user.wi_key_input_plaintext = !power_user.wi_key_input_plaintext;
+        saveSettingsDebounced();
+
+        // Just redraw the panel
+        const uid = ($(this).parents('.world_entry')).data('uid');
+        updateEditor(uid, false);
+
+        $(`.world_entry[uid="${uid}"] .inline-drawer-icon`).trigger('click');
+        // setTimeout(() => {
+        // }, debounce_timeout.standard);
+    }).each((_, icon) => {
+        $(icon).attr('title', $(icon).data(power_user.wi_key_input_plaintext ? 'tooltip-on' : 'tooltip-off'));
+        $(icon).text($(icon).data(power_user.wi_key_input_plaintext ? 'icon-on' : 'icon-off'));
     });
-    keyInput.val(entry.key.join(', ')).trigger('input', { skipReset: true });
-    //initScrollHeight(keyInput);
 
     // logic AND/NOT
     const selectiveLogicDropdown = template.find('select[name="entryLogicType"]');
@@ -1459,25 +1757,6 @@ function getWorldEntry(name, data, entry) {
         saveWorldInfo(name, data);
     });
 
-    // keysecondary
-    const keySecondaryInput = template.find('textarea[name="keysecondary"]');
-    keySecondaryInput.data('uid', entry.uid);
-    keySecondaryInput.on('input', function (_, { skipReset } = {}) {
-        const uid = $(this).data('uid');
-        const value = String($(this).val());
-        !skipReset && resetScrollHeight(this);
-        data.entries[uid].keysecondary = value
-            .split(',')
-            .map((x) => x.trim())
-            .filter((x) => x);
-
-        setOriginalDataValue(data, uid, 'secondary_keys', data.entries[uid].keysecondary);
-        saveWorldInfo(name, data);
-    });
-
-    keySecondaryInput.val(entry.keysecondary.join(', ')).trigger('input', { skipReset: true });
-    //initScrollHeight(keySecondaryInput);
-
     // comment
     const commentInput = template.find('textarea[name="comment"]');
     const commentToggle = template.find('input[name="addMemo"]');
@@ -1540,8 +1819,8 @@ function getWorldEntry(name, data, entry) {
         if (counter.data('first-run')) {
             counter.data('first-run', false);
             countTokensDebounced(counter, contentInput.val());
-            initScrollHeight(keyInput);
-            initScrollHeight(keySecondaryInput);
+            if (!keyInput.isFancy) initScrollHeight(keyInput.control);
+            if (!keySecondaryInput.isFancy) initScrollHeight(keySecondaryInput.control);
         }
     });
 
@@ -1564,11 +1843,11 @@ function getWorldEntry(name, data, entry) {
             .closest('.world_entry')
             .find('.keysecondarytextpole');
 
-        const keyprimarytextpole = $(this)
+        const keyprimaryselect = $(this)
             .closest('.world_entry')
-            .find('.keyprimarytextpole');
+            .find('.keyprimaryselect');
 
-        const keyprimaryHeight = keyprimarytextpole.outerHeight();
+        const keyprimaryHeight = keyprimaryselect.outerHeight();
         keysecondarytextpole.css('height', keyprimaryHeight + 'px');
 
         value ? keysecondary.show() : keysecondary.hide();
@@ -2043,7 +2322,7 @@ function getWorldEntry(name, data, entry) {
  */
 function getInclusionGroupCallback(data) {
     return function (control, input, output) {
-        const uid = $(control).data("uid");
+        const uid = $(control).data('uid');
         const thisGroups = String($(control).val()).split(/,\s*/).filter(x => x).map(x => x.toLowerCase());
         const groups = new Set();
         for (const entry of Object.values(data.entries)) {
@@ -2066,7 +2345,7 @@ function getInclusionGroupCallback(data) {
 
 function getAutomationIdCallback(data) {
     return function (control, input, output) {
-        const uid = $(control).data("uid");
+        const uid = $(control).data('uid');
         const ids = new Set();
         for (const entry of Object.values(data.entries)) {
             // Skip automation id of this entry, because auto-complete should only suggest the ones that are already available on other entries
@@ -2109,7 +2388,7 @@ function createEntryInputAutocomplete(input, callback, { allowMultiple = false }
             var terms = String($(input).val()).split(/,\s*/);
             terms.pop(); // remove the current input
             terms.push(ui.item.value); // add the selected item
-            $(input).val(terms.filter(x => x).join(", ")).trigger('input').trigger('blur');
+            $(input).val(terms.filter(x => x).join(', ')).trigger('input').trigger('blur');
         }
     };
 
@@ -2201,7 +2480,7 @@ const newEntryTemplate = {
     role: 0,
 };
 
-function createWorldInfoEntry(name, data) {
+function createWorldInfoEntry(_name, data) {
     const newUid = getFreeWorldEntryUid(data);
 
     if (!Number.isInteger(newUid)) {
@@ -2274,9 +2553,15 @@ async function renameWorldInfo(name, data) {
     }
 }
 
+/**
+ * Deletes a world info with the given name
+ *
+ * @param {string} worldInfoName - The name of the world info to delete
+ * @returns {Promise<boolean>} A promise that resolves to true if the world info was successfully deleted, false otherwise
+ */
 async function deleteWorldInfo(worldInfoName) {
     if (!world_names.includes(worldInfoName)) {
-        return;
+        return false;
     }
 
     const response = await fetch('/api/worldinfo/delete', {
@@ -2285,24 +2570,28 @@ async function deleteWorldInfo(worldInfoName) {
         body: JSON.stringify({ name: worldInfoName }),
     });
 
-    if (response.ok) {
-        const existingWorldIndex = selected_world_info.findIndex((e) => e === worldInfoName);
-        if (existingWorldIndex !== -1) {
-            selected_world_info.splice(existingWorldIndex, 1);
-            saveSettingsDebounced();
-        }
+    if (!response.ok) {
+        return false;
+    }
 
-        await updateWorldInfoList();
-        $('#world_editor_select').trigger('change');
+    const existingWorldIndex = selected_world_info.findIndex((e) => e === worldInfoName);
+    if (existingWorldIndex !== -1) {
+        selected_world_info.splice(existingWorldIndex, 1);
+        saveSettingsDebounced();
+    }
 
-        if ($('#character_world').val() === worldInfoName) {
-            $('#character_world').val('').trigger('change');
-            setWorldInfoButtonClass(undefined, false);
-            if (menu_type != 'create') {
-                saveCharacterDebounced();
-            }
+    await updateWorldInfoList();
+    $('#world_editor_select').trigger('change');
+
+    if ($('#character_world').val() === worldInfoName) {
+        $('#character_world').val('').trigger('change');
+        setWorldInfoButtonClass(undefined, false);
+        if (menu_type != 'create') {
+            saveCharacterDebounced();
         }
     }
+
+    return true;
 }
 
 function getFreeWorldEntryUid(data) {
@@ -2334,22 +2623,40 @@ function getFreeWorldName() {
     return undefined;
 }
 
-async function createNewWorldInfo(worldInfoName) {
+/**
+ * Creates a new world info/lorebook with the given name.
+ * Checks if a world with the same name already exists, providing a warning or optionally a user confirmation dialog.
+ *
+ * @param {string} worldName - The name of the new world info
+ * @param {Object} options - Optional parameters
+ * @param {boolean} [options.interactive=false] - Whether to show a confirmation dialog when overwriting an existing world
+ * @returns {Promise<boolean>} - True if the world info was successfully created, false otherwise
+ */
+async function createNewWorldInfo(worldName, { interactive = false } = {}) {
     const worldInfoTemplate = { entries: {} };
 
-    if (!worldInfoName) {
-        return;
+    if (!worldName) {
+        return false;
     }
 
-    await saveWorldInfo(worldInfoName, worldInfoTemplate, true);
+    const sanitizedWorldName = await getSanitizedFilename(worldName);
+
+    const allowed = await checkOverwriteExistingData('World Info', world_names, sanitizedWorldName, { interactive: interactive, actionName: 'Create', deleteAction: (existingName) => deleteWorldInfo(existingName) });
+    if (!allowed) {
+        return false;
+    }
+
+    await saveWorldInfo(worldName, worldInfoTemplate, true);
     await updateWorldInfoList();
 
-    const selectedIndex = world_names.indexOf(worldInfoName);
+    const selectedIndex = world_names.indexOf(worldName);
     if (selectedIndex !== -1) {
         $('#world_editor_select').val(selectedIndex).trigger('change');
     } else {
         hideWorldEditor();
     }
+
+    return true;
 }
 
 async function getCharacterLore() {
@@ -2772,7 +3079,7 @@ async function checkWorldInfo(chat, maxContext) {
 
     if (shouldWIAddPrompt) {
         const originalAN = context.extensionPrompts[NOTE_MODULE_NAME].value;
-        const ANWithWI = `${ANTopEntries.join('\n')}\n${originalAN}\n${ANBottomEntries.join('\n')}`;
+        const ANWithWI = `${ANTopEntries.join('\n')}\n${originalAN}\n${ANBottomEntries.join('\n')}`.replace(/(^\n)|(\n$)/g, '');
         context.setExtensionPrompt(NOTE_MODULE_NAME, ANWithWI, chat_metadata[metadata_keys.position], chat_metadata[metadata_keys.depth], extension_settings.note.allowWIScan, chat_metadata[metadata_keys.role]);
     }
 
@@ -3234,6 +3541,7 @@ function onWorldInfoChange(args, text) {
 
     saveSettingsDebounced();
     eventSource.emit(event_types.WORLDINFO_SETTINGS_UPDATED);
+    return '';
 }
 
 export async function importWorldInfo(file) {
@@ -3282,6 +3590,13 @@ export async function importWorldInfo(file) {
         return;
     }
 
+    const worldName = file.name.substr(0, file.name.lastIndexOf('.'));
+    const sanitizedWorldName = await getSanitizedFilename(worldName);
+    const allowed = await checkOverwriteExistingData('World Info', world_names, sanitizedWorldName, { interactive: true, actionName: 'Import', deleteAction: (existingName) => deleteWorldInfo(existingName) });
+    if (!allowed) {
+        return false;
+    }
+
     jQuery.ajax({
         type: 'POST',
         url: '/api/worldinfo/import',
@@ -3299,10 +3614,10 @@ export async function importWorldInfo(file) {
                     $('#world_editor_select').val(newIndex).trigger('change');
                 }
 
-                toastr.info(`World Info "${data.name}" imported successfully!`);
+                toastr.success(`World Info "${data.name}" imported successfully!`);
             }
         },
-        error: (jqXHR, exception) => { },
+        error: (_jqXHR, _exception) => { },
     });
 }
 
@@ -3374,7 +3689,7 @@ jQuery(() => {
         const finalName = await callPopup('<h3>Create a new World Info?</h3>Enter a name for the new file:', 'input', tempName);
 
         if (finalName) {
-            await createNewWorldInfo(finalName);
+            await createNewWorldInfo(finalName, { interactive: true });
         }
     });
 
@@ -3509,21 +3824,14 @@ jQuery(() => {
         });
 
         // Subscribe world loading to the select2 multiselect items (We need to target the specific select2 control)
-        $('#world_info + span.select2-container').on('click', function (event) {
-            if ($(event.target).hasClass('select2-selection__choice__display')) {
-                event.preventDefault();
-
-                // select2 still bubbles the event to open the dropdown. So we close it here
-                $('#world_info').select2('close');
-
-                const name = $(event.target).text();
-                const selectedIndex = world_names.indexOf(name);
-                if (selectedIndex !== -1) {
-                    $('#world_editor_select').val(selectedIndex).trigger('change');
-                    console.log('Quick selection of world', name);
-                }
+        select2ChoiceClickSubscribe($('#world_info'), target => {
+            const name = $(target).text();
+            const selectedIndex = world_names.indexOf(name);
+            if (selectedIndex !== -1) {
+                $('#world_editor_select').val(selectedIndex).trigger('change');
+                console.log('Quick selection of world', name);
             }
-        });
+        }, { buttonStyle: true, closeDrawer: true });
     }
 
     $('#WorldInfo').on('scroll', () => {

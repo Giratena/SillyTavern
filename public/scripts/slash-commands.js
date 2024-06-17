@@ -23,6 +23,7 @@ import {
     name2,
     reloadCurrentChat,
     removeMacros,
+    renameCharacter,
     saveChatConditional,
     sendMessageAsUser,
     sendSystemMessage,
@@ -44,7 +45,7 @@ import { hideChatMessageRange } from './chats.js';
 import { getContext, saveMetadataDebounced } from './extensions.js';
 import { getRegexedString, regex_placement } from './extensions/regex/engine.js';
 import { findGroupMemberId, groups, is_group_generating, openGroupById, resetSelectedGroup, saveGroupChat, selected_group } from './group-chats.js';
-import { chat_completion_sources, oai_settings } from './openai.js';
+import { chat_completion_sources, oai_settings, setupChatCompletionPromptManager } from './openai.js';
 import { autoSelectPersona, retriggerFirstMessageOnEmptyChat, user_avatar } from './personas.js';
 import { addEphemeralStoppingString, chat_styles, flushEphemeralStoppingStrings, power_user } from './power-user.js';
 import { textgen_types, textgenerationwebui_settings } from './textgen-settings.js';
@@ -55,13 +56,12 @@ import { background_settings } from './backgrounds.js';
 import { SlashCommandScope } from './slash-commands/SlashCommandScope.js';
 import { SlashCommandClosure } from './slash-commands/SlashCommandClosure.js';
 import { SlashCommandClosureResult } from './slash-commands/SlashCommandClosureResult.js';
-import { AutoCompleteNameResult } from './autocomplete/AutoCompleteNameResult.js';
-import { AutoCompleteOption } from './autocomplete/AutoCompleteOption.js';
 import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from './slash-commands/SlashCommandArgument.js';
 import { AutoComplete } from './autocomplete/AutoComplete.js';
 import { SlashCommand } from './slash-commands/SlashCommand.js';
 import { SlashCommandAbortController } from './slash-commands/SlashCommandAbortController.js';
 import { SlashCommandNamedArgumentAssignment } from './slash-commands/SlashCommandNamedArgumentAssignment.js';
+import { SlashCommandEnumValue } from './slash-commands/SlashCommandEnumValue.js';
 export {
     executeSlashCommands, executeSlashCommandsWithOptions, getSlashCommandsHelp, registerSlashCommand,
 };
@@ -73,7 +73,8 @@ export const parser = new SlashCommandParser();
 const registerSlashCommand = SlashCommandParser.addCommand.bind(SlashCommandParser);
 const getSlashCommandsHelp = parser.getHelpString.bind(parser);
 
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: '?',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: '?',
     callback: helpCommandCallback,
     aliases: ['help'],
     unnamedArgumentList: [new SlashCommandArgument(
@@ -81,33 +82,49 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: '?',
     )],
     helpString: 'Get help on macros, chat formatting and commands.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'name',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'persona',
     callback: setNameCallback,
-    unnamedArgumentList: [
-        new SlashCommandArgument(
-            'persona', [ARGUMENT_TYPE.STRING], true,
+    namedArgumentList: [
+        new SlashCommandNamedArgument(
+            'mode', 'The mode for persona selection. ("lookup" = search for existing persona, "temp" = create a temporary name, set a temporary name, "all" = allow both in the same command)',
+            [ARGUMENT_TYPE.STRING], false, false, 'all', ['lookup', 'temp', 'all'],
         ),
     ],
-    helpString: 'Sets user name and persona avatar (if set).',
-    aliases: ['persona'],
+    unnamedArgumentList: [
+        new SlashCommandArgument(
+            'persona name', [ARGUMENT_TYPE.STRING], true,
+        ),
+    ],
+    helpString: 'Selects the given persona with its name and avatar (by name or avatar url). If no matching persona exists, applies a temporary name.',
+    aliases: ['name'],
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sync',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'sync',
     callback: syncCallback,
     helpString: 'Syncs the user persona in user-attributed messages in the current chat.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'lock',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'lock',
     callback: bindCallback,
     aliases: ['bind'],
     helpString: 'Locks/unlocks a persona (name and avatar) to the current chat',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'bg',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'bg',
     callback: setBackgroundCallback,
     aliases: ['background'],
     returns: 'the current background',
     unnamedArgumentList: [
-        new SlashCommandArgument(
-            'filename', [ARGUMENT_TYPE.STRING], true,
-        ),
+        SlashCommandArgument.fromProps({
+            description: 'filename',
+            typeList: [ARGUMENT_TYPE.STRING],
+            isRequired: true,
+            enumProvider: () => [...document.querySelectorAll('.bg_example')]
+                .map((it) => new SlashCommandEnumValue(it.getAttribute('bgfile')))
+                .filter(it => it.value?.length)
+            ,
+        }),
     ],
     helpString: `
         <div>
@@ -123,7 +140,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'bg',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sendas',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'sendas',
     callback: sendMessageAs,
     namedArgumentList: [
         new SlashCommandNamedArgument(
@@ -161,7 +179,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sendas',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sys',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'sys',
     callback: sendNarratorMessage,
     aliases: ['nar'],
     namedArgumentList: [
@@ -204,7 +223,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sys',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sysname',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'sysname',
     callback: setNarratorName,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -213,7 +233,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sysname',
     ],
     helpString: 'Sets a name for future system narrator messages in this chat (display only). Default: System. Leave empty to reset.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'comment',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'comment',
     callback: sendCommentMessage,
     namedArgumentList: [
         new SlashCommandNamedArgument(
@@ -257,22 +278,26 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'comment',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'single',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'single',
     callback: setStoryModeCallback,
     aliases: ['story'],
     helpString: 'Sets the message style to single document mode without names or avatars visible.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'bubble',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'bubble',
     callback: setBubbleModeCallback,
     aliases: ['bubbles'],
     helpString: 'Sets the message style to bubble chat mode.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'flat',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'flat',
     callback: setFlatModeCallback,
     aliases: ['default'],
     helpString: 'Sets the message style to flat chat mode.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'continue',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'continue',
     callback: continueChatCallback,
     aliases: ['cont'],
     unnamedArgumentList: [
@@ -299,17 +324,48 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'continue',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'go',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'go',
     callback: goToCharacterCallback,
     unnamedArgumentList: [
-        new SlashCommandArgument(
-            'name', [ARGUMENT_TYPE.STRING], true,
-        ),
+        SlashCommandArgument.fromProps({
+            description: 'name',
+            typeList: [ARGUMENT_TYPE.STRING],
+            isRequired: true,
+            enumProvider: () => [
+                ...characters.map(it => new SlashCommandEnumValue(it.name, null, 'qr', 'C')),
+                ...groups.map(it => new SlashCommandEnumValue(it.name, null, 'variable', 'G')),
+            ],
+        }),
     ],
     helpString: 'Opens up a chat with the character or group by its name',
     aliases: ['char'],
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sysgen',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'rename-char',
+    /** @param {{silent: string, chats: string}} options @param {string} name */
+    callback: async ({ silent = 'true', chats = null }, name) => {
+        const renamed = await renameCharacter(name, { silent: isTrueBoolean(silent), renameChats: chats !== null ? isTrueBoolean(chats) : null });
+        return String(renamed);
+    },
+    returns: 'true/false - Whether the rename was successful',
+    namedArgumentList: [
+        new SlashCommandNamedArgument(
+            'silent', 'Hide any blocking popups. (if false, the name is optional. If not supplied, a popup asking for it will appear)', [ARGUMENT_TYPE.BOOLEAN], false, false, 'true',
+        ),
+        new SlashCommandNamedArgument(
+            'chats', 'Rename char in all previous chats', [ARGUMENT_TYPE.BOOLEAN], false, false, '<null>',
+        ),
+    ],
+    unnamedArgumentList: [
+        new SlashCommandArgument(
+            'new char name', [ARGUMENT_TYPE.STRING], true,
+        ),
+    ],
+    helpString: 'Renames the current character.',
+}));
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'sysgen',
     callback: generateSystemMessage,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -318,19 +374,27 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'sysgen',
     ],
     helpString: 'Generates a system message using a specified prompt.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'ask',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'ask',
     callback: askCharacter,
+    namedArgumentList: [
+        SlashCommandNamedArgument.fromProps({
+            name: 'name',
+            description: 'character name',
+            typeList: [ARGUMENT_TYPE.STRING],
+            isRequired: true,
+            enumProvider: () => characters.map(it => new SlashCommandEnumValue(it.name, null, 'qr', 'C')),
+        }),
+    ],
     unnamedArgumentList: [
         new SlashCommandArgument(
-            'character name', [ARGUMENT_TYPE.STRING], true,
-        ),
-        new SlashCommandArgument(
-            'prompt', [ARGUMENT_TYPE.STRING], true,
+            'prompt', [ARGUMENT_TYPE.STRING], true, false,
         ),
     ],
-    helpString: 'Asks a specified character card a prompt. Character name and prompt have to be separated by a new line.',
+    helpString: 'Asks a specified character card a prompt. Character name must be provided in a named argument.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delname',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'delname',
     callback: deleteMessagesByNameCallback,
     namedArgumentList: [],
     unnamedArgumentList: [
@@ -353,7 +417,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delname',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'send',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'send',
     callback: sendUserMessageCallback,
     namedArgumentList: [
         new SlashCommandNamedArgument(
@@ -408,7 +473,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'send',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trigger',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'trigger',
     callback: triggerGenerationCallback,
     namedArgumentList: [
         new SlashCommandNamedArgument(
@@ -429,7 +495,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trigger',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'hide',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'hide',
     callback: hideMessageCallback,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -438,7 +505,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'hide',
     ],
     helpString: 'Hides a chat message from the prompt.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'unhide',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'unhide',
     callback: unhideMessageCallback,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -447,8 +515,10 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'unhide',
     ],
     helpString: 'Unhides a message from the prompt.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'disable',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-disable',
     callback: disableGroupMemberCallback,
+    aliases: ['disable', 'disablemember', 'memberdisable'],
     unnamedArgumentList: [
         new SlashCommandArgument(
             'member index or name', [ARGUMENT_TYPE.NUMBER, ARGUMENT_TYPE.STRING], true,
@@ -456,7 +526,9 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'disable',
     ],
     helpString: 'Disables a group member from being drafted for replies.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'enable',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-enable',
+    aliases: ['enable', 'enablemember', 'memberenable'],
     callback: enableGroupMemberCallback,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -465,9 +537,10 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'enable',
     ],
     helpString: 'Enables a group member to be drafted for replies.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberadd',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-add',
     callback: addGroupMemberCallback,
-    aliases: ['addmember'],
+    aliases: ['addmember', 'memberadd'],
     unnamedArgumentList: [
         new SlashCommandArgument(
             'character name', [ARGUMENT_TYPE.STRING], true,
@@ -481,15 +554,16 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberadd',
             <strong>Example:</strong>
             <ul>
                 <li>
-                    <pre><code>/memberadd John Doe</code></pre>
+                    <pre><code>/member-add John Doe</code></pre>
                 </li>
             </ul>
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberremove',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-remove',
     callback: removeGroupMemberCallback,
-    aliases: ['removemember'],
+    aliases: ['removemember', 'memberremove'],
     unnamedArgumentList: [
         new SlashCommandArgument(
             'member index or name', [ARGUMENT_TYPE.NUMBER, ARGUMENT_TYPE.STRING], true,
@@ -503,16 +577,17 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberremove
             <strong>Example:</strong>
             <ul>
                 <li>
-                    <pre><code>/memberremove 2</code></pre>
-                    <pre><code>/memberremove John Doe</code></pre>
+                    <pre><code>/member-remove 2</code></pre>
+                    <pre><code>/member-remove John Doe</code></pre>
                 </li>
             </ul>
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberup',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-up',
     callback: moveGroupMemberUpCallback,
-    aliases: ['upmember'],
+    aliases: ['upmember', 'memberup'],
     unnamedArgumentList: [
         new SlashCommandArgument(
             'member index or name', [ARGUMENT_TYPE.NUMBER, ARGUMENT_TYPE.STRING], true,
@@ -520,9 +595,10 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberup',
     ],
     helpString: 'Moves a group member up in the group chat list.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberdown',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'member-down',
     callback: moveGroupMemberDownCallback,
-    aliases: ['downmember'],
+    aliases: ['downmember', 'memberdown'],
     unnamedArgumentList: [
         new SlashCommandArgument(
             'member index or name', [ARGUMENT_TYPE.NUMBER, ARGUMENT_TYPE.STRING], true,
@@ -530,7 +606,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'memberdown',
     ],
     helpString: 'Moves a group member down in the group chat list.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'peek',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'peek',
     callback: peekCallback,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -556,7 +633,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'peek',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delswipe',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'delswipe',
     callback: deleteSwipeCallback,
     aliases: ['swipedel'],
     unnamedArgumentList: [
@@ -583,7 +661,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delswipe',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'echo',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'echo',
     callback: echoCallback,
     returns: 'the text',
     namedArgumentList: [
@@ -613,7 +692,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'echo',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'gen',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'gen',
     callback: generateCallback,
     returns: 'generated text',
     namedArgumentList: [
@@ -644,7 +724,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'gen',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'genraw',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'genraw',
     callback: generateRawCallback,
     returns: 'generated text',
     namedArgumentList: [
@@ -690,7 +771,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'genraw',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'addswipe',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'addswipe',
     callback: addSwipeCallback,
     aliases: ['swipeadd'],
     unnamedArgumentList: [
@@ -700,11 +782,28 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'addswipe',
     ],
     helpString: 'Adds a swipe to the last chat message.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'abort',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'abort',
     callback: abortCallback,
+    namedArgumentList: [
+        SlashCommandNamedArgument.fromProps({
+            name: 'quiet',
+            description: 'Whether to suppress the toast message notifying about the /abort call.',
+            typeList: [ARGUMENT_TYPE.BOOLEAN],
+            defaultValue: 'true',
+            enumList: ['true', 'false'],
+        }),
+    ],
+    unnamedArgumentList: [
+        SlashCommandArgument.fromProps({
+            description: 'The reason for aborting command execution. Shown when quiet=false',
+            typeList: [ARGUMENT_TYPE.STRING],
+        }),
+    ],
     helpString: 'Aborts the slash command batch execution.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'fuzzy',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'fuzzy',
     callback: fuzzyCallback,
     returns: 'first matching item',
     namedArgumentList: [
@@ -743,7 +842,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'fuzzy',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'pass',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'pass',
     callback: (_, arg) => arg,
     returns: 'the provided value',
     unnamedArgumentList: [
@@ -764,7 +864,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'pass',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delay',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'delay',
     callback: delayCallback,
     aliases: ['wait', 'sleep'],
     unnamedArgumentList: [
@@ -786,7 +887,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'delay',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'input',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'input',
     aliases: ['prompt'],
     callback: inputCallback,
     returns: 'user input',
@@ -819,7 +921,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'input',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'run',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'run',
     aliases: ['call', 'exec'],
     callback: runCallback,
     returns: 'result of the executed closure of QR',
@@ -840,7 +943,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'run',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'messages',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'messages',
     callback: getMessagesCallback,
     aliases: ['message'],
     namedArgumentList: [
@@ -851,7 +955,7 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'messages',
             'hidden', 'include hidden messages', [ARGUMENT_TYPE.BOOLEAN], false, false, 'on', ['off', 'on'],
         ),
         new SlashCommandNamedArgument(
-            'role', 'filter messages by role' , [ARGUMENT_TYPE.STRING], false, false, null, ['system', 'assistant', 'user'],
+            'role', 'filter messages by role', [ARGUMENT_TYPE.STRING], false, false, null, ['system', 'assistant', 'user'],
         ),
     ],
     unnamedArgumentList: [
@@ -885,7 +989,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'messages',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'setinput',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'setinput',
     callback: setInputCallback,
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -906,7 +1011,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'setinput',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'popup',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'popup',
     callback: popupCallback,
     returns: 'popup text',
     namedArgumentList: [
@@ -940,7 +1046,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'popup',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'buttons',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'buttons',
     callback: buttonsCallback,
     returns: 'clicked button label',
     namedArgumentList: [
@@ -968,7 +1075,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'buttons',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimtokens',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'trimtokens',
     callback: trimTokensCallback,
     returns: 'trimmed text',
     namedArgumentList: [
@@ -998,7 +1106,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimtokens',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimstart',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'trimstart',
     callback: trimStartCallback,
     returns: 'trimmed text',
     unnamedArgumentList: [
@@ -1020,7 +1129,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimstart',
         </div>
     `,
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimend',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'trimend',
     callback: trimEndCallback,
     returns: 'trimmed text',
     unnamedArgumentList: [
@@ -1030,7 +1140,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'trimend',
     ],
     helpString: 'Trims the text to the end of the last full sentence.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'inject',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'inject',
     callback: injectCallback,
     namedArgumentList: [
         new SlashCommandNamedArgument(
@@ -1048,6 +1159,9 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'inject',
         new SlashCommandNamedArgument(
             'role', 'role for in-chat injections', [ARGUMENT_TYPE.STRING], false, false, 'system', ['system', 'user', 'assistant'],
         ),
+        new SlashCommandNamedArgument(
+            'ephemeral', 'remove injection after generation', [ARGUMENT_TYPE.BOOLEAN], false, false, 'false', ['true', 'false'],
+        ),
     ],
     unnamedArgumentList: [
         new SlashCommandArgument(
@@ -1056,15 +1170,24 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'inject',
     ],
     helpString: 'Injects a text into the LLM prompt for the current chat. Requires a unique injection ID. Positions: "before" main prompt, "after" main prompt, in-"chat" (default: after). Depth: injection depth for the prompt (default: 4). Role: role for in-chat injections (default: system). Scan: include injection content into World Info scans (default: false).',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'listinjects',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'listinjects',
     callback: listInjectsCallback,
     helpString: 'Lists all script injections for the current chat.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'flushinjects',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'flushinject',
+    aliases: ['flushinjects'],
+    unnamedArgumentList: [
+        new SlashCommandArgument(
+            'injection ID or a variable name pointing to ID', [ARGUMENT_TYPE.STRING, ARGUMENT_TYPE.VARIABLE_NAME], false, false, '',
+        ),
+    ],
     callback: flushInjectsCallback,
-    helpString: 'Removes all script injections for the current chat.',
+    helpString: 'Removes a script injection for the current chat. If no ID is provided, removes all script injections.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'tokens',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'tokens',
     callback: (_, text) => getTokenCountAsync(text),
     returns: 'number of tokens',
     unnamedArgumentList: [
@@ -1074,7 +1197,8 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'tokens',
     ],
     helpString: 'Counts the number of tokens in the provided text.',
 }));
-SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'model',
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'model',
     callback: modelCallback,
     returns: 'current model',
     unnamedArgumentList: [
@@ -1083,6 +1207,30 @@ SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'model',
         ),
     ],
     helpString: 'Sets the model for the current API. Gets the current model name if no argument is provided.',
+}));
+SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+    name: 'setpromptentry',
+    aliases: ['setpromptentries'],
+    callback: setPromptEntryCallback,
+    namedArgumentList: [
+        new SlashCommandNamedArgument(
+            'identifier', 'Prompt entry identifier(s) to target', [ARGUMENT_TYPE.STRING, ARGUMENT_TYPE.LIST], false, true,
+        ),
+        new SlashCommandNamedArgument(
+            'name', 'Prompt entry name(s) to target', [ARGUMENT_TYPE.STRING, ARGUMENT_TYPE.LIST], false, true,
+        ),
+    ],
+    unnamedArgumentList: [
+        SlashCommandArgument.fromProps({
+            description: 'Set entry/entries on or off',
+            typeList: [ARGUMENT_TYPE.STRING],
+            isRequired: true,
+            acceptsMultiple: false,
+            defaultValue: 'toggle', // unnamed arguments don't support default values yet
+            enumList: ['on', 'off', 'toggle'],
+        }),
+    ],
+    helpString: 'Sets the specified prompt manager entry/entries on or off.',
 }));
 
 registerVariableCommands();
@@ -1105,6 +1253,7 @@ function injectCallback(args, value) {
     };
 
     const id = resolveVariable(args?.id);
+    const ephemeral = isTrueBoolean(args?.ephemeral);
 
     if (!id) {
         console.warn('WARN: No ID provided for /inject command');
@@ -1138,11 +1287,28 @@ function injectCallback(args, value) {
 
     setExtensionPrompt(prefixedId, value, position, depth, scan, role);
     saveMetadataDebounced();
+
+    if (ephemeral) {
+        let deleted = false;
+        const unsetInject = () => {
+            if (deleted) {
+                return;
+            }
+            console.log('Removing ephemeral script injection', id);
+            delete chat_metadata.script_injects[id];
+            setExtensionPrompt(prefixedId, '', position, depth, scan, role);
+            saveMetadataDebounced();
+            deleted = true;
+        };
+        eventSource.once(event_types.GENERATION_ENDED, unsetInject);
+        eventSource.once(event_types.GENERATION_STOPPED, unsetInject);
+    }
+
     return '';
 }
 
 function listInjectsCallback() {
-    if (!chat_metadata.script_injects) {
+    if (!chat_metadata.script_injects || !Object.keys(chat_metadata.script_injects).length) {
         toastr.info('No script injections for the current chat');
         return '';
     }
@@ -1162,17 +1328,29 @@ function listInjectsCallback() {
     sendSystemMessage(system_message_types.GENERIC, htmlMessage);
 }
 
-function flushInjectsCallback() {
+/**
+ * Flushes script injections for the current chat.
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args Named arguments
+ * @param {string} value Unnamed argument
+ * @returns {string} Empty string
+ */
+function flushInjectsCallback(args, value) {
     if (!chat_metadata.script_injects) {
         return '';
     }
 
+    const idArgument = resolveVariable(value, args._scope);
+
     for (const [id, inject] of Object.entries(chat_metadata.script_injects)) {
+        if (idArgument && id !== idArgument) {
+            continue;
+        }
+
         const prefixedId = `${SCRIPT_PROMPT_KEY}${id}`;
         setExtensionPrompt(prefixedId, '', inject.position, inject.depth, inject.scan, inject.role);
+        delete chat_metadata.script_injects[id];
     }
 
-    chat_metadata.script_injects = {};
     saveMetadataDebounced();
     return '';
 }
@@ -1201,7 +1379,7 @@ export function processChatSlashCommands() {
 }
 
 function setInputCallback(_, value) {
-    $('#send_textarea').val(value || '')[0].dispatchEvent(new Event('input', { bubbles:true }));
+    $('#send_textarea').val(value || '')[0].dispatchEvent(new Event('input', { bubbles: true }));
     return value;
 }
 
@@ -1395,7 +1573,7 @@ async function runCallback(args, name) {
             throw new Error(`"${name}" is not callable.`);
         }
         closure.scope.parent = scope;
-        closure.argumentList.forEach(arg=>{
+        closure.argumentList.forEach(arg => {
             if (Object.keys(args).includes(arg.name)) {
                 const providedArg = new SlashCommandNamedArgumentAssignment();
                 providedArg.name = arg.name;
@@ -1419,15 +1597,21 @@ async function runCallback(args, name) {
     }
 }
 
-function abortCallback() {
-    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
-    throw new Error('/abort command executed');
+/**
+ *
+ * @param {object} param0
+ * @param {SlashCommandAbortController} param0._abortController
+ * @param {string} [param0.quiet]
+ * @param {string} [reason]
+ */
+function abortCallback({ _abortController, quiet }, reason) {
+    _abortController.abort((reason ?? '').toString().length == 0 ? '/abort command executed' : reason, !isFalseBoolean(quiet ?? 'true'));
 }
 
 async function delayCallback(_, amount) {
     if (!amount) {
         console.warn('WARN: No amount provided for /delay command');
-        return;
+        return '';
     }
 
     amount = Number(amount);
@@ -1436,6 +1620,7 @@ async function delayCallback(_, amount) {
     }
 
     await delay(amount);
+    return '';
 }
 
 async function inputCallback(args, prompt) {
@@ -1538,7 +1723,7 @@ async function generateRawCallback(args, value) {
     }
 
     // Prevent generate recursion
-    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
     const lock = isTrueBoolean(args?.lock);
     const as = args?.as || 'system';
     const quietToLoud = as === 'char';
@@ -1568,7 +1753,7 @@ async function generateCallback(args, value) {
     }
 
     // Prevent generate recursion
-    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
     const lock = isTrueBoolean(args?.lock);
     const as = args?.as || 'system';
     const quietToLoud = as === 'char';
@@ -1622,27 +1807,27 @@ async function addSwipeCallback(_, arg) {
 
     if (!lastMessage) {
         toastr.warning('No messages to add swipes to.');
-        return;
+        return '';
     }
 
     if (!arg) {
         console.warn('WARN: No argument provided for /addswipe command');
-        return;
+        return '';
     }
 
     if (lastMessage.is_user) {
         toastr.warning('Can\'t add swipes to user messages.');
-        return;
+        return '';
     }
 
     if (lastMessage.is_system) {
         toastr.warning('Can\'t add swipes to system messages.');
-        return;
+        return '';
     }
 
     if (lastMessage.extra?.image) {
         toastr.warning('Can\'t add swipes to message containing an image.');
-        return;
+        return '';
     }
 
     if (!Array.isArray(lastMessage.swipes)) {
@@ -1666,6 +1851,8 @@ async function addSwipeCallback(_, arg) {
 
     await saveChatConditional();
     await reloadCurrentChat();
+
+    return '';
 }
 
 async function deleteSwipeCallback(_, arg) {
@@ -1673,19 +1860,19 @@ async function deleteSwipeCallback(_, arg) {
 
     if (!lastMessage || !Array.isArray(lastMessage.swipes) || !lastMessage.swipes.length) {
         toastr.warning('No messages to delete swipes from.');
-        return;
+        return '';
     }
 
     if (lastMessage.swipes.length <= 1) {
         toastr.warning('Can\'t delete the last swipe.');
-        return;
+        return '';
     }
 
     const swipeId = arg && !isNaN(Number(arg)) ? (Number(arg) - 1) : lastMessage.swipe_id;
 
     if (swipeId < 0 || swipeId >= lastMessage.swipes.length) {
         toastr.warning(`Invalid swipe ID: ${swipeId + 1}`);
-        return;
+        return '';
     }
 
     lastMessage.swipes.splice(swipeId, 1);
@@ -1700,43 +1887,53 @@ async function deleteSwipeCallback(_, arg) {
 
     await saveChatConditional();
     await reloadCurrentChat();
+
+    return '';
 }
 
-async function askCharacter(_, text) {
+async function askCharacter(args, text) {
     // Prevent generate recursion
-    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
 
     // Not supported in group chats
     // TODO: Maybe support group chats?
     if (selected_group) {
         toastr.error('Cannot run this command in a group chat!');
-        return;
+        return '';
     }
 
     if (!text) {
         console.warn('WARN: No text provided for /ask command');
+        toastr.warning('No text provided for /ask command');
+        return '';
     }
 
-    const parts = text.split('\n');
-    if (parts.length <= 1) {
-        toastr.warning('Both character name and message are required. Separate them with a new line.');
-        return;
+    let name = '';
+    let mesText = '';
+
+    if (args?.name) {
+        name = args.name.trim();
+        mesText = text.trim();
+
+        if (!name && !mesText) {
+            toastr.warning('You must specify a name and text to ask.');
+            return '';
+        }
     }
 
-    // Grabbing the message
-    const name = parts.shift().trim();
-    let mesText = parts.join('\n').trim();
+    mesText = getRegexedString(mesText, regex_placement.SLASH_COMMAND);
+
     const prevChId = this_chid;
 
     // Find the character
     const chId = characters.findIndex((e) => e.name === name);
     if (!characters[chId] || chId === -1) {
         toastr.error('Character not found.');
-        return;
+        return '';
     }
 
     // Override character and send a user message
-    setCharacterId(chId);
+    setCharacterId(String(chId));
 
     // TODO: Maybe look up by filename instead of name
     const character = characters[chId];
@@ -1782,22 +1979,24 @@ async function askCharacter(_, text) {
     // Restore previous character once message renders
     // Hack for generate
     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, restoreCharacter);
+    return '';
 }
 
 async function hideMessageCallback(_, arg) {
     if (!arg) {
         console.warn('WARN: No argument provided for /hide command');
-        return;
+        return '';
     }
 
     const range = stringToRange(arg, 0, chat.length - 1);
 
     if (!range) {
         console.warn(`WARN: Invalid range provided for /hide command: ${arg}`);
-        return;
+        return '';
     }
 
     await hideChatMessageRange(range.start, range.end, false);
+    return '';
 }
 
 async function unhideMessageCallback(_, arg) {
@@ -2015,7 +2214,7 @@ async function triggerGenerationCallback(args, value) {
         }
 
         // Prevent generate recursion
-        $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+        $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
 
         let chid = undefined;
 
@@ -2181,7 +2380,7 @@ function continueChatCallback(_, prompt) {
         }
 
         // Prevent infinite recursion
-        $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+        $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
         $('#option_continue').trigger('click', { fromSlashCommand: true, additionalPrompt: prompt });
     }, 1);
 
@@ -2189,12 +2388,12 @@ function continueChatCallback(_, prompt) {
 }
 
 export async function generateSystemMessage(_, prompt) {
-    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles:true }));
+    $('#send_textarea').val('')[0].dispatchEvent(new Event('input', { bubbles: true }));
 
     if (!prompt) {
         console.warn('WARN: No prompt provided for /sysgen command');
         toastr.warning('You must provide a prompt for the system message');
-        return;
+        return '';
     }
 
     // Generate and regex the output if applicable
@@ -2203,48 +2402,74 @@ export async function generateSystemMessage(_, prompt) {
     message = getRegexedString(message, regex_placement.SLASH_COMMAND);
 
     sendNarratorMessage(_, message);
+    return '';
 }
 
 function syncCallback() {
     $('#sync_name_button').trigger('click');
+    return '';
 }
 
 function bindCallback() {
     $('#lock_user_name').trigger('click');
+    return '';
 }
 
 function setStoryModeCallback() {
     $('#chat_display').val(chat_styles.DOCUMENT).trigger('change');
+    return '';
 }
 
 function setBubbleModeCallback() {
     $('#chat_display').val(chat_styles.BUBBLES).trigger('change');
+    return '';
 }
 
 function setFlatModeCallback() {
     $('#chat_display').val(chat_styles.DEFAULT).trigger('change');
+    return '';
 }
 
-function setNameCallback(_, name) {
+/**
+ * Sets a persona name and optionally an avatar.
+ * @param {{mode: 'lookup' | 'temp' | 'all'}} namedArgs Named arguments
+ * @param {string} name Name to set
+ * @returns {string}
+ */
+function setNameCallback({ mode = 'all' }, name) {
     if (!name) {
-        toastr.warning('you must specify a name to change to');
-        return;
+        toastr.warning('You must specify a name to change to');
+        return '';
+    }
+
+    if (!['lookup', 'temp', 'all'].includes(mode)) {
+        toastr.warning('Mode must be one of "lookup", "temp" or "all"');
+        return '';
     }
 
     name = name.trim();
 
-    // If the name is a persona, auto-select it
-    for (let persona of Object.values(power_user.personas)) {
-        if (persona.toLowerCase() === name.toLowerCase()) {
-            autoSelectPersona(name);
+    // If the name matches a persona avatar, or a name, auto-select it
+    if (['lookup', 'all'].includes(mode)) {
+        let persona = Object.entries(power_user.personas).find(([avatar, _]) => avatar === name)?.[1];
+        if (!persona) persona = Object.entries(power_user.personas).find(([_, personaName]) => personaName.toLowerCase() === name.toLowerCase())?.[1];
+        if (persona) {
+            autoSelectPersona(persona);
             retriggerFirstMessageOnEmptyChat();
-            return;
+            return '';
+        } else if (mode === 'lookup') {
+            toastr.warning(`Persona ${name} not found`);
+            return '';
         }
     }
 
-    // Otherwise, set just the name
-    setUserName(name); //this prevented quickReply usage
-    retriggerFirstMessageOnEmptyChat();
+    if (['temp', 'all'].includes(mode)) {
+        // Otherwise, set just the name
+        setUserName(name); //this prevented quickReply usage
+        retriggerFirstMessageOnEmptyChat();
+    }
+
+    return '';
 }
 
 async function setNarratorName(_, text) {
@@ -2252,11 +2477,12 @@ async function setNarratorName(_, text) {
     chat_metadata[NARRATOR_NAME_KEY] = name;
     toastr.info(`System narrator name set to ${name}`);
     await saveChatConditional();
+    return '';
 }
 
 export async function sendMessageAs(args, text) {
     if (!text) {
-        return;
+        return '';
     }
 
     let name;
@@ -2268,7 +2494,7 @@ export async function sendMessageAs(args, text) {
 
         if (!name && !text) {
             toastr.warning('You must specify a name and text to send as');
-            return;
+            return '';
         }
     } else {
         const namelessWarningKey = 'sendAsNamelessWarningShown';
@@ -2329,11 +2555,13 @@ export async function sendMessageAs(args, text) {
         await eventSource.emit(event_types.CHARACTER_MESSAGE_RENDERED, (chat.length - 1));
         await saveChatConditional();
     }
+
+    return '';
 }
 
 export async function sendNarratorMessage(args, text) {
     if (!text) {
-        return;
+        return '';
     }
 
     const name = chat_metadata[NARRATOR_NAME_KEY] || NARRATOR_NAME_DEFAULT;
@@ -2372,6 +2600,8 @@ export async function sendNarratorMessage(args, text) {
         await eventSource.emit(event_types.USER_MESSAGE_RENDERED, (chat.length - 1));
         await saveChatConditional();
     }
+
+    return '';
 }
 
 export async function promptQuietForLoudResponse(who, text) {
@@ -2415,7 +2645,7 @@ export async function promptQuietForLoudResponse(who, text) {
 
 async function sendCommentMessage(args, text) {
     if (!text) {
-        return;
+        return '';
     }
 
     const compact = isTrueBoolean(args?.compact);
@@ -2448,6 +2678,8 @@ async function sendCommentMessage(args, text) {
         await eventSource.emit(event_types.USER_MESSAGE_RENDERED, (chat.length - 1));
         await saveChatConditional();
     }
+
+    return '';
 }
 
 /**
@@ -2485,6 +2717,8 @@ function helpCommandCallback(_, type) {
             sendSystemMessage(system_message_types.HELP);
             break;
     }
+
+    return '';
 }
 
 $(document).on('click', '[data-displayHelp]', function (e) {
@@ -2509,7 +2743,7 @@ function setBackgroundCallback(_, bg) {
 
     if (!result.length) {
         toastr.error(`No background found with name "${bg}"`);
-        return;
+        return '';
     }
 
     const bgElement = result[0].item.element;
@@ -2517,6 +2751,8 @@ function setBackgroundCallback(_, bg) {
     if (bgElement instanceof HTMLElement) {
         bgElement.click();
     }
+
+    return '';
 }
 
 /**
@@ -2618,6 +2854,85 @@ function modelCallback(_, model) {
     }
 }
 
+/**
+ * Sets state of prompt entries (toggles) either via identifier/uuid or name.
+ * @param {object} args Object containing arguments
+ * @param {string} args.identifier Select prompt entry using an identifier (uuid)
+ * @param {string} args.name Select prompt entry using name
+ * @param {string} targetState The targeted state of the entry/entries
+ * @returns {String} empty string
+ */
+function setPromptEntryCallback(args, targetState) {
+    // needs promptManager to manipulate prompt entries
+    const promptManager = setupChatCompletionPromptManager(oai_settings);
+    const prompts = promptManager.serviceSettings.prompts;
+
+    function parseArgs(arg) {
+        const list = [];
+        try {
+            const parsedArg = JSON.parse(arg);
+            list.push(...Array.isArray(parsedArg) ? parsedArg : [arg]);
+        } catch {
+            list.push(arg);
+        }
+        return list;
+    }
+
+    let identifiersList = parseArgs(args.identifier);
+    let nameList = parseArgs(args.name);
+
+    // Check if identifiers exists in prompt, else remove from list
+    if (identifiersList.length !== 0) {
+        identifiersList = identifiersList.filter(identifier => prompts.some(prompt => prompt.identifier === identifier));
+    }
+
+    if (nameList.length !== 0) {
+        nameList.forEach(name => {
+            // one name could potentially have multiple entries, find all identifiers that match given name
+            let identifiers = [];
+            prompts.forEach(entry => {
+                if (entry.name === name) {
+                    identifiers.push(entry.identifier);
+                }
+            });
+            identifiersList = identifiersList.concat(identifiers);
+        });
+    }
+
+    // Remove duplicates to allow consistent 'toggle'
+    identifiersList = [...new Set(identifiersList)];
+    if (identifiersList.length === 0) return '';
+
+    // logic adapted from PromptManager.js, handleToggle
+    const getPromptOrderEntryState = (promptOrderEntry) => {
+        if (['toggle', 't', ''].includes(targetState.trim().toLowerCase())) {
+            return !promptOrderEntry.enabled;
+        }
+
+        if (isTrueBoolean(targetState)) {
+            return true;
+        }
+
+        if (isFalseBoolean(targetState)) {
+            return false;
+        }
+
+        return promptOrderEntry.enabled;
+    };
+
+    identifiersList.forEach(promptID => {
+        const promptOrderEntry = promptManager.getPromptOrderEntry(promptManager.activeCharacter, promptID);
+        const counts = promptManager.tokenHandler.getCounts();
+
+        counts[promptID] = null;
+        promptOrderEntry.enabled = getPromptOrderEntryState(promptOrderEntry);
+    });
+
+    // no need to render for each identifier
+    promptManager.render();
+    promptManager.saveServiceSettings();
+    return '';
+}
 
 export let isExecutingCommandsFromChatInput = false;
 export let commandsFromChatInputAbortController;
@@ -2687,7 +3002,7 @@ const clearCommandProgressDebounced = debounce(clearCommandProgress);
  * @prop {boolean} [handleParserErrors] (true) Whether to handle parser errors (show toast on error) or throw.
  * @prop {SlashCommandScope} [scope] (null) The scope to be used when executing the commands.
  * @prop {boolean} [handleExecutionErrors] (false) Whether to handle execution errors (show toast on error) or throw
- * @prop {PARSER_FLAG[]} [parserFlags] (null) Parser flags to apply
+ * @prop {{[id:PARSER_FLAG]:boolean}} [parserFlags] (null) Parser flags to apply
  * @prop {SlashCommandAbortController} [abortController] (null) Controller used to abort or pause command execution
  * @prop {(done:number, total:number)=>void} [onProgress] (null) Callback to handle progress events
  */
@@ -2695,7 +3010,7 @@ const clearCommandProgressDebounced = debounce(clearCommandProgress);
 /**
  * @typedef ExecuteSlashCommandsOnChatInputOptions
  * @prop {SlashCommandScope} [scope] (null) The scope to be used when executing the commands.
- * @prop {PARSER_FLAG[]} [parserFlags] (null) Parser flags to apply
+ * @prop {{[id:PARSER_FLAG]:boolean}} [parserFlags] (null) Parser flags to apply
  * @prop {boolean} [clearChatInput] (false) Whether to clear the chat input textarea
  */
 
@@ -2723,7 +3038,7 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
 
     if (options.clearChatInput) {
         ta.value = '';
-        ta.dispatchEvent(new Event('input', { bubbles:true }));
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     document.querySelector('#send_textarea').style.setProperty('--prog', '0%');
@@ -2738,7 +3053,9 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
         commandsFromChatInputAbortController = new SlashCommandAbortController();
         result = await executeSlashCommandsWithOptions(text, {
             abortController: commandsFromChatInputAbortController,
-            onProgress: (done, total)=>ta.style.setProperty('--prog', `${done / total * 100}%`),
+            onProgress: (done, total) => ta.style.setProperty('--prog', `${done / total * 100}%`),
+            parserFlags: options.parserFlags,
+            scope: options.scope,
         });
         if (commandsFromChatInputAbortController.signal.aborted) {
             document.querySelector('#form_sheld').classList.add('script_aborted');
@@ -2747,12 +3064,14 @@ export async function executeSlashCommandsOnChatInput(text, options = {}) {
         }
     } catch (e) {
         document.querySelector('#form_sheld').classList.add('script_error');
-        toastr.error(e.message);
         result = new SlashCommandClosureResult();
         result.isError = true;
         result.errorMessage = e.message;
+        if (e.cause !== 'abort') {
+            toastr.error(e.message);
+        }
     } finally {
-        delay(1000).then(()=>clearCommandProgressDebounced());
+        delay(1000).then(() => clearCommandProgressDebounced());
 
         commandsFromChatInputAbortController = null;
         deactivateScriptButtons();
@@ -2782,7 +3101,7 @@ async function executeSlashCommandsWithOptions(text, options = {}) {
 
     let closure;
     try {
-        closure = parser.parse(text, true, options.parserFlags, options.abortController);
+        closure = parser.parse(text, true, options.parserFlags, options.abortController ?? new SlashCommandAbortController());
         closure.scope.parent = options.scope;
         closure.onProgress = options.onProgress;
     } catch (e) {
@@ -2798,7 +3117,7 @@ async function executeSlashCommandsWithOptions(text, options = {}) {
             toastr.error(
                 `${toast}${clickHint}`,
                 'SlashCommandParserError',
-                { escapeHtml:false, timeOut: 10000, onclick:()=>callPopup(toast, 'text') },
+                { escapeHtml: false, timeOut: 10000, onclick: () => callPopup(toast, 'text') },
             );
             const result = new SlashCommandClosureResult();
             return result;
@@ -2809,8 +3128,9 @@ async function executeSlashCommandsWithOptions(text, options = {}) {
 
     try {
         const result = await closure.execute();
-        if (result.isAborted) {
+        if (result.isAborted && !result.isQuietlyAborted) {
             toastr.warning(result.abortReason, 'Command execution aborted');
+            closure.abortController.signal.isQuiet = true;
         }
         return result;
     } catch (e) {
@@ -2832,7 +3152,7 @@ async function executeSlashCommandsWithOptions(text, options = {}) {
  * @param {boolean} handleParserErrors Whether to handle parser errors (show toast on error) or throw
  * @param {SlashCommandScope} scope The scope to be used when executing the commands.
  * @param {boolean} handleExecutionErrors Whether to handle execution errors (show toast on error) or throw
- * @param {PARSER_FLAG[]} parserFlags Parser flags to apply
+ * @param {{[id:PARSER_FLAG]:boolean}} parserFlags Parser flags to apply
  * @param {SlashCommandAbortController} abortController Controller used to abort or pause command execution
  * @param {(done:number, total:number)=>void} onProgress Callback to handle progress events
  * @returns {Promise<SlashCommandClosureResult>}
@@ -2854,11 +3174,25 @@ async function executeSlashCommands(text, handleParserErrors = true, scope = nul
  * @param {Boolean} isFloating Whether to show the auto complete as a floating window (e.g., large QR editor)
  */
 export async function setSlashCommandAutoComplete(textarea, isFloating = false) {
+    function canUseNegativeLookbehind() {
+        try {
+            new RegExp('(?<!_)');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    if (!canUseNegativeLookbehind()) {
+        console.warn('Cannot use negative lookbehind in this browser');
+        return;
+    }
+
     const parser = new SlashCommandParser();
     const ac = new AutoComplete(
         textarea,
         () => ac.text[0] == '/',
-        async(text, index) => await parser.getNameAt(text, index),
+        async (text, index) => await parser.getNameAt(text, index),
         isFloating,
     );
 }
