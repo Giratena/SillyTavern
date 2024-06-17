@@ -27,7 +27,13 @@
             "scanDepth": null,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         },
         "1": {
             "uid": 1,
@@ -57,7 +63,13 @@
             "scanDepth": null,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         },
         "2": {
             "uid": 2,
@@ -95,7 +107,13 @@
             "scanDepth": null,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         },
         "3": {
             "uid": 3,
@@ -117,7 +135,7 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 200,
-            "position": 4,
+            "position": 1,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
@@ -129,7 +147,13 @@
             "scanDepth": null,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         },
         "4": {
             "uid": 4,
@@ -144,7 +168,7 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 120,
-            "position": 4,
+            "position": 1,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
@@ -153,10 +177,16 @@
             "group": "",
             "displayIndex": 4,
             "preventRecursion": false,
-            "scanDepth": null,
+            "scanDepth": 1,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         },
         "5": {
             "uid": 5,
@@ -171,7 +201,7 @@
             "selectiveLogic": 0,
             "addMemo": true,
             "order": 121,
-            "position": 4,
+            "position": 1,
             "disable": false,
             "excludeRecursion": false,
             "probability": 100,
@@ -183,7 +213,13 @@
             "scanDepth": null,
             "caseSensitive": null,
             "matchWholeWords": null,
-            "automationId": ""
+            "automationId": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "role": null,
+            "vectorized": false,
+            "delayUntilRecursion": false,
+            "useGroupScoring": null
         }
     }
 }

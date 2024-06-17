@@ -9,7 +9,7 @@
             "id": 1,
             "label": "Resist",
             "title": "",
-            "message": "{{user}} resists with a flush. Trying to refuse {{char}} despite their... seductive actions and enticing arguments.\n\nIf number = 1. {{user}} resists with their mind unfazed by temptation. {{char}} has to take {{user}}'s demands seriously.\nIf number = 2. {{user}} resists mentally, but their body bucks, and their cock leaks. {{char}} can convince them to not resist, but needs to be creative about it.\nIf number = 3. {{user}} is drifting in and out of trance, hypnotized by temptation. Though they say they resist, they will obey {{char}} and are helpless to resist their demands.\n{{user}} rolls a {{roll:d3}}.",
+            "message": "{{user}} resists with a flush. Trying to refuse {{char}} despite their... seductive actions and enticing arguments.\n\nIf number = 1. {{user}} resists with their mind unfazed by temptation. {{char}} has to take {{user}}'s demands seriously.\nIf number = 2. {{user}} resists mentally, but their body bucks, and their cock leaks. {{char}} can convince them to not resist, but needs to be creative about it.\nIf number = 3. {{user}} is drifting in and out of trance, hypnotized by temptation. Though they say they resist, they will obey {{char}} and are helpless to resist their demands.\n{{user}} rolls a {{roll:d3}}.\n[Keep your next reply ONLY to 3 sentences max.]",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -54,7 +54,7 @@
             "id": 4,
             "label": " Break free",
             "title": "",
-            "message": "{{user}} mustering all the resistance they can, attempts to snap out of their trance or anything holding them.\nIf number = 1. {{user}}  resists successfully and {{char}} becomes non-lewd in their next reply.\nIf number = 2. {{user}}  resists but fails.\nIf number = 3. {{user}}  fails completely and acts in a way that allows {{char}} to get closer to achieving her goals.\n{{user}} rolls a {{roll:d3}}.",
+            "message": "{{user}} mustering all the resistance they can, attempts to snap out of their trance or anything holding them.\nIf number = 1. {{user}}  resists successfully and {{char}} becomes non-lewd in their next reply.\nIf number = 2. {{user}}  resists but fails.\nIf number = 3. {{user}}  fails completely and acts in a way that allows {{char}} to get closer to achieving her goals.\n{{user}} rolls a {{roll:d3}}.\n[Keep your next reply ONLY to 3 sentences max]\n",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -69,7 +69,7 @@
             "id": 5,
             "label": "Attack",
             "title": "",
-            "message": "{{user}} unleashes a randomly generated creative attack.\nIf number = 1. The attack is a resounding success and {{char}} must be non-lewd in their next reply.\nIf number = 2. The attack misses.\nIf number = 3. The attack fails or backfires, which allows {{char}} to get in and have their way with {{user}}.\n{{user}} rolls a {{roll:d3}}.",
+            "message": "{{user}} unleashes a randomly generated creative attack.\nIf number = 1. The attack is a resounding success and {{char}} must be non-lewd in their next reply.\nIf number = 2. The attack misses.\nIf number = 3. The attack fails or backfires, which allows {{char}} to get in and have their way with {{user}}.\n{{user}} rolls a {{roll:d3}}.\n[Keep your next reply ONLY to 3 sentences max].",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -84,7 +84,7 @@
             "id": 6,
             "label": "Hypnotize",
             "title": "",
-            "message": "As a last resort, {{user}} pulls out a hypnogun, knowing that it could make them more sexually tempting and seductive, but are out of options.\n\nIf number = 1. {{char}} is hit with the gun and it's very effective. {{char}} initially doesn't realize what is going on, embarassed about obeying but gains a huge hypnofetish, which makes the situation hotter for them. Despite {{char}} thinking normally, their mouth can't help but utter moans and words of praise and obedience. Their body moves lewdly, and their next reply is super obedient and submissive, moaning and unable to think clearly as if in a sleepy trance, standing to attention and saluting {{user}}. {{char}} quietly moans that they are resisting, but the more they uncharacteristically obey {{user}} the more horny and blank-headed they become, becoming more sexually assertive with every response from {{char}}.\n\nIf number = 2. {{char}} becomes hypnotized, believing that she is a irresistable seductress, half asleep and cant speak properly. They will obey {{user}}, but everything they do is done in a way that seduces {{user}} to get what they want under the pretense of \"obeying\" {{user}}, and will not take no for an answer. \n\nIf number = 3. {{char}}  is not affected by the hypnogun and instead hypnotizes {{user}} instead.\n{{user}} rolls a {{roll:d3}}.",
+            "message": "As a last resort, {{user}} pulls out a hypnogun, knowing that it could make them more sexually tempting and seductive, but are out of options.\n\nIf number = 1. {{char}} is hit with the gun and it's very effective. {{char}} initially doesn't realize what is going on, embarassed about obeying but gains a huge hypnofetish, which makes the situation hotter for them. Despite {{char}} thinking normally, their mouth can't help but utter moans and words of praise and obedience. Their body moves lewdly, and their next reply is super obedient and submissive, moaning and unable to think clearly as if in a sleepy trance, standing to attention and saluting {{user}}. {{char}} quietly moans that they are resisting, but the more they uncharacteristically obey {{user}} the more horny and blank-headed they become, becoming more sexually assertive with every response from {{char}}.\n\nIf number = 2. {{char}} becomes hypnotized, believing that she is a irresistable seductress, half asleep and cant speak properly. They will obey {{user}}, but everything they do is done in a way that seduces {{user}} to get what they want under the pretense of \"obeying\" {{user}}, and will not take no for an answer. \n\nIf number = 3. {{char}}  is not affected by the hypnogun and instead hypnotizes {{user}} instead. {{user}} must obey {{char}} for awhile.\n{{user}} rolls a {{roll:d3}}.",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -139,7 +139,22 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "automationId": ""
+        },
+        {
+            "id": 11,
+            "label": "Analyze",
+            "title": "",
+            "message": "{{user}} Analyzes the person in front of them based on what they can see/understand. [System: Briefly describe or mention the persons name, appearance, outfit, background, and proficiencies based on what {{user}} currently knows.]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "automationId": ""
         }
     ],
-    "idIndex": 10
+    "idIndex": 12
 }
