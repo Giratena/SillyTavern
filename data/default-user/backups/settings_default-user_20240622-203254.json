@@ -13,6 +13,7 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
+                "Sex Battle",
                 "Special Actions",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
@@ -210,7 +211,7 @@
         "fast_ui_mode": true,
         "avatar_style": 0,
         "chat_display": 0,
-        "chat_width": 50,
+        "chat_width": 53,
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -502,8 +503,8 @@
             "height": 1280,
             "prompt_prefix": "masterpiece, nsfw,",
             "negative_prompt": "{worst quality}, guide lines, unfinished, bad, url, tall image, bad eyes, widescreen, compression artifacts, unknown text,",
-            "sampler": "DPM++ 2M",
-            "model": "furryVixens_v20.safetensors [fec0e39345]",
+            "sampler": null,
+            "model": null,
             "restore_faces": false,
             "enable_hr": false,
             "horde": true,
@@ -537,7 +538,7 @@
                 "Pyra and Mythra": "Pyra and Mythra (xenoblade), 2 girls "
             },
             "source": "auto",
-            "auto_url": "http://127.0.0.1:7860/",
+            "auto_url": "http://192.168.86.20:7860",
             "auto_auth": "",
             "hr_upscaler": "Latent",
             "hr_scale": 2,
@@ -577,7 +578,7 @@
             ],
             "openai_style": "vivid",
             "openai_quality": "standard",
-            "scheduler": "automatic",
+            "scheduler": null,
             "vae": "",
             "multimodal_captioning": false,
             "comfy_url": "http://127.0.0.1:8188",
