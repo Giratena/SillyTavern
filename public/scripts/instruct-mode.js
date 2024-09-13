@@ -34,6 +34,8 @@ const controls = [
     { id: 'instruct_names_force_groups', property: 'names_force_groups', isCheckbox: true },
     { id: 'instruct_first_output_sequence', property: 'first_output_sequence', isCheckbox: false },
     { id: 'instruct_last_output_sequence', property: 'last_output_sequence', isCheckbox: false },
+    { id: 'instruct_first_input_sequence', property: 'first_input_sequence', isCheckbox: false },
+    { id: 'instruct_last_input_sequence', property: 'last_input_sequence', isCheckbox: false },
     { id: 'instruct_activation_regex', property: 'activation_regex', isCheckbox: false },
     { id: 'instruct_bind_to_context', property: 'bind_to_context', isCheckbox: true },
     { id: 'instruct_skip_examples', property: 'skip_examples', isCheckbox: true },
@@ -58,6 +60,8 @@ function migrateInstructModeSettings(settings) {
         system_suffix: '',
         user_alignment_message: '',
         last_system_sequence: '',
+        first_input_sequence: '',
+        last_input_sequence: '',
         names_force_groups: true,
         skip_examples: false,
         system_same_as_user: false,
@@ -74,12 +78,16 @@ function migrateInstructModeSettings(settings) {
  * Loads instruct mode settings from the given data object.
  * @param {object} data Settings data object.
  */
-export function loadInstructMode(data) {
+export async function loadInstructMode(data) {
     if (data.instruct !== undefined) {
         instruct_presets = data.instruct;
     }
 
     migrateInstructModeSettings(power_user.instruct);
+
+    $('#instruct_enabled').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.enabled);
+    $('#instructSettingsBlock, #InstructSequencesColumn').toggleClass('disabled', !power_user.instruct.enabled);
+    $('#instruct_bind_to_context').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.bind_to_context);
 
     controls.forEach(control => {
         const $element = $(`#${control.id}`);
@@ -90,12 +98,12 @@ export function loadInstructMode(data) {
             $element.val(power_user.instruct[control.property]);
         }
 
-        $element.on('input', function () {
+        $element.on('input', async function () {
             power_user.instruct[control.property] = control.isCheckbox ? !!$(this).prop('checked') : $(this).val();
-            saveSettingsDebounced();
-            if (!control.isCheckbox) {
-                resetScrollHeight($element);
+            if (!CSS.supports('field-sizing', 'content') && $(this).is('textarea')) {
+                await resetScrollHeight($(this));
             }
+            saveSettingsDebounced();
         });
 
         if (control.trigger) {
@@ -122,19 +130,22 @@ function highlightDefaultPreset() {
 /**
  * Select context template if not already selected.
  * @param {string} preset Preset name.
+ * @param {object} [options={}] Optional arguments.
+ * @param {boolean} [options.quiet=false] Suppress toast messages.
+ * @param {boolean} [options.isAuto=false] Is auto-select.
  */
-export function selectContextPreset(preset) {
+export function selectContextPreset(preset, { quiet = false, isAuto = false } = {}) {
     // If context template is not already selected, select it
     if (preset !== power_user.context.preset) {
         $('#context_presets').val(preset).trigger('change');
-        toastr.info(`Context Template: preset "${preset}" auto-selected`);
+        !quiet && toastr.info(`Context Template: "${preset}" ${isAuto ? 'auto-' : ''}selected`);
     }
 
     // If instruct mode is disabled, enable it, except for default context template
     if (!power_user.instruct.enabled && preset !== power_user.default_context) {
         power_user.instruct.enabled = true;
         $('#instruct_enabled').prop('checked', true).trigger('change');
-        toastr.info('Instruct Mode enabled');
+        !quiet && toastr.info('Instruct Mode enabled');
     }
 
     saveSettingsDebounced();
@@ -143,19 +154,22 @@ export function selectContextPreset(preset) {
 /**
  * Select instruct preset if not already selected.
  * @param {string} preset Preset name.
+ * @param {object} [options={}] Optional arguments.
+ * @param {boolean} [options.quiet=false] Suppress toast messages.
+ * @param {boolean} [options.isAuto=false] Is auto-select.
  */
-export function selectInstructPreset(preset) {
+export function selectInstructPreset(preset, { quiet = false, isAuto = false } = {}) {
     // If instruct preset is not already selected, select it
     if (preset !== power_user.instruct.preset) {
         $('#instruct_presets').val(preset).trigger('change');
-        toastr.info(`Instruct Mode: preset "${preset}" auto-selected`);
+        !quiet && toastr.info(`Instruct Template: "${preset}" ${isAuto ? 'auto-' : ''}selected`);
     }
 
     // If instruct mode is disabled, enable it
     if (!power_user.instruct.enabled) {
         power_user.instruct.enabled = true;
         $('#instruct_enabled').prop('checked', true).trigger('change');
-        toastr.info('Instruct Mode enabled');
+        !quiet && toastr.info('Instruct Mode enabled');
     }
 
     saveSettingsDebounced();
@@ -179,7 +193,7 @@ export function autoSelectInstructPreset(modelId) {
         // If instruct preset matches the context template
         if (power_user.instruct.bind_to_context && instruct_preset.name === power_user.context.preset) {
             foundMatch = true;
-            selectInstructPreset(instruct_preset.name);
+            selectInstructPreset(instruct_preset.name, { isAuto: true });
             break;
         }
     }
@@ -193,7 +207,7 @@ export function autoSelectInstructPreset(modelId) {
 
                     // Stop on first match so it won't cycle back and forth between presets if multiple regexes match
                     if (regex instanceof RegExp && regex.test(modelId)) {
-                        selectInstructPreset(preset.name);
+                        selectInstructPreset(preset.name, { isAuto: true });
 
                         return true;
                     }
@@ -253,7 +267,15 @@ export function getInstructStoppingSequences() {
         const system_sequence = power_user.instruct.system_sequence?.replace(/{{name}}/gi, 'System') || '';
         const last_system_sequence = power_user.instruct.last_system_sequence?.replace(/{{name}}/gi, 'System') || '';
 
-        const combined_sequence = `${stop_sequence}\n${input_sequence}\n${output_sequence}\n${first_output_sequence}\n${last_output_sequence}\n${system_sequence}\n${last_system_sequence}`;
+        const combined_sequence = [
+            stop_sequence,
+            input_sequence,
+            output_sequence,
+            first_output_sequence,
+            last_output_sequence,
+            system_sequence,
+            last_system_sequence,
+        ].join('\n');
 
         combined_sequence.split('\n').filter((line, index, self) => self.indexOf(line) === index).forEach(addInstructSequence);
     }
@@ -301,6 +323,14 @@ export function formatInstructModeChat(name, mes, isUser, isNarrator, forceAvata
         }
 
         if (isUser) {
+            if (forceOutputSequence === force_output_sequence.FIRST) {
+                return power_user.instruct.first_input_sequence || power_user.instruct.input_sequence;
+            }
+
+            if (forceOutputSequence === force_output_sequence.LAST) {
+                return power_user.instruct.last_input_sequence || power_user.instruct.input_sequence;
+            }
+
             return power_user.instruct.input_sequence;
         }
 
@@ -333,6 +363,9 @@ export function formatInstructModeChat(name, mes, isUser, isNarrator, forceAvata
     if (power_user.instruct.macro) {
         prefix = substituteParams(prefix, name1, name2);
         prefix = prefix.replace(/{{name}}/gi, name || 'System');
+
+        suffix = substituteParams(suffix, name1, name2);
+        suffix = suffix.replace(/{{name}}/gi, name || 'System');
     }
 
     if (!suffix && power_user.instruct.wrap) {
@@ -398,6 +431,8 @@ export function formatInstructModeExamples(mesExamplesArray, name1, name2) {
 
         inputPrefix = inputPrefix.replace(/{{name}}/gi, name1);
         outputPrefix = outputPrefix.replace(/{{name}}/gi, name2);
+        inputSuffix = inputSuffix.replace(/{{name}}/gi, name1);
+        outputSuffix = outputSuffix.replace(/{{name}}/gi, name2);
 
         if (!inputSuffix && power_user.instruct.wrap) {
             inputSuffix = '\n';
@@ -510,13 +545,13 @@ function selectMatchingContextTemplate(name) {
         // If context template matches the instruct preset
         if (context_preset.name === name) {
             foundMatch = true;
-            selectContextPreset(context_preset.name);
+            selectContextPreset(context_preset.name, { isAuto: true });
             break;
         }
     }
     if (!foundMatch) {
         // If no match was found, select default context preset
-        selectContextPreset(power_user.default_context);
+        selectContextPreset(power_user.default_context, { isAuto: true });
     }
 }
 
@@ -547,6 +582,8 @@ export function replaceInstructMacros(input, env) {
         'instructStop': power_user.instruct.stop_sequence,
         'instructUserFiller': power_user.instruct.user_alignment_message,
         'instructSystemInstructionPrefix': power_user.instruct.last_system_sequence,
+        'instructFirstInput|instructFirstUserPrefix': power_user.instruct.first_input_sequence || power_user.instruct.input_sequence,
+        'instructLastInput|instructLastUserPrefix': power_user.instruct.last_input_sequence || power_user.instruct.input_sequence,
     };
 
     for (const [placeholder, value] of Object.entries(instructMacros)) {
@@ -565,11 +602,11 @@ jQuery(() => {
         if (power_user.instruct.preset === power_user.default_instruct) {
             power_user.default_instruct = null;
             $(this).removeClass('default');
-            toastr.info('Default instruct preset cleared');
+            toastr.info('Default instruct template cleared');
         } else {
             power_user.default_instruct = power_user.instruct.preset;
             $(this).addClass('default');
-            toastr.info(`Default instruct preset set to ${power_user.default_instruct}`);
+            toastr.info(`Default instruct template set to ${power_user.default_instruct}`);
         }
 
         saveSettingsDebounced();
@@ -577,11 +614,25 @@ jQuery(() => {
 
     $('#instruct_system_same_as_user').on('input', function () {
         const state = !!$(this).prop('checked');
-        $('#instruct_system_sequence').prop('disabled', state);
-        $('#instruct_system_suffix').prop('disabled', state);
+        if (state) {
+            $('#instruct_system_sequence_block').addClass('disabled');
+            $('#instruct_system_suffix_block').addClass('disabled');
+            $('#instruct_system_sequence').prop('readOnly', true);
+            $('#instruct_system_suffix').prop('readOnly', true);
+        } else {
+            $('#instruct_system_sequence_block').removeClass('disabled');
+            $('#instruct_system_suffix_block').removeClass('disabled');
+            $('#instruct_system_sequence').prop('readOnly', false);
+            $('#instruct_system_suffix').prop('readOnly', false);
+        }
+
     });
 
     $('#instruct_enabled').on('change', function () {
+        //color toggle for the main switch
+        $('#instruct_enabled').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.enabled);
+        $('#instructSettingsBlock, #InstructSequencesColumn').toggleClass('disabled', !power_user.instruct.enabled);
+
         if (!power_user.instruct.bind_to_context) {
             return;
         }
@@ -593,6 +644,10 @@ jQuery(() => {
             // When instruct mode gets disabled, select default context preset
             selectContextPreset(power_user.default_context);
         }
+    });
+
+    $('#instruct_bind_to_context').on('change', function () {
+        $('#instruct_bind_to_context').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.bind_to_context);
     });
 
     $('#instruct_presets').on('change', function () {
@@ -614,7 +669,8 @@ jQuery(() => {
                 if (control.isCheckbox) {
                     $element.prop('checked', power_user.instruct[control.property]).trigger('input');
                 } else {
-                    $element.val(power_user.instruct[control.property]).trigger('input');
+                    $element.val(power_user.instruct[control.property]);
+                    $element.trigger('input');
                 }
             }
         });

@@ -1,5 +1,6 @@
-import { callPopup, eventSource, event_types, saveSettings, saveSettingsDebounced, getRequestHeaders, animation_duration } from '../script.js';
+import { eventSource, event_types, saveSettings, saveSettingsDebounced, getRequestHeaders, animation_duration } from '../script.js';
 import { hideLoader, showLoader } from './loader.js';
+import { POPUP_RESULT, POPUP_TYPE, Popup, callGenericPopup } from './popup.js';
 import { renderTemplate, renderTemplateAsync } from './templates.js';
 import { isSubsetOf, setValueByPath } from './utils.js';
 export {
@@ -20,6 +21,7 @@ const defaultUrl = 'http://localhost:5100';
 let saveMetadataTimeout = null;
 
 let requiresReload = false;
+let stateChanged = false;
 
 export function saveMetadataDebounced() {
     const context = getContext();
@@ -120,6 +122,11 @@ const extension_settings = {
     expressions: {
         /** @type {string[]} */
         custom: [],
+    },
+    connectionManager: {
+        selectedProfile: '',
+        /** @type {import('./extensions/connection-manager/index.js').ConnectionProfile[]} */
+        profiles: [],
     },
     dice: {},
     /** @type {import('./char-data.js').RegexScriptData[]} */
@@ -237,6 +244,7 @@ function onEnableExtensionClick() {
 
 async function enableExtension(name, reload = true) {
     extension_settings.disabledExtensions = extension_settings.disabledExtensions.filter(x => x !== name);
+    stateChanged = true;
     await saveSettings();
     if (reload) {
         location.reload();
@@ -247,6 +255,7 @@ async function enableExtension(name, reload = true) {
 
 async function disableExtension(name, reload = true) {
     extension_settings.disabledExtensions.push(name);
+    stateChanged = true;
     await saveSettings();
     if (reload) {
         location.reload();
@@ -303,7 +312,7 @@ async function activateExtensions() {
 
                 if (!isDisabled) {
                     const promise = Promise.all([addExtensionScript(name, manifest), addExtensionStyle(name, manifest)]);
-                    promise
+                    await promise
                         .then(() => activeExtensions.add(name))
                         .catch(err => console.log('Could not activate extension: ' + name, err));
                     promises.push(promise);
@@ -347,14 +356,12 @@ function autoConnectInputHandler() {
     saveSettingsDebounced();
 }
 
-function addExtensionsButtonAndMenu() {
-    const buttonHTML =
-        '<div id="extensionsMenuButton" style="display: none;" class="fa-solid fa-magic-wand-sparkles" title="Extras Extensions" /></div>';
-    const extensionsMenuHTML = '<div id="extensionsMenu" class="options-content" style="display: none;"></div>';
+async function addExtensionsButtonAndMenu() {
+    const buttonHTML = await renderTemplateAsync('wandButton');
+    const extensionsMenuHTML = await renderTemplateAsync('wandMenu');
 
     $(document.body).append(extensionsMenuHTML);
-
-    $('#leftSendForm').prepend(buttonHTML);
+    $('#leftSendForm').append(buttonHTML);
 
     const button = $('#extensionsMenuButton');
     const dropdown = $('#extensionsMenu');
@@ -375,7 +382,7 @@ function addExtensionsButtonAndMenu() {
 
     $('html').on('click', function (e) {
         const clickTarget = $(e.target);
-        const noCloseTargets = ['#sd_gen', '#extensionsMenuButton'];
+        const noCloseTargets = ['#sd_gen', '#extensionsMenuButton', '#roll_dice'];
         if (dropdown.is(':visible') && !noCloseTargets.some(id => clickTarget.closest(id).length > 0)) {
             $(dropdown).fadeOut(animation_duration);
         }
@@ -505,7 +512,7 @@ function addExtensionScript(name, manifest) {
  * @param {boolean} isDisabled - Whether the extension is disabled or not.
  * @param {boolean} isExternal - Whether the extension is external or not.
  * @param {string} checkboxClass - The class for the checkbox HTML element.
- * @return {string} - The HTML string that represents the extension.
+ * @return {Promise<string>} - The HTML string that represents the extension.
  */
 async function generateExtensionHtml(name, manifest, isActive, isDisabled, isExternal, checkboxClass) {
     const displayName = manifest.display_name;
@@ -557,8 +564,10 @@ async function generateExtensionHtml(name, manifest, isActive, isDisabled, isExt
     } else if (!isDisabled) { // Neither active nor disabled
         const requirements = new Set(manifest.requires);
         modules.forEach(x => requirements.delete(x));
-        const requirementsString = DOMPurify.sanitize([...requirements].join(', '));
-        extensionHtml += `<p>Missing modules: <span class="failure">${requirementsString}</span></p>`;
+        if (requirements.size > 0) {
+            const requirementsString = DOMPurify.sanitize([...requirements].join(', '));
+            extensionHtml += `<p>Missing modules: <span class="failure">${requirementsString}</span></p>`;
+        }
     }
 
     return extensionHtml;
@@ -604,41 +613,85 @@ function getModuleInformation() {
 async function showExtensionsDetails() {
     let popupPromise;
     try {
-        showLoader();
-        let htmlDefault = '<h3>Built-in Extensions:</h3>';
-        let htmlExternal = '<h3>Installed Extensions:</h3>';
+        const htmlDefault = $('<h3>Built-in Extensions:</h3>');
+        const htmlExternal = $('<h3>Installed Extensions:</h3>').addClass('opacity50p');
+        const htmlLoading = $(`<h3 class="flex-container alignItemsCenter justifyCenter marginTop10 marginBot5">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span>Loading third-party extensions... Please wait...</span>
+        </h3>`);
 
-        const extensions = Object.entries(manifests).sort((a, b) => a[1].loading_order - b[1].loading_order);
+        /** @type {Promise<any>[]} */
         const promises = [];
+        const extensions = Object.entries(manifests).sort((a, b) => a[1].loading_order - b[1].loading_order);
 
         for (const extension of extensions) {
             promises.push(getExtensionData(extension));
         }
 
-        const settledPromises = await Promise.allSettled(promises);
-
-        settledPromises.forEach(promise => {
-            if (promise.status === 'fulfilled') {
-                const { isExternal, extensionHtml } = promise.value;
-                if (isExternal) {
-                    htmlExternal += extensionHtml;
-                } else {
-                    htmlDefault += extensionHtml;
-                }
-            }
+        promises.forEach(promise => {
+            promise.then(value => {
+                const { isExternal, extensionHtml } = value;
+                const container = isExternal ? htmlExternal : htmlDefault;
+                container.append(extensionHtml);
+            });
         });
 
-        const html = `
-            ${getModuleInformation()}
-            ${htmlDefault}
-            ${htmlExternal}
-        `;
-        popupPromise = callPopup(`<div class="extensions_info">${html}</div>`, 'text', '', { okButton: 'Close', wide: true, large: true });
+        Promise.allSettled(promises).then(() => {
+            htmlLoading.remove();
+            htmlExternal.removeClass('opacity50p');
+        });
+
+        const html = $('<div></div>')
+            .addClass('extensions_info')
+            .append(getModuleInformation())
+            .append(htmlDefault)
+            .append(htmlLoading)
+            .append(htmlExternal);
+
+        /** @type {import('./popup.js').CustomPopupButton} */
+        const updateAllButton = {
+            text: 'Update all',
+            appendAtEnd: true,
+            action: async () => {
+                requiresReload = true;
+                await autoUpdateExtensions(true);
+                await popup.complete(POPUP_RESULT.AFFIRMATIVE);
+            },
+        };
+
+        // If we are updating an extension, the "old" popup is still active. We should close that.
+        const oldPopup = Popup.util.popups.find(popup => popup.content.querySelector('.extensions_info'));
+        if (oldPopup) {
+            await oldPopup.complete(POPUP_RESULT.CANCELLED);
+        }
+
+        let waitingForSave = false;
+
+        const popup = new Popup(html, POPUP_TYPE.TEXT, '', {
+            okButton: 'Close',
+            wide: true,
+            large: true,
+            customButtons: [updateAllButton],
+            allowVerticalScrolling: true,
+            onClosing: async () => {
+                if (waitingForSave) {
+                    return false;
+                }
+                if (stateChanged) {
+                    waitingForSave = true;
+                    const toast = toastr.info('The page will be reloaded shortly...', 'Extensions state changed');
+                    await saveSettings();
+                    toastr.clear(toast);
+                    waitingForSave = false;
+                    requiresReload = true;
+                }
+                return true;
+            },
+        });
+        popupPromise = popup.show();
     } catch (error) {
         toastr.error('Error loading extensions. See browser console for details.');
         console.error(error);
-    } finally {
-        hideLoader();
     }
     if (popupPromise) {
         await popupPromise;
@@ -702,8 +755,8 @@ async function updateExtension(extensionName, quiet) {
 async function onDeleteClick() {
     const extensionName = $(this).data('name');
     // use callPopup to create a popup for the user to confirm before delete
-    const confirmation = await callPopup(`Are you sure you want to delete ${extensionName}?`, 'delete_extension');
-    if (confirmation) {
+    const confirmation = await callGenericPopup(`Are you sure you want to delete ${extensionName}?`, POPUP_TYPE.CONFIRM, '', {});
+    if (confirmation === POPUP_RESULT.AFFIRMATIVE) {
         await deleteExtension(extensionName);
     }
 }
@@ -774,16 +827,17 @@ export async function installExtension(url) {
     const response = await request.json();
     toastr.success(`Extension "${response.display_name}" by ${response.author} (version ${response.version}) has been installed successfully!`, 'Extension installation successful');
     console.debug(`Extension "${response.display_name}" has been installed successfully at ${response.extensionPath}`);
-    await loadExtensionSettings({}, false);
-    eventSource.emit(event_types.EXTENSION_SETTINGS_LOADED);
+    await loadExtensionSettings({}, false, false);
+    await eventSource.emit(event_types.EXTENSION_SETTINGS_LOADED);
 }
 
 /**
  * Loads extension settings from the app settings.
  * @param {object} settings App Settings
  * @param {boolean} versionChanged Is this a version change?
+ * @param {boolean} enableAutoUpdate Enable auto-update
  */
-async function loadExtensionSettings(settings, versionChanged) {
+async function loadExtensionSettings(settings, versionChanged, enableAutoUpdate) {
     if (settings.extension_settings) {
         Object.assign(extension_settings, settings.extension_settings);
     }
@@ -794,12 +848,12 @@ async function loadExtensionSettings(settings, versionChanged) {
     $('#extensions_notify_updates').prop('checked', extension_settings.notifyUpdates);
 
     // Activate offline extensions
-    eventSource.emit(event_types.EXTENSIONS_FIRST_LOAD);
+    await eventSource.emit(event_types.EXTENSIONS_FIRST_LOAD);
     extensionNames = await discoverExtensions();
     manifests = await getManifests(extensionNames);
 
-    if (versionChanged) {
-        await autoUpdateExtensions();
+    if (versionChanged && enableAutoUpdate) {
+        await autoUpdateExtensions(false);
     }
 
     await activateExtensions();
@@ -862,7 +916,12 @@ async function checkForExtensionUpdates(force) {
     }
 }
 
-async function autoUpdateExtensions() {
+/**
+ * Updates all 3rd-party extensions that have auto-update enabled.
+ * @param {boolean} forceAll Force update all even if not auto-updating
+ * @returns {Promise<void>}
+ */
+async function autoUpdateExtensions(forceAll) {
     if (!Object.values(manifests).some(x => x.auto_update)) {
         return;
     }
@@ -870,7 +929,7 @@ async function autoUpdateExtensions() {
     const banner = toastr.info('Auto-updating extensions. This may take several minutes.', 'Please wait...', { timeOut: 10000, extendedTimeOut: 10000 });
     const promises = [];
     for (const [id, manifest] of Object.entries(manifests)) {
-        if (manifest.auto_update && id.startsWith('third-party')) {
+        if ((forceAll || manifest.auto_update) && id.startsWith('third-party')) {
             console.debug(`Auto-updating 3rd-party extension: ${manifest.display_name} (${id})`);
             promises.push(updateExtension(id.replace('third-party', ''), true));
         }
@@ -961,8 +1020,30 @@ export async function writeExtensionField(characterId, key, value) {
     }
 }
 
-jQuery(function () {
-    addExtensionsButtonAndMenu();
+/**
+ * Prompts the user to enter the Git URL of the extension to import.
+ * After obtaining the Git URL, makes a POST request to '/api/extensions/install' to import the extension.
+ * If the extension is imported successfully, a success message is displayed.
+ * If the extension import fails, an error message is displayed and the error is logged to the console.
+ * After successfully importing the extension, the extension settings are reloaded and a 'EXTENSION_SETTINGS_LOADED' event is emitted.
+ * @param {string} [suggestUrl] Suggested URL to install
+ * @returns {Promise<void>}
+ */
+export async function openThirdPartyExtensionMenu(suggestUrl = '') {
+    const html = await renderTemplateAsync('installExtension');
+    const input = await callGenericPopup(html, POPUP_TYPE.INPUT, suggestUrl ?? '');
+
+    if (!input) {
+        console.debug('Extension install cancelled');
+        return;
+    }
+
+    const url = String(input).trim();
+    await installExtension(url);
+}
+
+jQuery(async function () {
+    await addExtensionsButtonAndMenu();
     $('#extensionsMenuButton').css('display', 'flex');
 
     $('#extensions_connect').on('click', connectClickHandler);
@@ -976,28 +1057,8 @@ jQuery(function () {
 
     /**
      * Handles the click event for the third-party extension import button.
-     * Prompts the user to enter the Git URL of the extension to import.
-     * After obtaining the Git URL, makes a POST request to '/api/extensions/install' to import the extension.
-     * If the extension is imported successfully, a success message is displayed.
-     * If the extension import fails, an error message is displayed and the error is logged to the console.
-     * After successfully importing the extension, the extension settings are reloaded and a 'EXTENSION_SETTINGS_LOADED' event is emitted.
      *
      * @listens #third_party_extension_button#click - The click event of the '#third_party_extension_button' element.
      */
-    $('#third_party_extension_button').on('click', async () => {
-        const html = `<h3>Enter the Git URL of the extension to install</h3>
-    <br>
-    <p><b>Disclaimer:</b> Please be aware that using external extensions can have unintended side effects and may pose security risks. Always make sure you trust the source before importing an extension. We are not responsible for any damage caused by third-party extensions.</p>
-    <br>
-    <p>Example: <tt> https://github.com/author/extension-name </tt></p>`;
-        const input = await callPopup(html, 'input');
-
-        if (!input) {
-            console.debug('Extension install cancelled');
-            return;
-        }
-
-        const url = input.trim();
-        await installExtension(url);
-    });
+    $('#third_party_extension_button').on('click', () => openThirdPartyExtensionMenu());
 });

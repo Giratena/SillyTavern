@@ -1,10 +1,11 @@
-import { callPopup, main_api } from '../../../script.js';
+import { main_api } from '../../../script.js';
 import { getContext } from '../../extensions.js';
 import { SlashCommand } from '../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
 import { getFriendlyTokenizerName, getTextTokens, getTokenCountAsync, tokenizers } from '../../tokenizers.js';
 import { resetScrollHeight, debounce } from '../../utils.js';
 import { debounce_timeout } from '../../constants.js';
+import { POPUP_TYPE, callGenericPopup } from '../../popup.js';
 
 function rgb2hex(rgb) {
     rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
@@ -58,13 +59,14 @@ async function doTokenCounter() {
             $('#tokenized_chunks_display').text('—');
         }
 
-        resetScrollHeight($('#token_counter_textarea'));
-        resetScrollHeight($('#token_counter_ids'));
+        if (!CSS.supports('field-sizing', 'content')) {
+            await resetScrollHeight($('#token_counter_textarea'));
+            await resetScrollHeight($('#token_counter_ids'));
+        }
     }, debounce_timeout.relaxed);
     dialog.find('#token_counter_textarea').on('input', () => countDebounced());
 
-    $('#dialogue_popup').addClass('wide_dialogue_popup');
-    callPopup(dialog, 'text', '', { wide: true, large: true });
+    callGenericPopup(dialog, POPUP_TYPE.TEXT, '', { wide: true, large: true, allowVerticalScrolling: true });
 }
 
 /**
@@ -123,6 +125,7 @@ async function doCount() {
     //toastr success with the token count of the chat
     const count = await getTokenCountAsync(allMessages);
     toastr.success(`Token count: ${count}`);
+    return count;
 }
 
 jQuery(() => {
@@ -131,10 +134,11 @@ jQuery(() => {
             <div class="fa-solid fa-1 extensionsMenuExtensionButton" /></div>
             Token Counter
         </div>`;
-    $('#extensionsMenu').prepend(buttonHtml);
+    $('#token_counter_wand_container').append(buttonHtml);
     $('#token_counter').on('click', doTokenCounter);
-    SlashCommandParser.addCommandObject(SlashCommand.fromProps({ name: 'count',
-        callback: doCount,
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'count',
+        callback: async () => String(await doCount()),
         returns: 'number of tokens',
         helpString: 'Counts the number of tokens in the current chat.',
     }));

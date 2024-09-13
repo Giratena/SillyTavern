@@ -20,7 +20,7 @@ import {
     renderExtensionTemplateAsync,
     doExtrasFetch, getApiUrl,
 } from '../../extensions.js';
-import { collapseNewlines } from '../../power-user.js';
+import { collapseNewlines, registerDebugFunction } from '../../power-user.js';
 import { SECRET_KEYS, secret_state, writeSecret } from '../../secrets.js';
 import { getDataBankAttachments, getDataBankAttachmentsForSource, getFileAttachment } from '../../chats.js';
 import { debounce, getStringHash as calculateHash, waitUntilCondition, onlyUnique, splitRecursive, trimToStartSentence, trimToEndSentence } from '../../utils.js';
@@ -30,6 +30,13 @@ import { textgen_types, textgenerationwebui_settings } from '../../textgen-setti
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../slash-commands/SlashCommand.js';
 import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from '../../slash-commands/SlashCommandArgument.js';
+import { callGenericPopup, POPUP_RESULT, POPUP_TYPE } from '../../popup.js';
+import { generateWebLlmChatPrompt, isWebLlmSupported } from '../shared.js';
+
+/**
+ * @typedef {object} HashedMessage
+ * @property {string} text - The hashed message text
+ */
 
 const MODULE_NAME = 'vectors';
 
@@ -191,6 +198,11 @@ function splitByChunks(items) {
     return chunkedItems;
 }
 
+/**
+ * Summarizes messages using the Extras API method.
+ * @param {HashedMessage[]} hashedMessages Array of hashed messages
+ * @returns {Promise<HashedMessage[]>} Summarized messages
+ */
 async function summarizeExtra(hashedMessages) {
     for (const element of hashedMessages) {
         try {
@@ -222,6 +234,11 @@ async function summarizeExtra(hashedMessages) {
     return hashedMessages;
 }
 
+/**
+ * Summarizes messages using the main API method.
+ * @param {HashedMessage[]} hashedMessages Array of hashed messages
+ * @returns {Promise<HashedMessage[]>} Summarized messages
+ */
 async function summarizeMain(hashedMessages) {
     for (const element of hashedMessages) {
         element.text = await generateRaw(element.text, '', false, false, settings.summary_prompt);
@@ -230,12 +247,39 @@ async function summarizeMain(hashedMessages) {
     return hashedMessages;
 }
 
+/**
+ * Summarizes messages using WebLLM.
+ * @param {HashedMessage[]} hashedMessages Array of hashed messages
+ * @returns {Promise<HashedMessage[]>} Summarized messages
+ */
+async function summarizeWebLLM(hashedMessages) {
+    if (!isWebLlmSupported()) {
+        console.warn('Vectors: WebLLM is not supported');
+        return hashedMessages;
+    }
+
+    for (const element of hashedMessages) {
+        const messages = [{ role:'system', content: settings.summary_prompt }, { role:'user', content: element.text }];
+        element.text = await generateWebLlmChatPrompt(messages);
+    }
+
+    return hashedMessages;
+}
+
+/**
+ * Summarizes messages using the chosen method.
+ * @param {HashedMessage[]} hashedMessages Array of hashed messages
+ * @param {string} endpoint Type of endpoint to use
+ * @returns {Promise<HashedMessage[]>} Summarized messages
+ */
 async function summarize(hashedMessages, endpoint = 'main') {
     switch (endpoint) {
         case 'main':
             return await summarizeMain(hashedMessages);
         case 'extras':
             return await summarizeExtra(hashedMessages);
+        case 'webllm':
+            return await summarizeWebLLM(hashedMessages);
         default:
             console.error('Unsupported endpoint', endpoint);
     }
@@ -357,7 +401,7 @@ async function processFiles(chat) {
         const dataBankCollectionIds = await ingestDataBankAttachments();
 
         if (dataBankCollectionIds.length) {
-            const queryText = await getQueryText(chat);
+            const queryText = await getQueryText(chat, 'file');
             await injectDataBankChunks(queryText, dataBankCollectionIds);
         }
 
@@ -391,7 +435,7 @@ async function processFiles(chat) {
                 await vectorizeFile(fileText, fileName, collectionId, settings.chunk_size, settings.overlap_percent);
             }
 
-            const queryText = await getQueryText(chat);
+            const queryText = await getQueryText(chat, 'file');
             const fileChunks = await retrieveFileChunks(queryText, collectionId);
 
             message.mes = `${fileChunks}\n\n${message.mes}`;
@@ -552,7 +596,7 @@ async function rearrangeChat(chat) {
             return;
         }
 
-        const queryText = await getQueryText(chat);
+        const queryText = await getQueryText(chat, 'chat');
 
         if (queryText.length === 0) {
             console.debug('Vectors: No text to query');
@@ -639,15 +683,16 @@ const onChatEvent = debounce(async () => await moduleWorker.update(), debounce_t
 /**
  * Gets the text to query from the chat
  * @param {object[]} chat Chat messages
+ * @param {'file'|'chat'|'world-info'} initiator Initiator of the query
  * @returns {Promise<string>} Text to query
  */
-async function getQueryText(chat) {
+async function getQueryText(chat, initiator) {
     let queryText = '';
     let i = 0;
 
     let hashedMessages = chat.map(x => ({ text: String(substituteParams(x.mes)) }));
 
-    if (settings.summarize && settings.summarize_sent) {
+    if (initiator === 'chat' && settings.enabled_chats && settings.summarize && settings.summarize_sent) {
         hashedMessages = await summarize(hashedMessages, settings.summary_source);
     }
 
@@ -989,6 +1034,28 @@ async function purgeVectorIndex(collectionId) {
     }
 }
 
+/**
+ * Purges all vector indexes.
+ */
+async function purgeAllVectorIndexes() {
+    try {
+        const response = await fetch('/api/vector/purge-all', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to purge all vector indexes');
+        }
+
+        console.log('Vectors: Purged all vector indexes');
+        toastr.success('All vector indexes purged', 'Purge successful');
+    } catch (error) {
+        console.error('Vectors: Failed to purge all', error);
+        toastr.error('Failed to purge all vector indexes', 'Purge failed');
+    }
+}
+
 function toggleSettings() {
     $('#vectors_files_settings').toggle(!!settings.enabled_files);
     $('#vectors_chats_settings').toggle(!!settings.enabled_chats);
@@ -1213,7 +1280,7 @@ async function activateWorldInfo(chat) {
     }
 
     // Perform a multi-query
-    const queryText = await getQueryText(chat);
+    const queryText = await getQueryText(chat, 'world-info');
 
     if (queryText.length === 0) {
         console.debug('Vectors: No text to query for WI');
@@ -1257,7 +1324,7 @@ jQuery(async () => {
     // Migrate from TensorFlow to Transformers
     settings.source = settings.source !== 'local' ? settings.source : 'transformers';
     const template = await renderExtensionTemplateAsync(MODULE_NAME, 'settings');
-    $('#extensions_settings2').append(template);
+    $('#vectors_container').append(template);
     $('#vectors_enabled_chats').prop('checked', settings.enabled_chats).on('input', () => {
         settings.enabled_chats = $('#vectors_enabled_chats').prop('checked');
         Object.assign(extension_settings.vectors, settings);
@@ -1277,11 +1344,30 @@ jQuery(async () => {
         saveSettingsDebounced();
         toggleSettings();
     });
-    $('#api_key_nomicai').on('change', () => {
-        const nomicKey = String($('#api_key_nomicai').val()).trim();
-        if (nomicKey.length) {
-            writeSecret(SECRET_KEYS.NOMICAI, nomicKey);
+    $('#api_key_nomicai').on('click', async () => {
+        const popupText = 'NomicAI API Key:';
+        const key = await callGenericPopup(popupText, POPUP_TYPE.INPUT, '', {
+            customButtons: [{
+                text: 'Remove Key',
+                appendAtEnd: true,
+                result: POPUP_RESULT.NEGATIVE,
+                action: async () => {
+                    await writeSecret(SECRET_KEYS.NOMICAI, '');
+                    toastr.success('API Key removed');
+                    $('#api_key_nomicai').toggleClass('success', !!secret_state[SECRET_KEYS.NOMICAI]);
+                    saveSettingsDebounced();
+                },
+            }],
+        });
+
+        if (!key) {
+            return;
         }
+
+        await writeSecret(SECRET_KEYS.NOMICAI, String(key));
+        $('#api_key_nomicai').toggleClass('success', !!secret_state[SECRET_KEYS.NOMICAI]);
+
+        toastr.success('API Key saved');
         saveSettingsDebounced();
     });
     $('#vectors_togetherai_model').val(settings.togetherai_model).on('change', () => {
@@ -1502,9 +1588,14 @@ jQuery(async () => {
         saveSettingsDebounced();
     });
 
-    const validSecret = !!secret_state[SECRET_KEYS.NOMICAI];
-    const placeholder = validSecret ? '✔️ Key saved' : '❌ Missing key';
-    $('#api_key_nomicai').attr('placeholder', placeholder);
+    $('#vectors_ollama_pull').on('click', (e) => {
+        const presetModel = extension_settings.vectors.ollama_model || '';
+        e.preventDefault();
+        $('#ollama_download_model').trigger('click');
+        $('#dialogue_popup_input').val(presetModel);
+    });
+
+    $('#api_key_nomicai').toggleClass('success', !!secret_state[SECRET_KEYS.NOMICAI]);
 
     toggleSettings();
     eventSource.on(event_types.MESSAGE_DELETED, onChatEvent);
@@ -1571,4 +1662,11 @@ jQuery(async () => {
         ],
         returns: ARGUMENT_TYPE.LIST,
     }));
+
+    registerDebugFunction('purge-everything', 'Purge all vector indices', 'Obliterate all stored vectors for all sources. No mercy.', async () => {
+        if (!confirm('Are you sure?')) {
+            return;
+        }
+        await purgeAllVectorIndexes();
+    });
 });

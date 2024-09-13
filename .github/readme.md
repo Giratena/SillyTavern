@@ -74,16 +74,16 @@ Or get in touch with the developers directly:
 
 ## Extensions
 
-SillyTavern has extensibility support, with some additional AI modules hosted via [SillyTavern Extras API](https://github.com/SillyTavern/SillyTavern-extras)
+SillyTavern has extensibility support.
 
-* Author's Note / Character Bias
 * Character emotional expressions (sprites)
 * Auto-Summary of the chat history
 * Sending images to chat, and the AI interpreting the content
 * Stable Diffusion image generation (5 chat-related presets plus 'free mode')
 * Text-to-speech for AI response messages (via ElevenLabs, Silero, or the OS's System TTS)
+* Many more available to download from the "Download Extensions & Assets" menu.
 
-A full list of included extensions and tutorials on how to use them can be found in the [Docs](https://docs.sillytavern.app/).
+Tutorials on how to use them can be found in the [Docs](https://docs.sillytavern.app/).
 
 ## UI/CSS/Quality of Life tweaks by RossAscends
 
@@ -144,12 +144,14 @@ A full list of included extensions and tutorials on how to use them can be found
   8. The server will then start, and SillyTavern will pop up in your browser.
 
 ## Installing via SillyTavern Launcher
- 1. Install [Git for Windows](https://gitforwindows.org/)
- 2. Open Windows Explorer (`Win+E`) and make or choose a folder where you wanna install the launcher to
- 3. Open a Command Prompt inside that folder by clicking in the 'Address Bar' at the top, typing `cmd`, and pressing Enter.
- 4. When you see a black box, insert the following command: `git clone https://github.com/SillyTavern/SillyTavern-Launcher.git`
- 5. Double-click on `installer.bat` and choose what you wanna install
- 6. After installation double-click on `launcher.bat`
+1.  On your keyboard: press **`WINDOWS + R`** to open Run dialog box. Then, run the following command to install git:
+```shell
+cmd /c winget install -e --id Git.Git
+```
+2. On your keyboard: press **`WINDOWS + E`** to open File Explorer, then navigate to the folder where you want to install the launcher. Once in the desired folder, type `cmd` into the address bar and press enter. Then, run the following command:
+```shell
+git clone https://github.com/SillyTavern/SillyTavern-Launcher.git && cd SillyTavern-Launcher && start installer.bat
+```
 
 ## Installing via GitHub Desktop
 (This allows git usage **only** in GitHub Desktop, if you want to use `git` on the command line too, you also need to install [Git for Windows](https://gitforwindows.org/))
@@ -183,18 +185,40 @@ For MacOS / Linux all of these will be done in a Terminal.
 
 ### For Linux users
 1. Open your favorite terminal and install git
-2. Download Sillytavern Launcher with: `git clone https://github.com/SillyTavern/SillyTavern-Launcher.git`
-3. Navigate to the SillyTavern-Launcher with: `cd SillyTavern-Launcher`
-4. Start the install launcher with: `chmod +x install.sh && ./install.sh` and choose what you wanna install
-5. After installation start the launcher with: `chmod +x launcher.sh && ./launcher.sh`
+2. Git clone the Sillytavern-Launcher with: 
+```shell
+git clone https://github.com/SillyTavern/SillyTavern-Launcher.git && cd SillyTavern-Launcher
+```
+3. Start the installer.sh with: 
+```shell
+chmod +x install.sh && ./install.sh
+```
+4. After installation start the launcher.sh with: 
+```shell
+chmod +x launcher.sh && ./launcher.sh
+```
 
 ### For Mac users
-1. Open a terminal and install brew with: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-2. Then install git with: `brew install git`
-3. Download Sillytavern Launcher with: `git clone https://github.com/SillyTavern/SillyTavern-Launcher.git`
-4. Navigate to the SillyTavern-Launcher with: `cd SillyTavern-Launcher`
-5. Start the install launcher with: `chmod +x install.sh && ./install.sh` and choose what you wanna install
-6. After installation start the launcher with: `chmod +x launcher.sh && ./launcher.sh`
+1. Open a terminal and install brew with: 
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+2. Install git with: 
+```shell
+brew install git
+```
+3. Git clone the Sillytavern-Launcher with: 
+```shell
+git clone https://github.com/SillyTavern/SillyTavern-Launcher.git && cd SillyTavern-Launcher
+```
+4. Start the installer.sh with: 
+```shell
+chmod +x install.sh && ./install.sh
+```
+5. After installation start the launcher.sh with: 
+```shell
+chmod +x launcher.sh && ./launcher.sh
+```
 
 ## 🐋 Installing via Docker
 
@@ -222,7 +246,6 @@ You will need two mandatory directory mappings and a port mapping to allow Silly
 
 ##### Additional Settings
 
-- [TimeZone] - The timezone your instance should use. This is useful for making logs match your local time for easier troubleshooting. Use your TZ Identifier. (https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 - [DockerNet] - The docker network that the container should be created with a connection to. If you don't know what it is, see the [official Docker documentation](https://docs.docker.com/reference/cli/docker/network/).
 - [version] - On the right-hand side of this GitHub page, you'll see "Packages". Select the "sillytavern" package and you'll see the image versions. The image tag "latest" will keep you up-to-date with the current release. You can also utilize "staging" and "release" tags that point to the nightly images of the respective branches, but this may not be appropriate, if you are utilizing extensions that could be broken, and may need time to update.
 
@@ -231,7 +254,7 @@ You will need two mandatory directory mappings and a port mapping to allow Silly
 1. Open your Command Line
 2. Run the following command
 
-`docker create --name='sillytavern' --net='[DockerNet]' -e TZ="[TimeZone]" -p '8000:8000/tcp' -v '[plugins]':'/home/node/app/plugins':'rw' -v '[config]':'/home/node/app/config':'rw' -v '[data]':'/home/node/app/data':'rw' 'ghcr.io/sillytavern/sillytavern:[version]'`
+`docker create --name='sillytavern' --net='[DockerNet]' -p '8000:8000/tcp' -v '[plugins]':'/home/node/app/plugins':'rw' -v '[config]':'/home/node/app/config':'rw' -v '[data]':'/home/node/app/data':'rw' 'ghcr.io/sillytavern/sillytavern:[version]'`
 
 > Note that 8000 is a default listening port. Don't forget to use an appropriate port if you change it in the config.
 
@@ -244,7 +267,7 @@ You will need two mandatory directory mappings and a port mapping to allow Silly
 
 ## API keys management
 
-SillyTavern saves your API keys to a `secrets.json` file in the server directory.
+SillyTavern saves your API keys to a `secrets.json` file in the user data directory (`/data/default-user/secrets.json` is the default path).
 
 By default, they will not be exposed to a frontend after you enter them and reload the page.
 
@@ -253,13 +276,53 @@ In order to enable viewing your keys by clicking a button in the API block:
 1. Set the value of `allowKeysExposure` to `true` in `config.yaml` file.
 2. Restart the SillyTavern server.
 
+## Command-line arguments
+
+You can pass command-line arguments to SillyTavern server startup to override some settings in `config.yaml`.
+
+### Examples
+
+```shell
+node server.js --port 8000 --listen false
+# or
+npm run start -- --port 8000 --listen false
+# or (Windows only)
+Start.bat --port 8000 --listen false
+```
+
+### Supported arguments
+
+| Option                  | Description                                                                                          | Type     | Default                      |
+|-------------------------|------------------------------------------------------------------------------------------------------|----------|------------------------------|
+| `--version`             | Show version number                                                                                  | boolean  |                              |
+| `--enableIPv6`          | Enables IPv6.                                                                                        | boolean  | false                        |
+| `--enableIPv4`          | Enables IPv4.                                                                                        | boolean  | true                         |
+| `--port`                | Sets the port under which SillyTavern will run. If not provided falls back to yaml config 'port'.    | number   | 8000                         |
+| `--dnsPreferIPv6`       | Prefers IPv6 for dns. If not provided falls back to yaml config 'preferIPv6'.                        | boolean  | false                        |
+| `--autorun`             | Automatically launch SillyTavern in the browser. If not provided falls back to yaml config 'autorun'.| boolean  | false                        |
+| `--autorunHostname`     | The autorun hostname, probably best left on 'auto'.                                                  | string   | null                         |
+| `--autorunPortOverride` | Overrides the port for autorun.                                                                      | string   | null                         |
+| `--listen`              | SillyTavern is listening on all network interfaces. If not provided falls back to yaml config 'listen'.| boolean  | false                        |
+| `--corsProxy`           | Enables CORS proxy. If not provided falls back to yaml config 'enableCorsProxy'.                     | boolean  | false                        |
+| `--disableCsrf`         | Disables CSRF protection                                                                             | boolean  | null                         |
+| `--ssl`                 | Enables SSL                                                                                          | boolean  | false                        |
+| `--certPath`            | Path to your certificate file.                                                                       | string   | "certs/cert.pem"             |
+| `--keyPath`             | Path to your private key file.                                                                       | string   | "certs/privkey.pem"          |
+| `--whitelist`           | Enables whitelist mode                                                                               | boolean  | null                         |
+| `--dataRoot`            | Root directory for data storage                                                                      | string   | null                         |
+| `--avoidLocalhost`      | Avoids using 'localhost' for autorun in auto mode.                                                   | boolean  | null                         |
+| `--basicAuthMode`       | Enables basic authentication                                                                         | boolean  | null                         |
+| `--requestProxyEnabled` | Enables a use of proxy for outgoing requests                                                         | boolean  | null                         |
+| `--requestProxyUrl`     | Request proxy URL (HTTP or SOCKS protocols)                                                          | string   | null                         |
+| `--requestProxyBypass`  | Request proxy bypass list (space separated list of hosts)                                            | array    | null                         |
+
 ## Remote connections
 
 Most often this is for people who want to use SillyTavern on their mobile phones while their PC runs the ST server on the same wifi network.
 
 However, it can be used to allow remote connections from anywhere as well.
 
-**IMPORTANT: SillyTavern is a single-user program, so anyone who logs in will be able to see all characters and chats, and be able to change any settings inside the UI.**
+**IMPORTANT: Refer to the official guide if you want to configure SillyTavern user accounts with (optional) password protection: [Users](https://docs.sillytavern.app/installation/st-1.12.0-migration-guide/#users).**
 
 ### 1. Managing whitelisted IPs
 

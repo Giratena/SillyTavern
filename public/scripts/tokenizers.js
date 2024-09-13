@@ -7,7 +7,7 @@ import { kai_flags } from './kai-settings.js';
 import { textgen_types, textgenerationwebui_settings as textgen_settings, getTextGenServer, getTextGenModel } from './textgen-settings.js';
 import { getCurrentDreamGenModelTokenizer, getCurrentOpenRouterModelTokenizer, openRouterModels } from './textgen-models.js';
 
-const { OOBA, TABBY, KOBOLDCPP, APHRODITE, LLAMACPP, OPENROUTER, DREAMGEN } = textgen_types;
+const { OOBA, TABBY, KOBOLDCPP, VLLM, APHRODITE, LLAMACPP, OPENROUTER, DREAMGEN } = textgen_types;
 
 export const CHARACTERS_PER_TOKEN_RATIO = 3.35;
 const TOKENIZER_WARNING_KEY = 'tokenizationWarningShown';
@@ -26,6 +26,10 @@ export const tokenizers = {
     API_KOBOLD: 10,
     CLAUDE: 11,
     LLAMA3: 12,
+    GEMMA: 13,
+    JAMBA: 14,
+    QWEN2: 15,
+    COMMAND_R: 16,
     BEST_MATCH: 99,
 };
 
@@ -34,12 +38,14 @@ export const SENTENCEPIECE_TOKENIZERS = [
     tokenizers.MISTRAL,
     tokenizers.YI,
     tokenizers.LLAMA3,
+    tokenizers.GEMMA,
+    tokenizers.JAMBA,
     // uncomment when NovelAI releases Kayra and Clio weights, lol
     //tokenizers.NERD,
     //tokenizers.NERD2,
 ];
 
-export const TEXTGEN_TOKENIZERS = [OOBA, TABBY, KOBOLDCPP, LLAMACPP, APHRODITE];
+export const TEXTGEN_TOKENIZERS = [OOBA, TABBY, KOBOLDCPP, LLAMACPP, VLLM, APHRODITE];
 
 const TOKENIZER_URLS = {
     [tokenizers.GPT2]: {
@@ -91,6 +97,26 @@ const TOKENIZER_URLS = {
         decode: '/api/tokenizers/llama3/decode',
         count: '/api/tokenizers/llama3/encode',
     },
+    [tokenizers.GEMMA]: {
+        encode: '/api/tokenizers/gemma/encode',
+        decode: '/api/tokenizers/gemma/decode',
+        count: '/api/tokenizers/gemma/encode',
+    },
+    [tokenizers.JAMBA]: {
+        encode: '/api/tokenizers/jamba/encode',
+        decode: '/api/tokenizers/jamba/decode',
+        count: '/api/tokenizers/jamba/encode',
+    },
+    [tokenizers.QWEN2]: {
+        encode: '/api/tokenizers/qwen2/encode',
+        decode: '/api/tokenizers/qwen2/decode',
+        count: '/api/tokenizers/qwen2/encode',
+    },
+    [tokenizers.COMMAND_R]: {
+        encode: '/api/tokenizers/command-r/encode',
+        decode: '/api/tokenizers/command-r/decode',
+        count: '/api/tokenizers/command-r/encode',
+    },
     [tokenizers.API_TEXTGENERATIONWEBUI]: {
         encode: '/api/tokenizers/remote/textgenerationwebui/encode',
         count: '/api/tokenizers/remote/textgenerationwebui/encode',
@@ -141,9 +167,45 @@ async function resetTokenCache() {
 }
 
 /**
+ * @typedef {object} Tokenizer
+ * @property {number} tokenizerId - The id of the tokenizer option
+ * @property {string} tokenizerKey - Internal name/key of the tokenizer
+ * @property {string} tokenizerName - Human-readable detailed name of the tokenizer (as displayed in the UI)
+ */
+
+/**
+ * Gets all tokenizers available to the user.
+ * @returns {Tokenizer[]} Tokenizer info.
+ */
+export function getAvailableTokenizers() {
+    const tokenizerOptions = $('#tokenizer').find('option').toArray();
+    return tokenizerOptions.map(tokenizerOption => ({
+        tokenizerId: Number(tokenizerOption.value),
+        tokenizerKey: Object.entries(tokenizers).find(([_, value]) => value === Number(tokenizerOption.value))[0].toLocaleLowerCase(),
+        tokenizerName: tokenizerOption.text,
+    }));
+}
+
+/**
+ * Selects tokenizer if not already selected.
+ * @param {number} tokenizerId Tokenizer ID.
+ */
+export function selectTokenizer(tokenizerId) {
+    if (tokenizerId !== power_user.tokenizer) {
+        const tokenizer = getAvailableTokenizers().find(tokenizer => tokenizer.tokenizerId === tokenizerId);
+        if (!tokenizer) {
+            console.warn('Failed to find tokenizer with id', tokenizerId);
+            return;
+        }
+        $('#tokenizer').val(tokenizer.tokenizerId).trigger('change');
+        toastr.info(`Tokenizer: "${tokenizer.tokenizerName}" selected`);
+    }
+}
+
+/**
  * Gets the friendly name of the current tokenizer.
  * @param {string} forApi API to get the tokenizer for. Defaults to the main API.
- * @returns { { tokenizerName: string, tokenizerId: number } } Tokenizer info
+ * @returns {Tokenizer} Tokenizer info
  */
 export function getFriendlyTokenizerName(forApi) {
     if (!forApi) {
@@ -178,7 +240,9 @@ export function getFriendlyTokenizerName(forApi) {
         ? tokenizers.OPENAI
         : tokenizerId;
 
-    return { tokenizerName, tokenizerId };
+    const tokenizerKey = Object.entries(tokenizers).find(([_, value]) => value === tokenizerId)[0].toLocaleLowerCase();
+
+    return { tokenizerName, tokenizerKey, tokenizerId };
 }
 
 /**
@@ -231,6 +295,21 @@ export function getTokenizerBestMatch(forApi) {
             }
             if (model.includes('mistral') || model.includes('mixtral')) {
                 return tokenizers.MISTRAL;
+            }
+            if (model.includes('gemma')) {
+                return tokenizers.GEMMA;
+            }
+            if (model.includes('yi')) {
+                return tokenizers.YI;
+            }
+            if (model.includes('jamba')) {
+                return tokenizers.JAMBA;
+            }
+            if (model.includes('command-r')) {
+                return tokenizers.COMMAND_R;
+            }
+            if (model.includes('qwen2')) {
+                return tokenizers.QWEN2;
             }
         }
 
@@ -441,12 +520,17 @@ export function getTokenizerModel() {
     const turbo0301Tokenizer = 'gpt-3.5-turbo-0301';
     const turboTokenizer = 'gpt-3.5-turbo';
     const gpt4Tokenizer = 'gpt-4';
+    const gpt4oTokenizer = 'gpt-4o';
     const gpt2Tokenizer = 'gpt2';
     const claudeTokenizer = 'claude';
     const llamaTokenizer = 'llama';
     const llama3Tokenizer = 'llama3';
     const mistralTokenizer = 'mistral';
     const yiTokenizer = 'yi';
+    const gemmaTokenizer = 'gemma';
+    const jambaTokenizer = 'jamba';
+    const qwen2Tokenizer = 'qwen2';
+    const commandRTokenizer = 'command-r';
 
     // Assuming no one would use it for different models.. right?
     if (oai_settings.chat_completion_source == chat_completion_sources.SCALE) {
@@ -491,6 +575,18 @@ export function getTokenizerModel() {
         else if (model?.architecture?.tokenizer === 'Yi') {
             return yiTokenizer;
         }
+        else if (model?.architecture?.tokenizer === 'Gemini') {
+            return gemmaTokenizer;
+        }
+        else if (model?.architecture?.tokenizer === 'Qwen') {
+            return qwen2Tokenizer;
+        }
+        else if (model?.architecture?.tokenizer === 'Cohere') {
+            return commandRTokenizer;
+        }
+        else if (oai_settings.openrouter_model.includes('gpt-4o')) {
+            return gpt4oTokenizer;
+        }
         else if (oai_settings.openrouter_model.includes('gpt-4')) {
             return gpt4Tokenizer;
         }
@@ -506,10 +602,21 @@ export function getTokenizerModel() {
         else if (oai_settings.openrouter_model.includes('GPT-NeoXT')) {
             return gpt2Tokenizer;
         }
+        else if (oai_settings.openrouter_model.includes('jamba')) {
+            return jambaTokenizer;
+        }
+    }
+
+    if (oai_settings.chat_completion_source == chat_completion_sources.COHERE) {
+        return commandRTokenizer;
     }
 
     if (oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE) {
-        return oai_settings.google_model;
+        return gemmaTokenizer;
+    }
+
+    if (oai_settings.chat_completion_source == chat_completion_sources.AI21) {
+        return jambaTokenizer;
     }
 
     if (oai_settings.chat_completion_source == chat_completion_sources.CLAUDE) {
@@ -543,6 +650,22 @@ export function getTokenizerModel() {
         if (oai_settings.groq_model.includes('mistral') || oai_settings.groq_model.includes('mixtral')) {
             return mistralTokenizer;
         }
+        if (oai_settings.groq_model.includes('gemma')) {
+            return gemmaTokenizer;
+        }
+    }
+
+    if (oai_settings.chat_completion_source === chat_completion_sources.ZEROONEAI) {
+        return yiTokenizer;
+    }
+
+    if (oai_settings.chat_completion_source === chat_completion_sources.BLOCKENTROPY)  {
+        if (oai_settings.blockentropy_model.includes('llama3')) {
+            return llama3Tokenizer;
+        }
+        if (oai_settings.blockentropy_model.includes('miqu') || oai_settings.blockentropy_model.includes('mixtral')) {
+            return mistralTokenizer;
+        }
     }
 
     // Default to Turbo 3.5
@@ -554,16 +677,7 @@ export function getTokenizerModel() {
  * @deprecated Use countTokensOpenAIAsync instead.
  */
 export function countTokensOpenAI(messages, full = false) {
-    const shouldTokenizeAI21 = oai_settings.chat_completion_source === chat_completion_sources.AI21 && oai_settings.use_ai21_tokenizer;
-    const shouldTokenizeGoogle = oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE && oai_settings.use_google_tokenizer;
-    let tokenizerEndpoint = '';
-    if (shouldTokenizeAI21) {
-        tokenizerEndpoint = '/api/tokenizers/ai21/count';
-    } else if (shouldTokenizeGoogle) {
-        tokenizerEndpoint = `/api/tokenizers/google/count?model=${getTokenizerModel()}&reverse_proxy=${oai_settings.reverse_proxy}&proxy_password=${oai_settings.proxy_password}`;
-    } else {
-        tokenizerEndpoint = `/api/tokenizers/openai/count?model=${getTokenizerModel()}`;
-    }
+    const tokenizerEndpoint = `/api/tokenizers/openai/count?model=${getTokenizerModel()}`;
     const cacheObject = getTokenCacheObject();
 
     if (!Array.isArray(messages)) {
@@ -575,7 +689,7 @@ export function countTokensOpenAI(messages, full = false) {
     for (const message of messages) {
         const model = getTokenizerModel();
 
-        if (model === 'claude' || shouldTokenizeAI21 || shouldTokenizeGoogle) {
+        if (model === 'claude') {
             full = true;
         }
 
@@ -615,16 +729,7 @@ export function countTokensOpenAI(messages, full = false) {
  * @returns {Promise<number>} Token count.
  */
 export async function countTokensOpenAIAsync(messages, full = false) {
-    const shouldTokenizeAI21 = oai_settings.chat_completion_source === chat_completion_sources.AI21 && oai_settings.use_ai21_tokenizer;
-    const shouldTokenizeGoogle = oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE && oai_settings.use_google_tokenizer;
-    let tokenizerEndpoint = '';
-    if (shouldTokenizeAI21) {
-        tokenizerEndpoint = '/api/tokenizers/ai21/count';
-    } else if (shouldTokenizeGoogle) {
-        tokenizerEndpoint = `/api/tokenizers/google/count?model=${getTokenizerModel()}`;
-    } else {
-        tokenizerEndpoint = `/api/tokenizers/openai/count?model=${getTokenizerModel()}`;
-    }
+    const tokenizerEndpoint = `/api/tokenizers/openai/count?model=${getTokenizerModel()}`;
     const cacheObject = getTokenCacheObject();
 
     if (!Array.isArray(messages)) {
@@ -636,7 +741,7 @@ export async function countTokensOpenAIAsync(messages, full = false) {
     for (const message of messages) {
         const model = getTokenizerModel();
 
-        if (model === 'claude' || shouldTokenizeAI21 || shouldTokenizeGoogle) {
+        if (model === 'claude') {
             full = true;
         }
 
@@ -765,6 +870,8 @@ function getTextgenAPITokenizationParams(str) {
         api_type: textgen_settings.type,
         url: getTextGenServer(),
         legacy_api: textgen_settings.legacy_api && (textgen_settings.type === OOBA || textgen_settings.type === APHRODITE),
+        vllm_model: textgen_settings.vllm_model,
+        aphrodite_model: textgen_settings.aphrodite_model,
     };
 }
 

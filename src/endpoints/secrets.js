@@ -40,6 +40,12 @@ const SECRET_KEYS = {
     PERPLEXITY: 'api_key_perplexity',
     GROQ: 'api_key_groq',
     AZURE_TTS: 'api_key_azure_tts',
+    FEATHERLESS: 'api_key_featherless',
+    ZEROONEAI: 'api_key_01ai',
+    HUGGINGFACE: 'api_key_huggingface',
+    STABILITY: 'api_key_stability',
+    BLOCKENTROPY: 'api_key_blockentropy',
+    CUSTOM_OPENAI_TTS: 'api_key_custom_openai_tts',
 };
 
 // These are the keys that are safe to expose, even if allowKeysExposure is false

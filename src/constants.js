@@ -194,9 +194,14 @@ const CHAT_COMPLETION_SOURCES = {
     COHERE: 'cohere',
     PERPLEXITY: 'perplexity',
     GROQ: 'groq',
+    ZEROONEAI: '01ai',
+    BLOCKENTROPY: 'blockentropy',
 };
 
-const UPLOADS_PATH = './uploads';
+/**
+ * Path to multer file uploads under the data root.
+ */
+const UPLOADS_DIRECTORY = '_uploads';
 
 // TODO: this is copied from the client code; there should be a way to de-duplicate it eventually
 const TEXTGEN_TYPES = {
@@ -212,6 +217,8 @@ const TEXTGEN_TYPES = {
     INFERMATICAI: 'infermaticai',
     DREAMGEN: 'dreamgen',
     OPENROUTER: 'openrouter',
+    FEATHERLESS: 'featherless',
+    HUGGINGFACE: 'huggingface',
 };
 
 const INFERMATICAI_KEYS = [
@@ -224,7 +231,61 @@ const INFERMATICAI_KEYS = [
     'repetition_penalty',
     'stream',
     'stop',
+    'presence_penalty',
+    'frequency_penalty',
+    'min_p',
+    'seed',
+    'ignore_eos',
+    'n',
+    'best_of',
+    'min_tokens',
+    'spaces_between_special_tokens',
+    'skip_special_tokens',
+    'logprobs',
 ];
+
+const FEATHERLESS_KEYS = [
+    'model',
+    'prompt',
+    'best_of',
+    'echo',
+    'frequency_penalty',
+    'logit_bias',
+    'logprobs',
+    'max_tokens',
+    'n',
+    'presence_penalty',
+    'seed',
+    'stop',
+    'stream',
+    'suffix',
+    'temperature',
+    'top_p',
+    'user',
+
+    'use_beam_search',
+    'top_k',
+    'min_p',
+    'repetition_penalty',
+    'length_penalty',
+    'early_stopping',
+    'stop_token_ids',
+    'ignore_eos',
+    'min_tokens',
+    'skip_special_tokens',
+    'spaces_between_special_tokens',
+    'truncate_prompt_tokens',
+
+    'include_stop_str_in_output',
+    'response_format',
+    'guided_json',
+    'guided_regex',
+    'guided_choice',
+    'guided_grammar',
+    'guided_decoding_backend',
+    'guided_whitespace_pattern',
+];
+
 
 // https://dreamgen.com/docs/api#openai-text
 const DREAMGEN_KEYS = [
@@ -252,6 +313,9 @@ const TOGETHERAI_KEYS = [
     'top_p',
     'top_k',
     'repetition_penalty',
+    'min_p',
+    'presence_penalty',
+    'frequency_penalty',
     'stream',
     'stop',
 ];
@@ -259,6 +323,7 @@ const TOGETHERAI_KEYS = [
 // https://github.com/jmorganca/ollama/blob/main/docs/api.md#request-with-options
 const OLLAMA_KEYS = [
     'num_predict',
+    'num_ctx',
     'stop',
     'temperature',
     'repeat_penalty',
@@ -273,12 +338,18 @@ const OLLAMA_KEYS = [
     'mirostat',
     'mirostat_tau',
     'mirostat_eta',
+    'min_p',
 ];
 
 const AVATAR_WIDTH = 512;
 const AVATAR_HEIGHT = 768;
 
 const OPENROUTER_HEADERS = {
+    'HTTP-Referer': 'https://sillytavern.app',
+    'X-Title': 'SillyTavern',
+};
+
+const FEATHERLESS_HEADERS = {
     'HTTP-Referer': 'https://sillytavern.app',
     'X-Title': 'SillyTavern',
 };
@@ -352,7 +423,7 @@ module.exports = {
     PUBLIC_DIRECTORIES,
     USER_DIRECTORY_TEMPLATE,
     UNSAFE_EXTENSIONS,
-    UPLOADS_PATH,
+    UPLOADS_DIRECTORY,
     GEMINI_SAFETY,
     BISON_SAFETY,
     TEXTGEN_TYPES,
@@ -366,4 +437,6 @@ module.exports = {
     OPENROUTER_HEADERS,
     OPENROUTER_KEYS,
     VLLM_KEYS,
+    FEATHERLESS_KEYS,
+    FEATHERLESS_HEADERS,
 };

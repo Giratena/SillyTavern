@@ -1,8 +1,10 @@
 import { getContext } from './extensions.js';
-import { callPopup, getRequestHeaders } from '../script.js';
+import { getRequestHeaders } from '../script.js';
 import { isMobile } from './RossAscends-mods.js';
 import { collapseNewlines } from './power-user.js';
 import { debounce_timeout } from './constants.js';
+import { Popup, POPUP_RESULT, POPUP_TYPE } from './popup.js';
+import { SlashCommandClosure } from './slash-commands/SlashCommandClosure.js';
 
 /**
  * Pagination status string template.
@@ -29,6 +31,74 @@ export function isValidUrl(value) {
         return true;
     } catch (_) {
         return false;
+    }
+}
+
+/**
+ * Converts string to a value of a given type. Includes pythonista-friendly aliases.
+ * @param {string|SlashCommandClosure} value String value
+ * @param {string} type Type to convert to
+ * @returns {any} Converted value
+ */
+export function convertValueType(value, type) {
+    if (value instanceof SlashCommandClosure || typeof type !== 'string') {
+        return value;
+    }
+
+    switch (type.trim().toLowerCase()) {
+        case 'string':
+        case 'str':
+            return String(value);
+
+        case 'null':
+            return null;
+
+        case 'undefined':
+        case 'none':
+            return undefined;
+
+        case 'number':
+            return Number(value);
+
+        case 'int':
+            return parseInt(value, 10);
+
+        case 'float':
+            return parseFloat(value);
+
+        case 'boolean':
+        case 'bool':
+            return isTrueBoolean(value);
+
+        case 'list':
+        case 'array':
+            try {
+                const parsedArray = JSON.parse(value);
+                if (Array.isArray(parsedArray)) {
+                    return parsedArray;
+                }
+                // The value is not an array
+                return [];
+            } catch {
+                return [];
+            }
+
+        case 'object':
+        case 'dict':
+        case 'dictionary':
+            try {
+                const parsedObject = JSON.parse(value);
+                if (typeof parsedObject === 'object') {
+                    return parsedObject;
+                }
+                // The value is not an object
+                return {};
+            } catch {
+                return {};
+            }
+
+        default:
+            return value;
     }
 }
 
@@ -72,6 +142,20 @@ export function stringToRange(input, min, max) {
  */
 export function onlyUnique(value, index, array) {
     return array.indexOf(value) === index;
+}
+
+/**
+ * Removes the first occurrence of a specified item from an array
+ *
+ * @param {*[]} array - The array from which to remove the item
+ * @param {*} item - The item to remove from the array
+ * @returns {boolean} - Returns true if the item was successfully removed, false otherwise.
+ */
+export function removeFromArray(array, item) {
+    const index = array.indexOf(item);
+    if (index === -1) return false;
+    array.splice(index, 1);
+    return true;
 }
 
 /**
@@ -256,6 +340,13 @@ export function getStringHash(str, seed = 0) {
 }
 
 /**
+ * Map of debounced functions to their timers.
+ * Weak map is used to avoid memory leaks.
+ * @type {WeakMap<function, any>}
+ */
+const debounceMap = new WeakMap();
+
+/**
  * Creates a debounced function that delays invoking func until after wait milliseconds have elapsed since the last time the debounced function was invoked.
  * @param {function} func The function to debounce.
  * @param {debounce_timeout|number} [timeout=debounce_timeout.default] The timeout based on the common enum values, or in milliseconds.
@@ -263,10 +354,26 @@ export function getStringHash(str, seed = 0) {
  */
 export function debounce(func, timeout = debounce_timeout.standard) {
     let timer;
-    return (...args) => {
+    let fn = (...args) => {
         clearTimeout(timer);
         timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        debounceMap.set(func, timer);
+        debounceMap.set(fn, timer);
     };
+
+    return fn;
+}
+
+/**
+ * Cancels a scheduled debounced function.
+ * Does nothing if the function is not debounced or not scheduled.
+ * @param {function} func The function to cancel. Either the original or the debounced function.
+ */
+export function cancelDebounce(func) {
+    if (debounceMap.has(func)) {
+        clearTimeout(debounceMap.get(func));
+        debounceMap.delete(func);
+    }
 }
 
 /**
@@ -281,6 +388,32 @@ export function throttle(func, limit = 300) {
         const now = Date.now();
         if (!lastCall || (now - lastCall) >= limit) {
             lastCall = now;
+            func.apply(this, args);
+        }
+    };
+}
+
+/**
+ * Creates a debounced throttle function that only invokes func at most once per every limit milliseconds.
+ * @param {function} func The function to throttle.
+ * @param {number} [limit=300] The limit in milliseconds.
+ * @returns {function} The throttled function.
+ */
+export function debouncedThrottle(func, limit = 300) {
+    let last, deferTimer;
+    let db = debounce(func);
+
+    return function () {
+        let now = +new Date, args = arguments;
+        if (!last || (last && now < last + limit)) {
+            clearTimeout(deferTimer);
+            db.apply(this, args);
+            deferTimer = setTimeout(function () {
+                last = now;
+                func.apply(this, args);
+            }, limit);
+        } else {
+            last = now;
             func.apply(this, args);
         }
     };
@@ -610,6 +743,25 @@ export function isFalseBoolean(arg) {
 }
 
 /**
+ * Parses an array either as a comma-separated string or as a JSON array.
+ * @param {string} value String to parse
+ * @returns {string[]} The parsed array.
+ */
+export function parseStringArray(value) {
+    if (!value || typeof value !== 'string') return [];
+
+    try {
+        const parsedValue = JSON.parse(value);
+        if (!Array.isArray(parsedValue)) {
+            throw new Error('Not an array');
+        }
+        return parsedValue.map(x => String(x));
+    } catch (e) {
+        return value.split(',').map(x => x.trim()).filter(x => x);
+    }
+}
+
+/**
  * Checks if a number is odd.
  * @param {number} number The number to check.
  * @returns {boolean} True if the number is odd, false otherwise.
@@ -619,63 +771,6 @@ export function isFalseBoolean(arg) {
  */
 export function isOdd(number) {
     return number % 2 !== 0;
-}
-
-const dateCache = new Map();
-
-/**
- * Cached version of moment() to avoid re-parsing the same date strings.
- * Important: Moment objects are mutable, so use clone() before modifying them!
- * @param {string|number} timestamp String or number representing a date.
- * @returns {moment.Moment} Moment object
- */
-export function timestampToMoment(timestamp) {
-    if (dateCache.has(timestamp)) {
-        return dateCache.get(timestamp);
-    }
-
-    const moment = parseTimestamp(timestamp);
-    dateCache.set(timestamp, moment);
-    return moment;
-}
-
-function parseTimestamp(timestamp) {
-    if (!timestamp) {
-        return moment.invalid();
-    }
-
-    // Unix time (legacy TAI / tags)
-    if (typeof timestamp === 'number' || /^\d+$/.test(timestamp)) {
-        if (isNaN(timestamp) || !isFinite(timestamp) || timestamp < 0) {
-            return moment.invalid();
-        }
-        return moment(Number(timestamp));
-    }
-
-    // ST "humanized" format pattern
-    const pattern1 = /(\d{4})-(\d{1,2})-(\d{1,2}) @(\d{1,2})h (\d{1,2})m (\d{1,2})s (\d{1,3})ms/;
-    const replacement1 = (match, year, month, day, hour, minute, second, millisecond) => {
-        return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second.padStart(2, '0')}.${millisecond.padStart(3, '0')}Z`;
-    };
-    const isoTimestamp1 = timestamp.replace(pattern1, replacement1);
-    if (moment(isoTimestamp1).isValid()) {
-        return moment(isoTimestamp1);
-    }
-
-    // New format pattern: "June 19, 2023 4:13pm"
-    const pattern2 = /(\w+)\s(\d{1,2}),\s(\d{4})\s(\d{1,2}):(\d{1,2})(am|pm)/i;
-    const replacement2 = (match, month, day, year, hour, minute, meridiem) => {
-        const monthNum = moment().month(month).format('MM');
-        const hour24 = meridiem.toLowerCase() === 'pm' ? (parseInt(hour, 10) % 12) + 12 : parseInt(hour, 10) % 12;
-        return `${year}-${monthNum}-${day.padStart(2, '0')}T${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}:00`;
-    };
-    const isoTimestamp2 = timestamp.replace(pattern2, replacement2);
-    if (moment(isoTimestamp2).isValid()) {
-        return moment(isoTimestamp2);
-    }
-
-    // If none of the patterns match, return an invalid moment object
-    return moment.invalid();
 }
 
 /**
@@ -692,6 +787,71 @@ export function sortMoments(a, b) {
     } else {
         return 0;
     }
+}
+
+const dateCache = new Map();
+
+/**
+ * Cached version of moment() to avoid re-parsing the same date strings.
+ * Important: Moment objects are mutable, so use clone() before modifying them!
+ * @param {string|number} timestamp String or number representing a date.
+ * @returns {moment.Moment} Moment object
+ */
+export function timestampToMoment(timestamp) {
+    if (dateCache.has(timestamp)) {
+        return dateCache.get(timestamp);
+    }
+
+    const iso8601 = parseTimestamp(timestamp);
+    const objMoment = iso8601 ? moment(iso8601) : moment.invalid();
+
+    dateCache.set(timestamp, objMoment);
+    return objMoment;
+}
+
+/**
+ * Parses a timestamp and returns a moment object representing the parsed date and time.
+ * @param {string|number} timestamp - The timestamp to parse. It can be a string or a number.
+ * @returns {string} - If the timestamp is valid, returns an ISO 8601 string.
+ */
+function parseTimestamp(timestamp) {
+    if (!timestamp) return;
+
+    // Unix time (legacy TAI / tags)
+    if (typeof timestamp === 'number' || /^\d+$/.test(timestamp)) {
+        const unixTime = Number(timestamp);
+        const isValid = Number.isFinite(unixTime) && !Number.isNaN(unixTime) && unixTime >= 0;
+        if (!isValid) return;
+        return new Date(unixTime).toISOString();
+    }
+
+    let dtFmt = [];
+
+    // meridiem-based format
+    const convertFromMeridiemBased = (_, month, day, year, hour, minute, meridiem) => {
+        const monthNum = moment().month(month).format('MM');
+        const hour24 = meridiem.toLowerCase() === 'pm' ? (parseInt(hour, 10) % 12) + 12 : parseInt(hour, 10) % 12;
+        return `${year}-${monthNum}-${day.padStart(2, '0')}T${hour24.toString().padStart(2, '0')}:${minute.padStart(2, '0')}:00`;
+    };
+    // June 19, 2023 2:20pm
+    dtFmt.push({ callback: convertFromMeridiemBased, pattern: /(\w+)\s(\d{1,2}),\s(\d{4})\s(\d{1,2}):(\d{1,2})(am|pm)/i });
+
+    // ST "humanized" format patterns
+    const convertFromHumanized = (_, year, month, day, hour, min, sec, ms) => {
+        ms = typeof ms !== 'undefined' ? `.${ms.padStart(3, '0')}` : '';
+        return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${min.padStart(2, '0')}:${sec.padStart(2, '0')}${ms}Z`;
+    };
+    // 2024-7-12@01h31m37s
+    dtFmt.push({ callback: convertFromHumanized, pattern: /(\d{4})-(\d{1,2})-(\d{1,2})@(\d{1,2})h(\d{1,2})m(\d{1,2})s/ });
+    // 2024-6-5 @14h 56m 50s 682ms
+    dtFmt.push({ callback: convertFromHumanized, pattern: /(\d{4})-(\d{1,2})-(\d{1,2}) @(\d{1,2})h (\d{1,2})m (\d{1,2})s (\d{1,3})ms/ });
+
+    for (const x of dtFmt) {
+        let rgxMatch = timestamp.match(x.pattern);
+        if (!rgxMatch) continue;
+        return x.callback(...rgxMatch);
+    }
+    return;
 }
 
 /** Split string to parts no more than length in size.
@@ -769,7 +929,7 @@ export function getImageSizeFromDataURL(dataUrl) {
 
 export function getCharaFilename(chid) {
     const context = getContext();
-    const fileName = context.characters[chid ?? context.characterId].avatar;
+    const fileName = context.characters[chid ?? context.characterId]?.avatar;
 
     if (fileName) {
         return fileName.replace(/\.[^/.]+$/, '');
@@ -1276,6 +1436,15 @@ export function uuidv4() {
     });
 }
 
+/**
+ * Collapses multiple spaces in a strings into one.
+ * @param {string} s String to process
+ * @returns {string} String with collapsed spaces
+ */
+export function collapseSpaces(s) {
+    return s.replace(/\s+/g, ' ').trim();
+}
+
 function postProcessText(text, collapse = true) {
     // Remove carriage returns
     text = text.replace(/\r/g, '');
@@ -1511,11 +1680,56 @@ export function setValueByPath(obj, path, value) {
 /**
  * Flashes the given HTML element via CSS flash animation for a defined period
  * @param {JQuery<HTMLElement>} element - The element to flash
- * @param {number} timespan - A numer in milliseconds how the flash should last
+ * @param {number} timespan - A number in milliseconds how the flash should last (default is 2000ms.  Multiples of 1000ms work best, as they end with the flash animation being at 100% opacity)
  */
 export function flashHighlight(element, timespan = 2000) {
+    const flashDuration = 2000; // Duration of a single flash cycle in milliseconds
+
     element.addClass('flash animated');
-    setTimeout(() => element.removeClass('flash animated'), timespan);
+    element.css('--animation-duration', `${flashDuration}ms`);
+
+    // Repeat the flash animation
+    const intervalId = setInterval(() => {
+        element.removeClass('flash animated');
+        void element[0].offsetWidth; // Trigger reflow to restart animation
+        element.addClass('flash animated');
+    }, flashDuration);
+
+    setTimeout(() => {
+        clearInterval(intervalId);
+        element.removeClass('flash animated');
+        element.css('--animation-duration', '');
+    }, timespan);
+}
+
+
+/**
+ * Checks if the given control has an animation applied to it
+ *
+ * @param {HTMLElement} control - The control element to check for animation
+ * @returns {boolean} Whether the control has an animation applied
+ */
+export function hasAnimation(control) {
+    const animatioName = getComputedStyle(control, null)['animation-name'];
+    return animatioName != 'none';
+}
+
+/**
+ * Run an action once an animation on a control ends. If the control has no animation, the action will be executed immediately.
+ *
+ * @param {HTMLElement} control - The control element to listen for animation end event
+ * @param {(control:*?) => void} callback - The callback function to be executed when the animation ends
+ */
+export function runAfterAnimation(control, callback) {
+    if (hasAnimation(control)) {
+        const onAnimationEnd = () => {
+            control.removeEventListener('animationend', onAnimationEnd);
+            callback(control);
+        };
+        control.addEventListener('animationend', onAnimationEnd);
+    } else {
+        callback(control);
+    }
 }
 
 /**
@@ -1592,20 +1806,24 @@ export function select2ModifyOptions(element, items, { select = false, changeEve
     /** @type {Select2Option[]} */
     const dataItems = items.map(x => typeof x === 'string' ? { id: getSelect2OptionId(x), text: x } : x);
 
-    const existingValues = [];
+    const optionsToSelect = [];
+    const newOptions = [];
+
     dataItems.forEach(item => {
         // Set the value, creating a new option if necessary
         if (element.find('option[value=\'' + item.id + '\']').length) {
-            if (select) existingValues.push(item.id);
+            if (select) optionsToSelect.push(item.id);
         } else {
             // Create a DOM Option and optionally pre-select by default
             var newOption = new Option(item.text, item.id, select, select);
             // Append it to the select
-            element.append(newOption);
-            if (select) element.trigger('change', changeEventArgs);
+            newOptions.push(newOption);
+            if (select) optionsToSelect.push(item.id);
         }
-        if (existingValues.length) element.val(existingValues).trigger('change', changeEventArgs);
     });
+
+    element.append(newOptions);
+    if (optionsToSelect.length) element.val(optionsToSelect).trigger('change', changeEventArgs);
 }
 
 /**
@@ -1759,7 +1977,7 @@ export async function checkOverwriteExistingData(type, existingNames, name, { in
         return true;
     }
 
-    const overwrite = interactive ? await callPopup(`<h3>${type} ${actionName}</h3><p>A ${type.toLowerCase()} with the same name already exists:<br />${existing}</p>Do you want to overwrite it?`, 'confirm') : false;
+    const overwrite = interactive && await Popup.show.confirm(`${type} ${actionName}`, `<p>A ${type.toLowerCase()} with the same name already exists:<br />${existing}</p>Do you want to overwrite it?`);
     if (!overwrite) {
         toastr.warning(`${type} ${actionName.toLowerCase()} cancelled. A ${type.toLowerCase()} with the same name already exists:<br />${existing}`, `${type} ${actionName}`, { escapeHtml: false });
         return false;
@@ -1773,4 +1991,128 @@ export async function checkOverwriteExistingData(type, existingNames, name, { in
     }
 
     return true;
+}
+
+/**
+ * Generates a free name by appending a counter to the given name if it already exists in the list
+ *
+ * @param {string} name - The original name to check for existence in the list
+ * @param {string[]} list - The list of names to check for existence
+ * @param {(n: number) => string} [numberFormatter=(n) => ` #${n}`] - The function used to format the counter
+ * @returns {string} The generated free name
+ */
+export function getFreeName(name, list, numberFormatter = (n) => ` #${n}`) {
+    if (!list.includes(name)) {
+        return name;
+    }
+    let counter = 1;
+    while (list.includes(`${name} #${counter}`)) {
+        counter++;
+    }
+    return `${name}${numberFormatter(counter)}`;
+}
+
+
+/**
+ * Toggles the visibility of a drawer by changing the display style of its content.
+ * This function skips the usual drawer animation.
+ *
+ * @param {HTMLElement} drawer - The drawer element to toggle
+ * @param {boolean} [expand=true] - Whether to expand or collapse the drawer
+ */
+export function toggleDrawer(drawer, expand = true) {
+    /** @type {HTMLElement} */
+    const icon = drawer.querySelector('.inline-drawer-icon');
+    /** @type {HTMLElement} */
+    const content = drawer.querySelector('.inline-drawer-content');
+
+    if (expand) {
+        icon.classList.remove('up', 'fa-circle-chevron-up');
+        icon.classList.add('down', 'fa-circle-chevron-down');
+        content.style.display = 'block';
+    } else {
+        icon.classList.remove('down', 'fa-circle-chevron-down');
+        icon.classList.add('up', 'fa-circle-chevron-up');
+        content.style.display = 'none';
+    }
+
+    // Set the height of "autoSetHeight" textareas within the inline-drawer to their scroll height
+    if (!CSS.supports('field-sizing', 'content')) {
+        content.querySelectorAll('textarea.autoSetHeight').forEach(resetScrollHeight);
+    }
+}
+
+export async function fetchFaFile(name) {
+    const style = document.createElement('style');
+    style.innerHTML = await (await fetch(`/css/${name}`)).text();
+    document.head.append(style);
+    const sheet = style.sheet;
+    style.remove();
+    return [...sheet.cssRules]
+        .filter(rule => rule.style?.content)
+        .map(rule => rule.selectorText.split(/,\s*/).map(selector => selector.split('::').shift().slice(1)))
+    ;
+}
+export async function fetchFa() {
+    return [...new Set((await Promise.all([
+        fetchFaFile('fontawesome.min.css'),
+    ])).flat())];
+}
+/**
+ * Opens a popup with all the available Font Awesome icons and returns the selected icon's name.
+ * @prop {string[]} customList A custom list of Font Awesome icons to use instead of all available icons.
+ * @returns {Promise<string>} The icon name (fa-pencil) or null if cancelled.
+ */
+export async function showFontAwesomePicker(customList = null) {
+    const faList = customList ?? await fetchFa();
+    const fas = {};
+    const dom = document.createElement('div'); {
+        dom.classList.add('faPicker-container');
+        const search = document.createElement('div'); {
+            search.classList.add('faQuery-container');
+            const qry = document.createElement('input'); {
+                qry.classList.add('text_pole');
+                qry.classList.add('faQuery');
+                qry.type = 'search';
+                qry.placeholder = 'Filter icons';
+                qry.autofocus = true;
+                const qryDebounced = debounce(() => {
+                    const result = faList.filter(fa => fa.find(className => className.includes(qry.value.toLowerCase())));
+                    for (const fa of faList) {
+                        if (!result.includes(fa)) {
+                            fas[fa].classList.add('hidden');
+                        } else {
+                            fas[fa].classList.remove('hidden');
+                        }
+                    }
+                });
+                qry.addEventListener('input', () => qryDebounced());
+                search.append(qry);
+            }
+            dom.append(search);
+        }
+        const grid = document.createElement('div'); {
+            grid.classList.add('faPicker');
+            for (const fa of faList) {
+                const opt = document.createElement('div'); {
+                    fas[fa] = opt;
+                    opt.classList.add('menu_button');
+                    opt.classList.add('fa-solid');
+                    opt.classList.add(fa[0]);
+                    opt.title = fa.map(it => it.slice(3)).join(', ');
+                    opt.dataset.result = POPUP_RESULT.AFFIRMATIVE.toString();
+                    opt.addEventListener('click', () => value = fa[0]);
+                    grid.append(opt);
+                }
+            }
+            dom.append(grid);
+        }
+    }
+    let value = '';
+    const picker = new Popup(dom, POPUP_TYPE.TEXT, null, { allowVerticalScrolling: true, okButton: 'No Icon', cancelButton: 'Cancel' });
+    await picker.show();
+    if (picker.result == POPUP_RESULT.AFFIRMATIVE) {
+        return value;
+    }
+    return null;
 }

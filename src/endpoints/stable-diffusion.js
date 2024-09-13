@@ -7,6 +7,7 @@ const path = require('path');
 const writeFileAtomicSync = require('write-file-atomic').sync;
 const { jsonParser } = require('../express-common');
 const { readSecret, SECRET_KEYS } = require('./secrets.js');
+const FormData = require('form-data');
 
 /**
  * Sanitizes a string.
@@ -128,6 +129,31 @@ router.post('/upscalers', jsonParser, async (request, response) => {
         upscalers.splice(1, 0, ...latentUpscalers);
 
         return response.send(upscalers);
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+router.post('/vaes', jsonParser, async (request, response) => {
+    try {
+        const url = new URL(request.body.url);
+        url.pathname = '/sdapi/v1/sd-vae';
+
+        const result = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': getBasicAuthHeader(request.body.auth),
+            },
+        });
+
+        if (!result.ok) {
+            throw new Error('SD WebUI returned an error.');
+        }
+
+        const data = await result.json();
+        const names = data.map(x => x.model_name);
+        return response.send(names);
     } catch (error) {
         console.log(error);
         return response.sendStatus(500);
@@ -297,6 +323,17 @@ router.post('/generate', jsonParser, async (request, response) => {
         const url = new URL(request.body.url);
         url.pathname = '/sdapi/v1/txt2img';
 
+        const controller = new AbortController();
+        request.socket.removeAllListeners('close');
+        request.socket.on('close', function () {
+            if (!response.writableEnded) {
+                const url = new URL(request.body.url);
+                url.pathname = '/sdapi/v1/interrupt';
+                fetch(url, { method: 'POST', headers: { 'Authorization': getBasicAuthHeader(request.body.auth) } });
+            }
+            controller.abort();
+        });
+
         const result = await fetch(url, {
             method: 'POST',
             body: JSON.stringify(request.body),
@@ -305,6 +342,8 @@ router.post('/generate', jsonParser, async (request, response) => {
                 'Authorization': getBasicAuthHeader(request.body.auth),
             },
             timeout: 0,
+            // @ts-ignore
+            signal: controller.signal,
         });
 
         if (!result.ok) {
@@ -530,6 +569,17 @@ comfy.post('/generate', jsonParser, async (request, response) => {
         const url = new URL(request.body.url);
         url.pathname = '/prompt';
 
+        const controller = new AbortController();
+        request.socket.removeAllListeners('close');
+        request.socket.on('close', function () {
+            if (!response.writableEnded && !item) {
+                const interruptUrl = new URL(request.body.url);
+                interruptUrl.pathname = '/interrupt';
+                fetch(interruptUrl, { method: 'POST', headers: { 'Authorization': getBasicAuthHeader(request.body.auth) } });
+            }
+            controller.abort();
+        });
+
         const promptResult = await fetch(url, {
             method: 'POST',
             body: request.body.prompt,
@@ -555,6 +605,9 @@ comfy.post('/generate', jsonParser, async (request, response) => {
             }
             await delay(100);
         }
+        if (item.status.status_str === 'error') {
+            throw new Error('ComfyUI generation did not succeed.');
+        }
         const imgInfo = Object.keys(item.outputs).map(it => item.outputs[it].images).flat()[0];
         const imgUrl = new URL(request.body.url);
         imgUrl.pathname = '/view';
@@ -566,6 +619,7 @@ comfy.post('/generate', jsonParser, async (request, response) => {
         const imgBuffer = await imgResponse.buffer();
         return response.send(imgBuffer.toString('base64'));
     } catch (error) {
+        console.log(error);
         return response.sendStatus(500);
     }
 });
@@ -757,6 +811,31 @@ drawthings.post('/generate', jsonParser, async (request, response) => {
 
 const pollinations = express.Router();
 
+pollinations.post('/models', jsonParser, async (_request, response) => {
+    try {
+        const modelsUrl = new URL('https://image.pollinations.ai/models');
+        const result = await fetch(modelsUrl);
+
+        if (!result.ok) {
+            console.log('Pollinations returned an error.', result.status, result.statusText);
+            throw new Error('Pollinations request failed.');
+        }
+
+        const data = await result.json();
+
+        if (!Array.isArray(data)) {
+            console.log('Pollinations returned invalid data.');
+            throw new Error('Pollinations request failed.');
+        }
+
+        const models = data.map(x => ({ value: x, text: x }));
+        return response.send(models);
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
 pollinations.post('/generate', jsonParser, async (request, response) => {
     try {
         const promptUrl = new URL(`https://image.pollinations.ai/prompt/${encodeURIComponent(request.body.prompt)}`);
@@ -765,7 +844,6 @@ pollinations.post('/generate', jsonParser, async (request, response) => {
             negative_prompt: String(request.body.negative_prompt),
             seed: String(request.body.seed >= 0 ? request.body.seed : Math.floor(Math.random() * 10_000_000)),
             enhance: String(request.body.enhance ?? false),
-            refine: String(request.body.refine ?? false),
             width: String(request.body.width ?? 1024),
             height: String(request.body.height ?? 1024),
             nologo: String(true),
@@ -793,9 +871,196 @@ pollinations.post('/generate', jsonParser, async (request, response) => {
     }
 });
 
+const stability = express.Router();
+
+stability.post('/generate', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.STABILITY);
+
+        if (!key) {
+            console.log('Stability AI key not found.');
+            return response.sendStatus(400);
+        }
+
+        const { payload, model } = request.body;
+
+        console.log('Stability AI request:', model, payload);
+
+        const formData = new FormData();
+        for (const [key, value] of Object.entries(payload)) {
+            if (value !== undefined) {
+                formData.append(key, String(value));
+            }
+        }
+
+        let apiUrl;
+        switch (model) {
+            case 'stable-image-ultra':
+                apiUrl = 'https://api.stability.ai/v2beta/stable-image/generate/ultra';
+                break;
+            case 'stable-image-core':
+                apiUrl = 'https://api.stability.ai/v2beta/stable-image/generate/core';
+                break;
+            case 'stable-diffusion-3':
+                apiUrl = 'https://api.stability.ai/v2beta/stable-image/generate/sd3';
+                break;
+            default:
+                throw new Error('Invalid Stability AI model selected');
+        }
+
+        const result = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${key}`,
+                'Accept': 'image/*',
+            },
+            body: formData,
+            timeout: 0,
+        });
+
+        if (!result.ok) {
+            const text = await result.text();
+            console.log('Stability AI returned an error.', result.status, result.statusText, text);
+            return response.sendStatus(500);
+        }
+
+        const buffer = await result.buffer();
+        return response.send(buffer.toString('base64'));
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+const blockentropy = express.Router();
+
+blockentropy.post('/models', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.BLOCKENTROPY);
+
+        if (!key) {
+            console.log('Block Entropy key not found.');
+            return response.sendStatus(400);
+        }
+
+        const modelsResponse = await fetch('https://api.blockentropy.ai/sdapi/v1/sd-models', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${key}`,
+            },
+        });
+
+        if (!modelsResponse.ok) {
+            console.log('Block Entropy returned an error.');
+            return response.sendStatus(500);
+        }
+
+        const data = await modelsResponse.json();
+
+        if (!Array.isArray(data)) {
+            console.log('Block Entropy returned invalid data.');
+            return response.sendStatus(500);
+        }
+        const models = data.map(x => ({ value: x.name, text: x.name }));
+        return response.send(models);
+
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+blockentropy.post('/generate', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.BLOCKENTROPY);
+
+        if (!key) {
+            console.log('Block Entropy key not found.');
+            return response.sendStatus(400);
+        }
+
+        console.log('Block Entropy request:', request.body);
+
+        const result = await fetch('https://api.blockentropy.ai/sdapi/v1/txt2img', {
+            method: 'POST',
+            body: JSON.stringify({
+                prompt: request.body.prompt,
+                negative_prompt: request.body.negative_prompt,
+                model: request.body.model,
+                steps: request.body.steps,
+                width: request.body.width,
+                height: request.body.height,
+                // Random seed if negative.
+                seed: request.body.seed >= 0 ? request.body.seed : Math.floor(Math.random() * 10_000_000),
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`,
+            },
+        });
+
+        if (!result.ok) {
+            console.log('Block Entropy returned an error.');
+            return response.sendStatus(500);
+        }
+
+        const data = await result.json();
+        console.log('Block Entropy response:', data);
+
+        return response.send(data);
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+
+const huggingface = express.Router();
+
+huggingface.post('/generate', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.HUGGINGFACE);
+
+        if (!key) {
+            console.log('Hugging Face key not found.');
+            return response.sendStatus(400);
+        }
+
+        console.log('Hugging Face request:', request.body);
+
+        const result = await fetch(`https://api-inference.huggingface.co/models/${request.body.model}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                inputs: request.body.prompt,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`,
+            },
+        });
+
+        if (!result.ok) {
+            console.log('Hugging Face returned an error.');
+            return response.sendStatus(500);
+        }
+
+        const buffer = await result.buffer();
+        return response.send({
+            image: buffer.toString('base64'),
+        });
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+
 router.use('/comfy', comfy);
 router.use('/together', together);
 router.use('/drawthings', drawthings);
 router.use('/pollinations', pollinations);
+router.use('/stability', stability);
+router.use('/blockentropy', blockentropy);
+router.use('/huggingface', huggingface);
 
 module.exports = { router };

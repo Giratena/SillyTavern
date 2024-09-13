@@ -1,4 +1,3 @@
-import { eventSource, event_types } from '../script.js';
 import { power_user } from './power-user.js';
 import { delay } from './utils.js';
 
@@ -160,7 +159,7 @@ async function* parseStreamData(json) {
         return;
     }
     // llama.cpp?
-    else if (typeof json.content === 'string' && json.content.length > 0) {
+    else if (typeof json.content === 'string' && json.content.length > 0 && json.object !== 'chat.completion.chunk') {
         for (let i = 0; i < json.content.length; i++) {
             const str = json.content[i];
             yield {
@@ -268,7 +267,6 @@ export class SmoothEventSourceStream extends EventSourceStream {
                         hasFocus && await delay(getDelay(lastStr));
                         controller.enqueue(new MessageEvent(event.type, { data: JSON.stringify(parsed.data) }));
                         lastStr = parsed.chunk;
-                        hasFocus && await eventSource.emit(event_types.SMOOTH_STREAM_TOKEN_RECEIVED, parsed.chunk);
                     }
                 } catch (error) {
                     console.debug('Smooth Streaming parsing error', error);

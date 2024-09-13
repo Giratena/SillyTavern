@@ -1,4 +1,5 @@
 require('./polyfill.js');
+const { getConfigValue } = require('./util.js');
 
 /**
  * Convert a prompt from the ChatML objects to the format used by Claude.
@@ -263,8 +264,16 @@ function convertGooglePrompt(messages, model, useSysPrompt = false, charName = '
     const PNG_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
     const visionSupportedModels = [
+        'gemini-1.5-flash',
         'gemini-1.5-flash-latest',
+        'gemini-1.5-flash-001',
+        'gemini-1.5-flash-exp-0827',
+        'gemini-1.5-flash-8b-exp-0827',
+        'gemini-1.5-pro',
         'gemini-1.5-pro-latest',
+        'gemini-1.5-pro-001',
+        'gemini-1.5-pro-exp-0801',
+        'gemini-1.5-pro-exp-0827',
         'gemini-1.0-pro-vision-latest',
         'gemini-pro-vision',
     ];
@@ -326,10 +335,12 @@ function convertGooglePrompt(messages, model, useSysPrompt = false, charName = '
                 if (part.type === 'text') {
                     parts.push({ text: part.text });
                 } else if (part.type === 'image_url' && isMultimodal) {
+                    const mimeType = part.image_url.url.split(';')[0].split(':')[1];
+                    const base64Data = part.image_url.url.split(',')[1];
                     parts.push({
                         inlineData: {
-                            mimeType: 'image/png',
-                            data: part.image_url.url,
+                            mimeType: mimeType,
+                            data: base64Data,
                         },
                     });
                     hasImage = true;
@@ -362,66 +373,123 @@ function convertGooglePrompt(messages, model, useSysPrompt = false, charName = '
 }
 
 /**
- * Convert a prompt from the ChatML objects to the format used by MistralAI.
+ * Convert AI21 prompt. Classic: system message squash, user/assistant message merge.
  * @param {object[]} messages Array of messages
- * @param {string} model Model name
  * @param {string} charName Character name
  * @param {string} userName User name
  */
-function convertMistralMessages(messages, model, charName = '', userName = '') {
+function convertAI21Messages(messages, charName = '', userName = '') {
     if (!Array.isArray(messages)) {
         return [];
     }
 
-    //large seems to be throwing a 500 error if we don't make the first message a user role, most likely a bug since the other models won't do this
-    if (model.includes('large')) {
-        messages[0].role = 'user';
-    }
+    // Collect all the system messages up until the first instance of a non-system message, and then remove them from the messages array.
+    let i = 0, systemPrompt = '';
 
-    //must send a user role as last message
-    const lastMsg = messages[messages.length - 1];
-    if (messages.length > 0 && lastMsg && (lastMsg.role === 'system' || lastMsg.role === 'assistant')) {
-        if (lastMsg.role === 'assistant' && lastMsg.name) {
-            lastMsg.content = lastMsg.name + ': ' + lastMsg.content;
-        } else if (lastMsg.role === 'system') {
-            lastMsg.content = '[INST] ' + lastMsg.content + ' [/INST]';
+    for (i = 0; i < messages.length; i++) {
+        if (messages[i].role !== 'system') {
+            break;
         }
-        lastMsg.role = 'user';
+        // Append example names if not already done by the frontend (e.g. for group chats).
+        if (userName && messages[i].name === 'example_user') {
+            if (!messages[i].content.startsWith(`${userName}: `)) {
+                messages[i].content = `${userName}: ${messages[i].content}`;
+            }
+        }
+        if (charName && messages[i].name === 'example_assistant') {
+            if (!messages[i].content.startsWith(`${charName}: `)) {
+                messages[i].content = `${charName}: ${messages[i].content}`;
+            }
+        }
+        systemPrompt += `${messages[i].content}\n\n`;
     }
 
-    //system prompts can be stacked at the start, but any futher sys prompts after the first user/assistant message will break the model
-    let encounteredNonSystemMessage = false;
+    messages.splice(0, i);
+
+    // Prevent erroring out if the messages array is empty.
+    if (messages.length === 0) {
+        messages.unshift({
+            role: 'user',
+            content: '[Start a new chat]',
+        });
+    }
+
+    if (systemPrompt) {
+        messages.unshift({
+            role: 'system',
+            content: systemPrompt.trim(),
+        });
+    }
+
+    // Doesn't support completion names, so prepend if not already done by the frontend (e.g. for group chats).
+    messages.forEach(msg => {
+        if ('name' in msg) {
+            if (msg.role !== 'system' && !msg.content.startsWith(`${msg.name}: `)) {
+                msg.content = `${msg.name}: ${msg.content}`;
+            }
+            delete msg.name;
+        }
+    });
+
+    // Since the messaging endpoint only supports alternating turns, we have to merge messages with the same role if they follow each other
+    let mergedMessages = [];
+    messages.forEach((message) => {
+        if (mergedMessages.length > 0 && mergedMessages[mergedMessages.length - 1].role === message.role) {
+            mergedMessages[mergedMessages.length - 1].content += '\n\n' + message.content;
+        } else {
+            mergedMessages.push(message);
+        }
+    });
+
+    return mergedMessages;
+}
+
+/**
+ * Convert a prompt from the ChatML objects to the format used by MistralAI.
+ * @param {object[]} messages Array of messages
+ * @param {string} charName Character name
+ * @param {string} userName User name
+ */
+function convertMistralMessages(messages, charName = '', userName = '') {
+    if (!Array.isArray(messages)) {
+        return [];
+    }
+
+    // Make the last assistant message a prefill
+    const prefixEnabled = getConfigValue('mistral.enablePrefix', false);
+    const lastMsg = messages[messages.length - 1];
+    if (prefixEnabled && messages.length > 0 && lastMsg?.role === 'assistant') {
+        lastMsg.prefix = true;
+    }
+
+    // Doesn't support completion names, so prepend if not already done by the frontend (e.g. for group chats).
     messages.forEach(msg => {
         if (msg.role === 'system' && msg.name === 'example_assistant') {
-            if (charName) {
+            if (charName && !msg.content.startsWith(`${charName}: `)) {
                 msg.content = `${charName}: ${msg.content}`;
             }
             delete msg.name;
         }
 
         if (msg.role === 'system' && msg.name === 'example_user') {
-            if (userName) {
+            if (userName && !msg.content.startsWith(`${userName}: `)) {
                 msg.content = `${userName}: ${msg.content}`;
             }
             delete msg.name;
         }
 
-        if (msg.name) {
+        if (msg.name && msg.role !== 'system' && !msg.content.startsWith(`${msg.name}: `)) {
             msg.content = `${msg.name}: ${msg.content}`;
             delete msg.name;
         }
-
-        if ((msg.role === 'user' || msg.role === 'assistant') && !encounteredNonSystemMessage) {
-            encounteredNonSystemMessage = true;
-        }
-
-        if (encounteredNonSystemMessage && msg.role === 'system') {
-            msg.role = 'user';
-            //unsure if the instruct version is what they've deployed on their endpoints and if this will make a difference or not.
-            //it should be better than just sending the message as a user role without context though
-            msg.content = '[INST] ' + msg.content + ' [/INST]';
-        }
     });
+
+    // If system role message immediately follows an assistant message, change its role to user
+    for (let i = 0; i < messages.length - 1; i++) {
+        if (messages[i].role === 'assistant' && messages[i + 1].role === 'system') {
+            messages[i + 1].role = 'user';
+        }
+    }
 
     return messages;
 }
@@ -529,4 +597,5 @@ module.exports = {
     convertCohereMessages,
     convertMistralMessages,
     convertCohereTools,
+    convertAI21Messages,
 };
