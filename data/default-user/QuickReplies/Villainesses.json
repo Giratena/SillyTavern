@@ -99,7 +99,7 @@
             "id": 4,
             "label": " Break free",
             "title": "",
-            "message": "{{user}} mustering all the resistance they can form attempts to break free from {{input}}\nIf number = 1. {{user}} resists successfully. His foe briefly makes a comment towards {{user}} about this. Allow {{user}} to act before his foe does anything.\nIf number = 2. {{user}}  resists but fails.\nIf number = 3. {{user}}'s foe does something that stops {{user}} from resisting completely. Describe how {{user}} acts in a way that allows {{char}} to get closer to achieving her goals.\n{{user}} rolls a {{roll:d3}}.\n",
+            "message": "{{user}} mustering all the resistance they can form attempts to break free from {{input}}\nIf number = 1. {{user}} resists successfully. His foe briefly makes a comment towards {{user}} about this. Allow {{user}} to act before his foe does anything.\nIf number = 2. {{user}}  resists but fails. Eg {{user}} tries to {action} but...\nIf number = 3. {{user}}'s foe does something that stops {{user}} from resisting completely. Describe how {{user}} acts in a way that allows {{char}} to get closer to achieving her goals. Eg {{user}} tries to {action} but...\n{{user}} rolls a {{roll:d3}}.\n",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -129,7 +129,7 @@
             "id": 11,
             "label": "Analyze",
             "title": "",
-            "message": "{{user}} analyzes {{input}}.\n[System: Briefly describe {{input}}, mentioning name, appearance, background/history, and proficiencies of {{input}}. Mention details {{user}} does not know or will not know. ]",
+            "message": "{{user}} analyzes {{input}}.\n[System: Briefly describe {{input}},mentioning name, appearance, background/history, and proficiencies of {{input}}. Mention details {{user}} does not know or will not know. Your reply must be 2 paragraphs in length. ]",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -159,7 +159,7 @@
             "id": 7,
             "label": "Defy",
             "title": "",
-            "message": "{{user}} tries to resist his foe from making him ejaculate\nIf number = 1. {{user}} resists cumming. {{user}} can act again after this.\nIf number = 2. {{user}} resist cumming, but {{char}} is insistent, pushing them closer and closer to the edge.\nIf number = 3. {{user}} ejaculates as {{char}} milks them. {{user}}'s mind becomes slow and falls into a deep trance from the pleasure as {{char}} whispers sexy commands and mantras in his ear. \n{{user}} rolls a {{roll:d3}}.",
+            "message": "{{user}} tries to resist his foe from making him ejaculate. Describe {{user}}'s attempt to resist in the formate of \"{user attempt to resist} but/and {cause and outcome here}\" \nIf number = 1. {{user}} resists cumming. {{user}} can act again after this.\nIf number = 2 {{user}} resists but something happens that makes him ejaculates.\nIf number = 3. {{user}} ejaculates with a massive load.\n{{user}} rolls a {{roll:d3}}.",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -184,7 +184,37 @@
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
             "automationId": ""
+        },
+        {
+            "id": 17,
+            "label": "Roll for action",
+            "title": "",
+            "message": "{{input}}\nDetermine the success of this action.\nIf number = 1. Critical success\nIf number = 2. Minor success\nIf number = 3. Minor failure\nIf number = 4. Critical failure\n{{user}} rolls a {{roll:d4}}.",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "automationId": ""
+        },
+        {
+            "id": 19,
+            "label": "Next",
+            "title": "",
+            "message": "[Reminder to continue the plot of {{scenario}}.]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "automationId": ""
         }
     ],
-    "idIndex": 16
+    "idIndex": 20
 }
