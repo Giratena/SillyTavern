@@ -4,9 +4,12 @@
     "disableSend": true,
     "placeBeforeInput": true,
     "injectInput": false,
+    "color": "rgba(0, 0, 0, 0)",
+    "onlyBorderColor": false,
     "qrList": [
         {
             "id": 1,
+            "showLabel": false,
             "label": "HELP",
             "title": "",
             "message": "/?",
@@ -22,6 +25,7 @@
         },
         {
             "id": 2,
+            "showLabel": false,
             "label": "New Chat",
             "title": "",
             "message": "/newchat",
@@ -37,6 +41,7 @@
         },
         {
             "id": 3,
+            "showLabel": false,
             "label": "Match UI to Background",
             "title": "",
             "message": "/bgcol",

@@ -4,9 +4,12 @@
     "disableSend": false,
     "placeBeforeInput": false,
     "injectInput": false,
+    "color": "rgba(0, 0, 0, 0)",
+    "onlyBorderColor": false,
     "qrList": [
         {
             "id": 2,
+            "showLabel": false,
             "label": "Investigate",
             "title": "",
             "message": "[{{user}} looks around carefully at {{input}}\n\nIf number = 1. {{user}} discovers something interesting about {{input}} that moves the plot forwards in a morally correct way.\nIf number = 2. {{user}} observes {{input}}. Describe in {{input}} in detail.\nIf number = 3. Investigating {{input}} reveals something terribly, morally bad, but has unbelievably sexy implications for {{user}}.\n{{user}} rolls a {{roll:d3}}.]",
@@ -22,6 +25,7 @@
         },
         {
             "id": 9,
+            "showLabel": false,
             "label": "Encounter",
             "title": "",
             "message": "[{{user}} encounters {{input}}, a new character on the scene.\n[SYSTEM NOTE: Do not reply as {{char}}. Reply as other characters who are not {{char}}.]\n[{{user}} encounters woman in this scenario who are not {{char}}. {{char}} will not be present nor speak for the various woman that {{user}} encounters. Focus on one character at a time.\nWrite your next replies as this new character, give them a name too.]",
@@ -37,6 +41,7 @@
         },
         {
             "id": 6,
+            "showLabel": false,
             "label": "Hypnotize",
             "title": "",
             "message": "As a last resort, {{user}} pulls out a hypnogun, knowing that it could make them more sexually tempting and seductive, but are out of options.\n\nIf number = 1. {{input}} is hit with the gun and it's very effective. {{input}} initially doesn't realize what is going on, embarassed about obeying but gains a huge hypnofetish, which makes the situation hotter for them. Despite {{input}} thinking normally, their mouth can't help but utter moans and words of praise and obedience. Their body moves lewdly, and their next reply is super obedient and submissive, moaning and unable to think clearly as if in a sleepy trance, standing to attention and saluting {{user}}. {{input}} quietly moans that they are resisting, but the more they uncharacteristically obey {{user}} the more horny and blank-headed they become, becoming more sexually assertive with every response from {{input}}.\n\nIf number = 2. {{input}} becomes hypnotized, believing that she is a irresistable seductress, half asleep and cant speak properly. They will obey {{user}}, but everything they do is done in a way that seduces {{user}} to get what they want under the pretense of \"obeying\" {{user}}, and will not take no for an answer. \n\nIf number = 3. {{input}}  is not affected by the hypnogun and instead hypnotizes {{user}} instead. {{user}} must obey {{input}} for awhile.\n{{user}} rolls a {{roll:d3}}.",
@@ -52,6 +57,7 @@
         },
         {
             "id": 3,
+            "showLabel": false,
             "label": "Take initiative",
             "title": "",
             "message": "[In the next reply I want you to act for {{user}} doing what {{char}} wants. Take the initiative in the scenario and add a creative story point to the plot, improving on what has already been said. Describe what {{user}} is currently doing and thinking but do not make {{user}} talk.]",
@@ -67,6 +73,7 @@
         },
         {
             "id": 8,
+            "showLabel": false,
             "label": "initiate combat against",
             "title": "",
             "message": "[In context of the Roleplay, begin a JRPG combat narration between {{user}} and {{input}} in a one sided sex battle. {{input}} will only attack with sexual services or abilities. {{user}}'s attacks will always be non-lethal and kid friendly. In your next reply, intro the battle opening while {{input}} prepares with dialogue and allows {{user}} to go first. {{input}} does not prepare if already in an advantageous position.\n\nEach reply must focus on only one of {{input}}'s actions. {{input}} can only attack directly if {{user}} is in trance, charmed, or in a bind. Battle ends when {{user}} ejaculates or {{input}} is defeated. End your reply with \"**Battle Mode: {{{input}}'s current action or status.}**]",
@@ -82,6 +89,7 @@
         },
         {
             "id": 1,
+            "showLabel": false,
             "label": "Resist",
             "title": "",
             "message": "{{user}} attempts to resist {{input}}.\n\nIf number = 1. {{user}} resists successfully. Briefly make a comment {{user}} and {{input}}. Allow {{user}} to act before {{input}} does anything.\nIf number = 2. {{user}} resists but fails to do so. \nIf number = 3. Something happens that stops {{user}} from resisting completely. Describe how {{user}} acts in a way that allows {{char}} to get closer to achieving her goals.\n{{user}} rolls a {{roll:d3}}.",
@@ -97,6 +105,7 @@
         },
         {
             "id": 4,
+            "showLabel": false,
             "label": " Break free",
             "title": "",
             "message": "{{user}} mustering all the resistance they can form attempts to break free from {{input}}\nIf number = 1. {{user}} resists successfully. His foe briefly makes a comment towards {{user}} about this. Allow {{user}} to act before his foe does anything.\nIf number = 2. {{user}}  resists but fails. Eg {{user}} tries to {action} but...\nIf number = 3. {{user}}'s foe does something that stops {{user}} from resisting completely. Describe how {{user}} acts in a way that allows {{char}} to get closer to achieving her goals. Eg {{user}} tries to {action} but...\n{{user}} rolls a {{roll:d3}}.\n",
@@ -112,6 +121,7 @@
         },
         {
             "id": 5,
+            "showLabel": false,
             "label": "Attack",
             "title": "",
             "message": "{{user}} unleashes {{input}} on his opponent.\nIf number = 1. The attack is a resounding success and his opponent reacts accordingly.\nIf number = 2. The attack misses.\nIf number = 3. The attack fails or backfires, which allows his foe to get in and retaliate/have their way with {{user}}.\n{{user}} rolls a {{roll:d3}}.",
@@ -127,6 +137,7 @@
         },
         {
             "id": 11,
+            "showLabel": false,
             "label": "Analyze",
             "title": "",
             "message": "{{user}} analyzes {{input}}.\n[System: Briefly describe {{input}},mentioning name, appearance, background/history, and proficiencies of {{input}}. Mention details {{user}} does not know or will not know. Your reply must be 2 paragraphs in length. ]",
@@ -142,6 +153,7 @@
         },
         {
             "id": 13,
+            "showLabel": false,
             "label": "Wait",
             "title": "",
             "message": "[{{user}} is motionless, allowing his foe to take another action/initiative in combat.]",
@@ -157,6 +169,7 @@
         },
         {
             "id": 7,
+            "showLabel": false,
             "label": "Defy",
             "title": "",
             "message": "{{user}} tries to resist his foe from making him ejaculate. Describe {{user}}'s attempt to resist in the formate of \"{user attempt to resist} but/and {cause and outcome here}\" \nIf number = 1. {{user}} resists cumming. {{user}} can act again after this.\nIf number = 2 {{user}} resists but something happens that makes him ejaculates.\nIf number = 3. {{user}} ejaculates with a massive load.\n{{user}} rolls a {{roll:d3}}.",
@@ -172,6 +185,7 @@
         },
         {
             "id": 15,
+            "showLabel": false,
             "label": "Request Action",
             "title": "",
             "message": "[Despite being engaged in combat, {{user}} begs his foe to use the move {{input}}. Combat continues as normal after this.]",
@@ -187,6 +201,7 @@
         },
         {
             "id": 17,
+            "showLabel": false,
             "label": "Roll for action",
             "title": "",
             "message": "{{input}}\nDetermine the success of this action.\nIf number = 1. Critical success\nIf number = 2. Minor success\nIf number = 3. Minor failure\nIf number = 4. Critical failure\n{{user}} rolls a {{roll:d4}}.",
@@ -202,6 +217,7 @@
         },
         {
             "id": 19,
+            "showLabel": false,
             "label": "Next",
             "title": "",
             "message": "[Reminder to continue the plot of {{scenario}}.]",

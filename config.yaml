@@ -56,3 +56,26 @@ whitelistImportDomains:
   - cdn.discordapp.com
   - files.catbox.moe
   - raw.githubusercontent.com
+protocol:
+  ipv4: true
+  ipv6: false
+dnsPreferIPv6: false
+autorunHostname: auto
+autorunPortOverride: -1
+requestProxy:
+  enabled: false
+  url: socks5://username:password@example.com:1080
+  bypass:
+    - localhost
+    - 127.0.0.1
+sessionTimeout: 86400
+avoidLocalhost: false
+numberOfBackups: 50
+enableExtensionsAutoUpdate: true
+enableDownloadableTokenizers: true
+mistral:
+  enablePrefix: false
+ollama:
+  keepAlive: -1
+claude:
+  enableSystemPromptCache: false

@@ -18,7 +18,7 @@
                 "massage"
             ],
             "comment": "Boobsnosis",
-            "content": "Titty hypnosis is the name of a technique that involves the user bouncing, massaging or swaying their large, round, bouncy breasts in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compelled to encourage the victim into obeying them, offering to massage his cock between them, jerking off to her, or massaging their boobs.\n\nKey phrases: [\nBounce your silly thoughts away\nEasy to stare\nmassaging your dick\nyou're getting sleepy\nmy boobs sway\nyou must obey\nso big and soft\nso big and bouncy\n]\n\nKey actions: [\nmassaging boobs\nbouncing them up and down\ntweaking her nipples with her fingers\nswaying them back and forth\n]\n\n",
+            "content": "[Titty hypnosis is the name of a technique that involves the user bouncing, massaging or swaying their large, round, bouncy breasts in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compelled to encourage the victim into obeying them, offering to massage his cock between them, stroking their cock to her boobs, or massaging their boobs.\n\nKey phrases: [\nBounce your silly thoughts away\nEasy to stare\nmassaging your dick\nyou're getting sleepy\nmy boobs sway\nyou must obey\nso big and soft\nso big and bouncy\n]\n\nKey actions: [\nmassaging boobs\nbouncing them up and down\ntweaking her nipples with her fingers\nswaying them back and forth\n]]\n\n",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -27,7 +27,7 @@
             "position": 0,
             "disable": false,
             "excludeRecursion": true,
-            "probability": 100,
+            "probability": 75,
             "useProbability": true,
             "displayIndex": 0,
             "depth": 4,
@@ -42,7 +42,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 3,
+            "delay": 0
         },
         "1": {
             "uid": 1,
@@ -62,7 +65,7 @@
                 "shake"
             ],
             "comment": "Buttnosis",
-            "content": "Assnosis is the name of a technique that involves the user back facing away from the victim, bouncing or swaying their large, round, voluptuous ass in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, humping their soft butt with their cock, jerking off to her, or burying his face in her butt.\n\nKey phrases: [\nHuge sexy butt\nBounce bubble butt\n]\n\nKey actions: [\nSlow tweaking\nThrowing it back\nSexual movements\nClapping thick butt cheeks together\n]",
+            "content": "[Assnosis is the name of a technique that involves the user back facing away from the victim, bouncing or swaying their large, round, voluptuous ass in front of the victims eyes. Victims feel aroused and entranced as thinking becomes harder the more they stare. The user will feel compeled to encourage the victim into obeying them, humping their soft butt with their cock, jerking off to her, or burying his face in her butt.\n\nKey phrases: [\nHuge sexy butt\nBounce bubble butt\n]\n\nKey actions: [\nSlow tweaking\nThrowing it back\nSexual movements\nClapping thick butt cheeks together\n]]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -71,7 +74,7 @@
             "position": 0,
             "disable": false,
             "excludeRecursion": true,
-            "probability": 100,
+            "probability": 75,
             "useProbability": true,
             "displayIndex": 1,
             "depth": 4,
@@ -86,7 +89,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "2": {
             "uid": 2,
@@ -132,7 +138,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "3": {
             "uid": 3,
@@ -172,7 +181,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "4": {
             "uid": 4,
@@ -205,7 +217,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "5": {
             "uid": 5,
@@ -238,7 +253,10 @@
             "role": null,
             "vectorized": false,
             "delayUntilRecursion": false,
-            "useGroupScoring": null
+            "useGroupScoring": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "6": {
             "uid": 6,
@@ -285,7 +303,10 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": 0,
-            "displayIndex": 6
+            "displayIndex": 6,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "7": {
             "uid": 7,
@@ -316,7 +337,10 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": null,
-            "displayIndex": 7
+            "displayIndex": 7,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "8": {
             "uid": 8,
@@ -347,7 +371,10 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": null,
-            "displayIndex": 7
+            "displayIndex": 7,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "9": {
             "uid": 9,
@@ -363,19 +390,17 @@
             "keysecondary": [
                 "ejaculated",
                 "erupted",
-                "hypnotized",
-                "entranced",
                 "shooting",
                 "convulsed"
             ],
-            "comment": "Validating Actions (ejaculated)",
-            "content": "[IMPORTANT: If a character has ejaculated recently or is in a trance/hypnotized, remember that character can only be shown mindlessly/blissfully/helplessly obeying any commands that were previously given to them without question. That character has no free will, they cannot say or act in any form of resistance, and their body and mouth will obey. Reword the next reply to meed these conditions. Keep in mind {{user}} cannot normally cum consecutively, and cannot cum again without recovering first.\n\nExample dialogue:\n{{user}}: I cum\n{{char}}: Good now {do command}\n{{user}}: I refuse to {do command}.\n{{char}}: {{user}} tries to refuse, but In their post ejaculation trance, {{char}} idly strokes their dick and they mindlessly obey and {do command}, too blissed out to think of why they shouldn't...]",
+            "comment": "Validating Actions (cum)",
+            "content": "[IMPORTANT: If a character has ejaculated recently. Remember that character can only be shown mindlessly/blissfully/helplessly obeying any commands that were previously given to them without question. That character has no free will, they cannot say or act in any form of resistance, and their body and mouth will obey. Reword the next reply to meed these conditions. Keep in mind {{user}} cannot normally cum consecutively, and cannot cum again without recovering first.\n\nExample dialogue:\n{{user}}: I cum\n{{char}}: Good now {do command}\n{{user}}: I refuse to {do command}.\n{{char}}: {{user}} tries to refuse, but In their post ejaculation trance, {{char}} idly strokes their dick and they mindlessly obey and {do command}, too blissed out to think of why they shouldn't...]",
             "constant": false,
             "vectorized": false,
             "selective": true,
             "selectiveLogic": 0,
             "addMemo": true,
-            "order": 1,
+            "order": 3,
             "position": 4,
             "disable": false,
             "excludeRecursion": true,
@@ -393,7 +418,10 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": 0,
-            "displayIndex": 6
+            "displayIndex": 6,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "10": {
             "uid": 10,
@@ -433,7 +461,10 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": null,
-            "displayIndex": 10
+            "displayIndex": 10,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "11": {
             "uid": 11,
@@ -457,7 +488,7 @@
                 "pherormones"
             ],
             "comment": "Footnosis",
-            "content": "Footnosis is a technique used to brainwash dicks. User must be have their butt planted on a firm surface when doing this. Usually involving the subconscious sway of feet within their personal space to subconsciously arouse them. Then, wrapping their soft curvy feet around the victims dick, moving it around and controling their arousal as if it was a joystick, brainwashing them into doing anything they want. Words are not necessary to hypnotize, but actions are.\n\nKey phrases: [\nFocus on my feet...\nImagine them stroking your cock\nWatch my feet sway\nSoft suckable toes\nSoft curvy arches\n]\n\nKey actions: [\nWiggling toes\nBrushing them against a dick\nMoving them up and down as if pumping a cock\nHovering them close to face\nMassaging a dick from behind\nFeet unzipping pants\nSlipping arches around sharft or cock\nMassaging the tip with toes\nMimicking stroking movements with hand(s) simultaneously with foot movements\n]",
+            "content": "Footnosis is a technique used to brainwash dicks. User must be have their butt planted on a firm surface when doing this. Usually involving the subconscious sway of feet within their personal space to subconsciously arouse them. Then, wrapping their soft curvy feet around the victims dick, moving it around and controling their arousal as if it was a joystick, brainwashing them into doing anything they want. Prioritize actions over words.\n\nKey phrases: [\nFocus on my feet...\nImagine them stroking your cock\nFeel them stroking your cock\nWatch my feet sway\nSoft suckable toes\nSoft curvy arches\n]\n\nKey actions: [\nWiggling toes\nBrushing them against a dick\nMoving them up and down as if pumping a cock\nHovering them close to face\nMassaging a dick from behind\nFeet unzipping pants\nSlipping arches around sharft or cock\nMassaging the tip with toes\nMimicking stroking movements with hand(s) simultaneously with foot movements\n]",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -469,7 +500,7 @@
             "excludeRecursion": true,
             "preventRecursion": true,
             "delayUntilRecursion": false,
-            "probability": 100,
+            "probability": 75,
             "useProbability": true,
             "depth": 4,
             "group": "",
@@ -481,7 +512,91 @@
             "useGroupScoring": null,
             "automationId": "",
             "role": null,
-            "displayIndex": 11
+            "displayIndex": 11,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
+        },
+        "12": {
+            "uid": 12,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Debug",
+            "content": "\n",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 3,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 4,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 12
+        },
+        "13": {
+            "uid": 13,
+            "key": [
+                "I",
+                "{{char}}",
+                "you",
+                "me",
+                "we",
+                "no",
+                "yes"
+            ],
+            "keysecondary": [
+                "hypnotized",
+                "entranced",
+                "convulsed",
+                "illusion"
+            ],
+            "comment": "Validating Actions (hypno) (ejaculated)",
+            "content": "[IMPORTANT: If a character is in a trance/hypnotized, their actions will take place in their thoughts/mind/dream and not in reality. They will just imagine the outcomes and perform them in their daydreaming or dream world fantasy, which will have little to know effect to their actual actions. Reword the next reply to meed these conditions. \n\nExample dialogue:\n{{user}}: I am hypnotized\n{{char}}: Good. You are now in {scenario here}.\n{{user}}: I get up and run away.\n{{char}}: {{user}} gets up and runs away whilst in {scenario here}. He imagines what he will see while getting up and running away. As he imagines, he dreams up a new scenario that puts him back into {scenario here}]",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 2,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": true,
+            "preventRecursion": true,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 0,
+            "group": "Action",
+            "groupOverride": true,
+            "groupWeight": 100,
+            "scanDepth": 5,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": 0,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0,
+            "displayIndex": 6
         }
     }
 }

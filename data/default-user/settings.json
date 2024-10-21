@@ -1,8 +1,8 @@
 {
     "firstRun": false,
-    "currentVersion": "1.12.1",
+    "currentVersion": "1.12.5",
     "username": "Gira",
-    "active_character": "The Frisky Foursome Part 2.png",
+    "active_character": "Catherine_1.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -13,9 +13,9 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Crossdress",
                 "Special Actions",
                 "Stances",
+                "User interation",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
             "charLore": [
@@ -50,13 +50,15 @@
         "world_info_min_activations": 0,
         "world_info_min_activations_depth_max": 0,
         "world_info_budget": 49,
+        "world_info_include_names": true,
         "world_info_recursive": false,
         "world_info_overflow_alert": false,
         "world_info_case_sensitive": false,
         "world_info_match_whole_words": false,
         "world_info_character_strategy": 0,
         "world_info_budget_cap": 0,
-        "world_info_use_group_scoring": false
+        "world_info_use_group_scoring": false,
+        "world_info_max_recursion_steps": 0
     },
     "textgenerationwebui_settings": {
         "temp": 0.5,
@@ -100,7 +102,6 @@
         "preset": "Default",
         "add_bos_token": true,
         "stopping_strings": [],
-        "truncation_length": 2048,
         "ban_eos_token": false,
         "skip_special_tokens": true,
         "streaming": false,
@@ -147,6 +148,7 @@
         "vllm_model": "",
         "aphrodite_model": "",
         "dreamgen_model": "opus-v1-xl/text",
+        "tabby_model": "",
         "legacy_api": false,
         "sampler_order": [
             6,
@@ -169,6 +171,10 @@
         },
         "custom_model": "",
         "bypass_status_check": false,
+        "openrouter_allow_fallbacks": true,
+        "xtc_threshold": 0.1,
+        "xtc_probability": 0,
+        "truncation_length": 2048,
         "ignore_eos_token_aphrodite": false,
         "spaces_between_special_tokens_aphrodite": true,
         "streaming_url": "ws://127.0.0.1:5005/api/v1/stream",
@@ -182,6 +188,7 @@
         "trusted_workers_only": false
     },
     "power_user": {
+        "charListGrid": true,
         "tokenizer": 99,
         "token_padding": 64,
         "collapse_newlines": false,
@@ -202,11 +209,10 @@
         "streaming_fps": 60,
         "smooth_streaming": false,
         "smooth_streaming_speed": 50,
-        "ui_mode": 1,
         "fast_ui_mode": false,
         "avatar_style": 1,
         "chat_display": 1,
-        "chat_width": 50,
+        "chat_width": "",
         "never_resize_avatars": false,
         "show_card_avatar_urls": false,
         "play_message_sound": false,
@@ -221,14 +227,14 @@
         "shadow_width": 4,
         "main_text_color": "rgba(160, 190, 190, 1)",
         "italics_text_color": "rgba(180, 170, 200, 1)",
-        "underline_text_color": "rgba(0, 0, 0, 1)",
+        "underline_text_color": "",
         "quote_text_color": "rgba(145, 97, 207, 1)",
         "blur_tint_color": "rgba(17, 0, 54, 0.8)",
-        "chat_tint_color": "rgba(0, 0, 0, 1)",
-        "user_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
-        "bot_mes_blur_tint_color": "rgba(0, 0, 0, 1)",
+        "chat_tint_color": "",
+        "user_mes_blur_tint_color": "",
+        "bot_mes_blur_tint_color": "",
         "shadow_color": "rgba(0, 0, 0, 0.5)",
-        "border_color": "rgba(0, 0, 0, 1)",
+        "border_color": "",
         "custom_css": "",
         "waifuMode": false,
         "movingUI": false,
@@ -246,27 +252,31 @@
         "send_on_enter": 0,
         "console_log_prompts": false,
         "request_token_probabilities": false,
+        "show_group_chat_queue": false,
         "render_formulas": true,
         "allow_name1_display": true,
         "allow_name2_display": true,
         "hotswap_enabled": false,
         "timer_enabled": false,
-        "timestamps_enabled": true,
+        "timestamps_enabled": "",
         "timestamp_model_icon": "",
-        "mesIDDisplay_enabled": true,
-        "hideChatAvatars_enabled": false,
+        "mesIDDisplay_enabled": "",
+        "hideChatAvatars_enabled": "",
         "max_context_unlocked": false,
         "message_token_count_enabled": "",
-        "expand_message_actions": false,
-        "enableZenSliders": false,
-        "enableLabMode": false,
+        "expand_message_actions": "",
+        "enableZenSliders": "",
+        "enableLabMode": "",
         "prefer_character_prompt": true,
         "prefer_character_jailbreak": true,
         "quick_continue": false,
+        "quick_impersonate": false,
         "continue_on_send": true,
         "trim_spaces": false,
         "relaxed_api_urls": false,
         "world_import_dialog": true,
+        "enable_auto_select_input": false,
+        "tag_import_setting": 1,
         "disable_group_trimming": false,
         "single_line": false,
         "default_instruct": "",
@@ -293,7 +303,9 @@
             "user_alignment_message": "",
             "last_system_sequence": "",
             "skip_examples": false,
-            "system_same_as_user": false
+            "system_same_as_user": false,
+            "first_input_sequence": "",
+            "last_input_sequence": ""
         },
         "default_context": "Default",
         "context": {
@@ -302,7 +314,8 @@
             "chat_start": "### New Roleplay:",
             "example_separator": "### New Roleplay:",
             "use_stop_strings": false,
-            "allow_jailbreak": false
+            "allow_jailbreak": false,
+            "names_as_stop_strings": true
         },
         "personas": {
             "1690874889727.png": "Gira",
@@ -349,7 +362,38 @@
         "custom_stopping_strings_macro": true,
         "fuzzy_search": false,
         "encode_tags": true,
-        "servers": [],
+        "servers": [
+            {
+                "label": "ooba_blocking",
+                "url": "http://127.0.0.1:5000/",
+                "lastConnection": 1726379481511
+            },
+            {
+                "label": "aphrodite",
+                "url": "http://127.0.0.1:5000/api",
+                "lastConnection": 1726379481512
+            },
+            {
+                "label": "tabby",
+                "url": "http://127.0.0.1:5000/api",
+                "lastConnection": 1726379481512
+            },
+            {
+                "label": "koboldcpp",
+                "url": "http://127.0.0.1:5000/api",
+                "lastConnection": 1726379481512
+            },
+            {
+                "label": "ollama",
+                "url": "http://127.0.0.1:5000/api",
+                "lastConnection": 1726379481512
+            },
+            {
+                "label": "llamacpp",
+                "url": "http://127.0.0.1:5000/api",
+                "lastConnection": 1726379481512
+            }
+        ],
         "bogus_folders": "",
         "zoomed_avatar_magnification": "",
         "show_tag_filters": false,
@@ -365,16 +409,16 @@
                 "width": {
                     "left": 1,
                     "right": 1
-                }
+                },
+                "select": 3
             },
             "parser": {
                 "flags": {}
-            },
-            "autocomplete_style": "light"
+            }
         },
         "restore_user_input": true,
-        "reduced_motion": false,
-        "compact_input_area": true,
+        "reduced_motion": "",
+        "compact_input_area": "",
         "auto_connect": true,
         "auto_load_chat": true,
         "forbid_external_media": true,
@@ -384,6 +428,7 @@
             "Nailah.png"
         ],
         "external_media_forbidden_overrides": [],
+        "ui_mode": 1,
         "forbid_external_images": false,
         "lazy_load": 0,
         "pygmalion_formatting": 0,
@@ -396,7 +441,6 @@
         "multigen_first_chunk": 50,
         "multigen_next_chunks": 30,
         "custom_chat_separator": "",
-        "charListGrid": true,
         "message_token_count": "",
         "auto_sort_tags": false,
         "selectSamplers": {
@@ -462,7 +506,8 @@
             "maxMessagesPerRequestMin": 0,
             "maxMessagesPerRequestMax": 250,
             "maxMessagesPerRequestStep": 1,
-            "prompt_builder": 0
+            "prompt_builder": 0,
+            "scan": false
         },
         "note": {
             "default": "",
@@ -488,6 +533,10 @@
             ],
             "api": 1,
             "llmPrompt": "Pause your roleplay. Classify the emotion of the last message. Output just one word, e.g. \"joy\" or \"anger\". Choose only one of the following labels: {{labels}}"
+        },
+        "connectionManager": {
+            "selectedProfile": "",
+            "profiles": []
         },
         "dice": {},
         "regex": [],
@@ -529,7 +578,7 @@
             "prompts": {
                 "0": "[Provide only a detailed comma-delimited list of keywords and phrases which currently describe the person {{user}} is interacting with. The list must include all of the following items and as many as possible in this order: name, species and race, gender, age, clothing, occupation, facial appearance, physical features, current pose, and appearances. \n\nShorten facial expressions to one word such as, \"ahegao\", \"heart eyes\", \"seductive smile\", \"puppy eyes\", \"hypnotized eyes\", \"open mouth\", \"smile\", frown\" etc.\n\nDo not include keywords more than 2 words. Do not include descriptions of non-visual qualities such as personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Do not include {{char}}'s name. Prefix your description with the phrase 'full body portrait, standing upright, looking at viewer'.\n\nEnd your description with ', {best quality}, {amazing quality}, best quality, amazing quality, very aesthetic, absurdres'.]",
                 "1": "[Pause your roleplay and provide a detailed description of {{user}}'s physical appearance from the perspective of {{char}} in the form of a comma-delimited list of keywords and phrases. The list must include all of the following items and as many as possible in this order: name, species and race, gender, age, clothing, occupation,  facial expression, physical features and appearances. Do not include descriptions of non-visual qualities such as personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Prefix your description with the phrase 'full body portrait,'. Ignore the rest of the story when crafting this description. Do not roleplay as {{char}} when writing this description, and do not attempt to continue the story.]",
-                "2": "[Pause your roleplay and provide a short detailed description of the scenario at hand. Include actions and appearances such as outfit, location, body, facial expression etc. Whenever a proper noun is mentioned, describe their appearance in detail, such as the outfit they are wearing, skin colour, body type, what they are doing, the location of their arms and legs, any accessories, facial features, hair color etc. Descriptions should be for visual purposes only so that an artist would have enough information to draw the scene accurately if they were to read this description. Do not include details that can't be visually represented, such as {{char}}'s backstory, voices, sounds, feelings and bank account number for example. Describe the scene from {{user}}'s pov and the description must be in present tense. Do not mention {{user}}. End your reply with \", POV\"\n\nEg:\nAt the [location here] {{char}}, a [describe char's outfit, accessories, hair/skin colour etc] is currently doing [actions here]. She is positioning her [body part descriptions from what {{user}} can see]. Her arms and legs are [describe here] and her legs and feet are [describe here]. ",
+                "2": "[Pause your roleplay and provide a short detailed description of the scenario at hand. Include actions and appearances such as outfit, location, body, facial expression etc. Whenever a proper noun is mentioned, describe their appearance in detail, such as the outfit they are wearing, skin colour, body type, what they are doing, the location of their arms and legs, any accessories, facial features, hair color etc. Descriptions should be for visual purposes only so that an artist would have enough information to draw the scene accurately if they were to read this description. Do not include details that can't be visually represented, such as {{char}}'s backstory, voices, sounds, feelings and bank account number for example. Describe the scene from {{user}}'s pov and the description must be in present tense. Instead of saying {{user}}, call them \"the viewer\". End your reply with \", POV\"\n\nEg:\nAt the [location here] {{char}}, a [describe char's outfit, accessories, hair/skin colour etc] is currently doing [actions here]. She is positioning her [body part descriptions from what {{user}} can see]. Her arms and legs are [describe here] and her legs and feet are [describe here]. ",
                 "3": "[Pause your roleplay and provide ONLY the last chat message string back to me verbatim. Do not write anything after the string. Do not roleplay at all in your response. Do not continue the roleplay story.]",
                 "4": "[Provide a detailed comma-delimited list of keywords and phrases which currently describe characters from {{user}}'s POV (only describe characters in front of {{user}}. The list must include all and as many as possible of the following items + adjectives in this order: characters, name, species and race, gender, age, clothing, occupation, facial expression, physical features, appearances and current actions being performed. Recognise any sexual services by their name if they are happening at that moment and add \"NSFW\", such as \"footjob, NSFW\", \"paizuri, NSFW\", \"handjob, NSFW\", \"blowjob, NSFW\", \"massaging breasts, NSFW\" etc. Only add if they are happening.\n\nInclude clothing details such as type of outfit and any accessories they have. Add adjectives accurate to the character eg: \"Purple heart pasties\"\n\nShorten facial expressions to one word such as, \"ahegao\", \"heart eyes\", \"seductive smile\", \"puppy eyes\", \"hypnotized eyes\", \"open mouth\" etc.\n\nInclude actions of two words at a time describing the image such as, \"arched back\", \"on knees\", \"standing up\" \"massaging breasts\", \"foot focus\", \"breast focus\", etc\n\nDo not include keywords more than 2 words. Do not include descriptions of non-visual qualities such as personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Do not include {{char}}'s name. Prefix your description with the phrase 'full body portrait,'. End your description with 'POV, background, mist, hearts, looking at viewer, {best quality}, {amazing quality}, best quality, amazing quality, very aesthetic, absurdres'.]",
                 "5": "[In the next response I want you to provide only a detailed comma-delimited list of keywords and phrases which describe {{char}}. The list must include all of the following items in this order: name, species and race, gender, age, facial features and expressions, occupation, hair and hair accessories (if any), what they are wearing on their upper body (if anything). Do not describe anything below their neck. Do not include descriptions of non-visual qualities such as personality, movements, scents, mental traits, or anything which could not be seen in a still photograph. Do not write in full sentences. Prefix your description with the phrase 'close up facial portrait,']",
@@ -595,8 +644,8 @@
             ],
             "openai_style": "vivid",
             "openai_quality": "standard",
-            "scheduler": "automatic",
-            "vae": "",
+            "scheduler": null,
+            "vae": null,
             "multimodal_captioning": false,
             "comfy_url": "http://127.0.0.1:8188",
             "comfy_workflow": "Default_Comfy_Workflow.json",
@@ -619,7 +668,8 @@
             "novel_decrisper": false,
             "wand_visible": false,
             "command_visible": false,
-            "interactive_visible": false
+            "interactive_visible": false,
+            "stability_style_preset": "anime"
         },
         "chromadb": {},
         "translate": {
@@ -774,10 +824,11 @@
             "isEnabled": true,
             "isCombined": false,
             "isPopout": false,
+            "showPopoutButton": true,
             "config": {
                 "setList": [
                     {
-                        "set": "Villainesses",
+                        "set": "Text",
                         "isVisible": true
                     }
                 ]
@@ -789,6 +840,106 @@
             "id": "1345561466591",
             "name": "ST Default",
             "color": "rgba(108, 32, 32, 1)"
+        },
+        {
+            "id": "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "name": "NSFW",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "name": "Female",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "a6cdd7bf-d5b9-48b5-af98-67f75a367468",
+            "name": "Futanari",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "f2497526-475e-4fa3-bb3d-3661d7714664",
+            "name": "Futa",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "9e9e182b-7e1c-4854-a7d5-b49efdafdb80",
+            "name": "OC",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "14305fb8-9550-4f88-a3ab-ee22d9487f22",
+            "name": "Human",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338823
+        },
+        {
+            "id": "30cf1e89-48b8-4b76-95de-8243c739a162",
+            "name": "Scenario",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1727086338824
+        },
+        {
+            "id": "0ce5b21e-f1e2-4179-89ce-7ad83a8fabc6",
+            "name": "NIKKE",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1728048340206
+        },
+        {
+            "id": "3cea8086-212d-4460-b2d4-33cfcd9c0724",
+            "name": "Anime Game Characters",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1728048340206
+        },
+        {
+            "id": "795d5d60-a769-46e3-b76d-0152468c7c43",
+            "name": "Goddess of Victory: Nikke",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1728048340206
         }
     ],
     "tag_map": {
@@ -889,7 +1040,6 @@
         "Celeste.png": [],
         "Arezu.png": [],
         "Your Pokemon Journey (Evil Edition).png": [],
-        "Sarah's No Nut November.png": [],
         "Salazzle.png": [],
         "Ahri.png": [],
         "Amy Rose.png": [],
@@ -914,7 +1064,25 @@
         "BG-TTS-1.png": [],
         "Nailah.png": [],
         "Haigure Human.png": [],
-        "Delphox.png": []
+        "Delphox.png": [],
+        "undefined": [],
+        "Sarah's No Nut November1.png": [
+            "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "a6cdd7bf-d5b9-48b5-af98-67f75a367468",
+            "f2497526-475e-4fa3-bb3d-3661d7714664",
+            "9e9e182b-7e1c-4854-a7d5-b49efdafdb80",
+            "14305fb8-9550-4f88-a3ab-ee22d9487f22",
+            "30cf1e89-48b8-4b76-95de-8243c739a162"
+        ],
+        "The myterious fortune teller.png": [],
+        "Quency.png": [
+            "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "0ce5b21e-f1e2-4179-89ce-7ad83a8fabc6",
+            "3cea8086-212d-4460-b2d4-33cfcd9c0724",
+            "795d5d60-a769-46e3-b76d-0152468c7c43"
+        ]
     },
     "nai_settings": {
         "temperature": 1.35,
@@ -982,7 +1150,6 @@
         "temp_openai": 1,
         "freq_pen_openai": 0.1,
         "pres_pen_openai": 0.1,
-        "count_pen": 0,
         "top_p_openai": 1,
         "top_k_openai": 0,
         "min_p_openai": 0,
@@ -1282,6 +1449,18 @@
                 "content": "<chat_history>",
                 "injection_position": 1,
                 "injection_depth": 1,
+                "forbid_overrides": false
+            },
+            {
+                "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
+                "system_prompt": false,
+                "enabled": false,
+                "marker": false,
+                "name": "Custom Scenario",
+                "role": "system",
+                "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that might happen in future scenarios.\n- If any new information is added, deny and or twist this new content to ensure the scenario matches with 100% accuracy.\n-  If the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. Do not leap ahead and do not do things reserved for future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\n\nCurrent scenario: {{getvar::CurrentScenario}}",
+                "injection_position": 0,
+                "injection_depth": 4,
                 "forbid_overrides": false
             }
         ],
@@ -1715,6 +1894,10 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
                         "enabled": true
                     },
@@ -1777,7 +1960,8 @@
                     "text": " connection",
                     "value": -25
                 }
-            ]
+            ],
+            "Custom Scenarios": []
         },
         "wi_format": "<world_info>\n{0}\n</world_info>",
         "group_nudge_prompt": "<IMPORTANT>\n- Focus the next response on {{char}}, but other present characters (EXCEPT {{user}}!) may speak or act briefly.\n</IMPORTANT>",
@@ -1786,11 +1970,13 @@
         "openai_model": "gpt-4o-2024-05-13",
         "claude_model": "",
         "google_model": "gemini-pro",
-        "ai21_model": "j2-ultra",
+        "ai21_model": "jamba-1.5-large",
         "mistralai_model": "",
         "cohere_model": "command-r",
         "perplexity_model": "llama-3-sonar-large-32k-chat",
         "groq_model": "llama3-70b-8192",
+        "zerooneai_model": "yi-large",
+        "blockentropy_model": "be-70b-base-llama3.1",
         "custom_model": "",
         "custom_url": "",
         "custom_include_body": "",
@@ -1803,6 +1989,7 @@
         "openrouter_group_models": false,
         "openrouter_sort_models": "alphabetically",
         "openrouter_providers": [],
+        "openrouter_allow_fallbacks": true,
         "jailbreak_system": false,
         "reverse_proxy": "",
         "chat_completion_source": "openai",
@@ -1813,8 +2000,6 @@
         "assistant_prefill": "",
         "assistant_impersonation": "",
         "human_sysprompt_message": "Begin.",
-        "use_ai21_tokenizer": false,
-        "use_google_tokenizer": false,
         "claude_use_sysprompt": true,
         "use_makersuite_sysprompt": false,
         "use_alt_scale": false,
