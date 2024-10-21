@@ -24,7 +24,7 @@ public/css/user.css
 /plugins/
 /default/scaffold
 public/scripts/extensions/third-party
-data/
+data/*
 !data/default-user/chats/
 !data/default-user/themes/
 !data/default-user/thumbnails/
