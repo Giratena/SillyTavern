@@ -1,0 +1,29 @@
+{
+    "entries": {
+        "0": {
+            "uid": 0,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Global",
+            "content": "[SYSTEM NOTE: Do not reply as {{char}}. Reply as other characters who are not {{char}}.]\n[{{user}} encounters woman in this scenario who are not {{char}}. {{char}} will not be present nor speak for the various woman that {{user}} encounters. Focus on one character at a time.\nWrite your next replies as this new character, give them a name too.]",
+            "constant": true,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "displayIndex": 0,
+            "preventRecursion": false,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "automationId": ""
+        }
+    }
+}

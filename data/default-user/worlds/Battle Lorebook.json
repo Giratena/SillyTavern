@@ -1,0 +1,113 @@
+{
+    "entries": {
+        "0": {
+            "uid": 0,
+            "key": [
+                "JRPG combat"
+            ],
+            "keysecondary": [
+                "Battle End",
+                "battle end",
+                "ending the battle"
+            ],
+            "comment": "In Battle",
+            "content": "[End your reply with \"**Battle Mode: {The name of the move {{user}}'s opponent is using, or their current status.}**\nIf foe loses the will to fight, end your reply \"Battle End\".]",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 2,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": true,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 2,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": 0,
+            "displayIndex": 0
+        },
+        "1": {
+            "uid": 1,
+            "key": [
+                "Battle Mode"
+            ],
+            "keysecondary": [
+                "Battle End",
+                "battle end",
+                "ending the battle"
+            ],
+            "comment": "In Battle",
+            "content": "[Pause your role playing and continue JRPG combat narration in a one sided sex battle. In addition to their normal moveset {{user}}'s foe may also attack with sexual services or abilities. {{user}}'s attacks will always be non-lethal and kid friendly.\n\nEach reply must focus on only one action at a time. {{user}}'s foe can only attack directly if {{user}} is in trance, charmed, or in a bind. Battle ends when {{user}} ejaculates or {{user}}'s foe is defeated.]",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 2,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": true,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 2,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": 3,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": 0,
+            "displayIndex": 1
+        },
+        "2": {
+            "uid": 2,
+            "key": [
+                "battle end",
+                "ending the battle",
+                "stop fighting"
+            ],
+            "keysecondary": [],
+            "comment": "Battle end",
+            "content": "[Combat ends, and {{user}} stops fighting with his opponent].",
+            "constant": false,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 4,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 1,
+            "group": "",
+            "groupOverride": false,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": 0,
+            "displayIndex": 2
+        }
+    }
+}
