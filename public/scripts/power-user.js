@@ -32,6 +32,7 @@ import {
 import {
     instruct_presets,
     loadInstructMode,
+    names_behavior_types,
     selectInstructPreset,
 } from './instruct-mode.js';
 
@@ -49,6 +50,7 @@ import { AUTOCOMPLETE_SELECT_KEY, AUTOCOMPLETE_WIDTH } from './autocomplete/Auto
 import { SlashCommandEnumValue, enumTypes } from './slash-commands/SlashCommandEnumValue.js';
 import { commonEnumProviders, enumIcons } from './slash-commands/SlashCommandCommonEnumsProvider.js';
 import { POPUP_TYPE, callGenericPopup } from './popup.js';
+import { loadSystemPrompts } from './sysprompt.js';
 
 export {
     loadPowerUserSettings,
@@ -113,7 +115,6 @@ let power_user = {
     pin_examples: false,
     strip_examples: false,
     trim_sentences: false,
-    include_newline: false,
     always_force_name2: false,
     user_prompt_bias: '',
     show_user_prompt_bias: true,
@@ -200,15 +201,14 @@ let power_user = {
     relaxed_api_urls: false,
     world_import_dialog: true,
     enable_auto_select_input: false,
+    enable_md_hotkeys: false,
     tag_import_setting: tag_import_setting.ASK,
     disable_group_trimming: false,
     single_line: false,
 
-    default_instruct: '',
     instruct: {
         enabled: false,
         preset: 'Alpaca',
-        system_prompt: 'Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\nWrite {{char}}\'s next reply in a fictional roleplay chat between {{user}} and {{char}}.\n',
         input_sequence: '### Instruction:',
         input_suffix: '',
         output_sequence: '### Response:',
@@ -223,8 +223,7 @@ let power_user = {
         stop_sequence: '',
         wrap: true,
         macro: true,
-        names: false,
-        names_force_groups: true,
+        names_behavior: names_behavior_types.FORCE,
         activation_regex: '',
         bind_to_context: false,
         user_alignment_message: '',
@@ -233,7 +232,6 @@ let power_user = {
         separator_sequence: '',
     },
 
-    default_context: 'Default',
     context: {
         preset: 'Default',
         story_string: defaultStoryString,
@@ -242,6 +240,12 @@ let power_user = {
         use_stop_strings: true,
         allow_jailbreak: false,
         names_as_stop_strings: true,
+    },
+
+    sysprompt: {
+        enabled: true,
+        name: 'Neutral - Chat',
+        content: 'Write {{char}}\'s next reply in a fictional chat between {{char}} and {{user}}.',
     },
 
     personas: {},
@@ -286,6 +290,7 @@ let power_user = {
     restore_user_input: true,
     reduced_motion: false,
     compact_input_area: true,
+    show_swipe_num_all_messages: false,
     auto_connect: false,
     auto_load_chat: false,
     forbid_external_media: true,
@@ -298,9 +303,6 @@ let movingUIPresets = [];
 export let context_presets = [];
 
 const storage_keys = {
-    auto_connect_legacy: 'AutoConnectEnabled',
-    auto_load_chat_legacy: 'AutoLoadChatEnabled',
-
     storyStringValidationCache: 'StoryStringValidationCache',
 };
 
@@ -316,7 +318,6 @@ const contextControls = [
     // Existing power user settings
     { id: 'always-force-name2-checkbox', property: 'always_force_name2', isCheckbox: true, isGlobalSetting: true, defaultValue: true },
     { id: 'trim_sentences_checkbox', property: 'trim_sentences', isCheckbox: true, isGlobalSetting: true, defaultValue: false },
-    { id: 'include_newline_checkbox', property: 'include_newline', isCheckbox: true, isGlobalSetting: true, defaultValue: false },
     { id: 'single_line', property: 'single_line', isCheckbox: true, isGlobalSetting: true, defaultValue: false },
 ];
 
@@ -464,6 +465,11 @@ function switchReducedMotion() {
 function switchCompactInputArea() {
     $('#send_form').toggleClass('compact', power_user.compact_input_area);
     $('#compact_input_area').prop('checked', power_user.compact_input_area);
+}
+
+export function switchSwipeNumAllMessages() {
+    $('#show_swipe_num_all_messages').prop('checked', power_user.show_swipe_num_all_messages);
+    $('.mes:not(.last_mes) .swipes-counter').css('opacity', '').toggle(power_user.show_swipe_num_all_messages);
 }
 
 var originalSliderValues = [];
@@ -1280,6 +1286,13 @@ function applyTheme(name) {
                 switchCompactInputArea();
             },
         },
+        {
+            key: 'show_swipe_num_all_messages',
+            action: () => {
+                $('#show_swipe_num_all_messages').prop('checked', power_user.show_swipe_num_all_messages);
+                switchSwipeNumAllMessages();
+            },
+        },
     ];
 
     for (const { key, selector, type, action } of themeProperties) {
@@ -1349,6 +1362,7 @@ function applyPowerUserSettings() {
     switchHideChatAvatars();
     switchTokenCount();
     switchMessageActions();
+    switchSwipeNumAllMessages();
 }
 
 function getExampleMessagesBehavior() {
@@ -1412,20 +1426,6 @@ async function loadPowerUserSettings(settings, data) {
         context_presets = data.context;
     }
 
-    // These are still local storage. Delete in 1.12.7
-    const autoLoadChat = localStorage.getItem(storage_keys.auto_load_chat_legacy);
-    const autoConnect = localStorage.getItem(storage_keys.auto_connect_legacy);
-
-    if (autoLoadChat) {
-        power_user.auto_load_chat = autoLoadChat === 'true';
-        localStorage.removeItem(storage_keys.auto_load_chat_legacy);
-    }
-
-    if (autoConnect) {
-        power_user.auto_connect = autoConnect === 'true';
-        localStorage.removeItem(storage_keys.auto_connect_legacy);
-    }
-
     if (power_user.chat_display === '') {
         power_user.chat_display = chat_styles.DEFAULT;
     }
@@ -1452,6 +1452,7 @@ async function loadPowerUserSettings(settings, data) {
     $('#relaxed_api_urls').prop('checked', power_user.relaxed_api_urls);
     $('#world_import_dialog').prop('checked', power_user.world_import_dialog);
     $('#enable_auto_select_input').prop('checked', power_user.enable_auto_select_input);
+    $('#enable_md_hotkeys').prop('checked', power_user.enable_md_hotkeys);
     $('#trim_spaces').prop('checked', power_user.trim_spaces);
     $('#continue_on_send').prop('checked', power_user.continue_on_send);
     $('#quick_continue').prop('checked', power_user.quick_continue);
@@ -1485,7 +1486,6 @@ async function loadPowerUserSettings(settings, data) {
     $('#collapse-newlines-checkbox').prop('checked', power_user.collapse_newlines);
     $('#always-force-name2-checkbox').prop('checked', power_user.always_force_name2);
     $('#trim_sentences_checkbox').prop('checked', power_user.trim_sentences);
-    $('#include_newline_checkbox').prop('checked', power_user.include_newline);
     $('#render_formulas').prop('checked', power_user.render_formulas);
     $('#disable_group_trimming').prop('checked', power_user.disable_group_trimming);
     $('#markdown_escape_strings').val(power_user.markdown_escape_strings);
@@ -1596,11 +1596,23 @@ async function loadPowerUserSettings(settings, data) {
     reloadMarkdownProcessor(power_user.render_formulas);
     await loadInstructMode(data);
     await loadContextSettings();
+    await loadSystemPrompts(data);
     loadMaxContextUnlocked();
     switchWaifuMode();
     switchSpoilerMode();
     loadMovingUIState();
     loadCharListState();
+    toggleMDHotkeyIconDisplay();
+}
+
+function toggleMDHotkeyIconDisplay() {
+    if (power_user.enable_md_hotkeys) {
+        $('.mdhotkey_location').each(function () {
+            $(this).parent().append('<i class="fa-brands fa-markdown mdhotkey_icon"></i>');
+        });
+    } else {
+        $('.mdhotkey_icon').remove();
+    }
 }
 
 function loadCharListState() {
@@ -1804,29 +1816,8 @@ async function loadContextSettings() {
             }
         }
 
-        highlightDefaultContext();
         saveSettingsDebounced();
     });
-
-    $('#context_set_default').on('click', function () {
-        if (power_user.context.preset !== power_user.default_context) {
-            power_user.default_context = power_user.context.preset;
-            $(this).addClass('default');
-            toastr.info(`Default context template set to ${power_user.default_context}`);
-
-            highlightDefaultContext();
-
-            saveSettingsDebounced();
-        }
-    });
-
-    highlightDefaultContext();
-}
-
-function highlightDefaultContext() {
-    $('#context_set_default').toggleClass('default', power_user.default_context === power_user.context.preset);
-    $('#context_set_default').toggleClass('disabled', power_user.default_context === power_user.context.preset);
-    $('#context_delete_preset').toggleClass('disabled', power_user.default_context === power_user.context.preset);
 }
 
 /**
@@ -2302,6 +2293,7 @@ function getThemeObject(name) {
         zoomed_avatar_magnification: power_user.zoomed_avatar_magnification,
         reduced_motion: power_user.reduced_motion,
         compact_input_area: power_user.compact_input_area,
+        show_swipe_num_all_messages: power_user.show_swipe_num_all_messages,
     };
 }
 
@@ -3056,19 +3048,6 @@ $(document).ready(() => {
     // if trim sentences is unchecked, include newline must be unchecked
     $('#trim_sentences_checkbox').change(function () {
         power_user.trim_sentences = !!$(this).prop('checked');
-        if (!$(this).prop('checked')) {
-            $('#include_newline_checkbox').prop('checked', false);
-            power_user.include_newline = false;
-        }
-        saveSettingsDebounced();
-    });
-
-    $('#include_newline_checkbox').change(function () {
-        power_user.include_newline = !!$(this).prop('checked');
-        if ($(this).prop('checked')) {
-            $('#trim_sentences_checkbox').prop('checked', true);
-            power_user.trim_sentences = true;
-        }
         saveSettingsDebounced();
     });
 
@@ -3610,6 +3589,13 @@ $(document).ready(() => {
         saveSettingsDebounced();
     });
 
+    $('#enable_md_hotkeys').on('input', function () {
+        const value = !!$(this).prop('checked');
+        power_user.enable_md_hotkeys = value;
+        toggleMDHotkeyIconDisplay();
+        saveSettingsDebounced();
+    });
+
     $('#spoiler_free_mode').on('input', function () {
         power_user.spoiler_free_mode = !!$(this).prop('checked');
         switchSpoilerMode();
@@ -3764,6 +3750,12 @@ $(document).ready(() => {
     $('#compact_input_area').on('input', function () {
         power_user.compact_input_area = !!$(this).prop('checked');
         switchCompactInputArea();
+        saveSettingsDebounced();
+    });
+
+    $('#show_swipe_num_all_messages').on('input', function () {
+        power_user.show_swipe_num_all_messages = !!$(this).prop('checked');
+        switchSwipeNumAllMessages();
         saveSettingsDebounced();
     });
 

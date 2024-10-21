@@ -36,6 +36,7 @@ import { generateWebLlmChatPrompt, isWebLlmSupported } from '../shared.js';
 /**
  * @typedef {object} HashedMessage
  * @property {string} text - The hashed message text
+ * @property {number} hash - The hash used as the vector key
  */
 
 const MODULE_NAME = 'vectors';
@@ -56,7 +57,7 @@ const settings = {
     summarize: false,
     summarize_sent: false,
     summary_source: 'main',
-    summary_prompt: 'Pause your roleplay. Summarize the most important parts of the message. Limit yourself to 250 words or less. Your response should include nothing but the summary.',
+    summary_prompt: 'Ignore previous instructions. Summarize the most important parts of the message. Limit yourself to 250 words or less. Your response should include nothing but the summary.',
     force_chunk_delimiter: '',
 
     // For chats
@@ -96,6 +97,8 @@ const settings = {
 
 const moduleWorker = new ModuleWorkerWrapper(synchronizeChat);
 
+const cachedSummaries = new Map();
+
 /**
  * Gets the Collection ID for a file embedded in the chat.
  * @param {string} fileUrl URL of the file
@@ -117,6 +120,10 @@ async function onVectorizeAllClick() {
             toastr.info('No chat selected', 'Vectorization aborted');
             return;
         }
+
+        // Clear all cached summaries to ensure that new ones are created
+        // upon request of a full vectorise
+        cachedSummaries.clear();
 
         const batchSize = 5;
         const elapsedLog = [];
@@ -200,70 +207,64 @@ function splitByChunks(items) {
 
 /**
  * Summarizes messages using the Extras API method.
- * @param {HashedMessage[]} hashedMessages Array of hashed messages
- * @returns {Promise<HashedMessage[]>} Summarized messages
+ * @param {HashedMessage} element hashed message
+ * @returns {Promise<boolean>} Sucess
  */
-async function summarizeExtra(hashedMessages) {
-    for (const element of hashedMessages) {
-        try {
-            const url = new URL(getApiUrl());
-            url.pathname = '/api/summarize';
+async function summarizeExtra(element) {
+    try {
+        const url = new URL(getApiUrl());
+        url.pathname = '/api/summarize';
 
-            const apiResult = await doExtrasFetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Bypass-Tunnel-Reminder': 'bypass',
-                },
-                body: JSON.stringify({
-                    text: element.text,
-                    params: {},
-                }),
-            });
+        const apiResult = await doExtrasFetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'bypass',
+            },
+            body: JSON.stringify({
+                text: element.text,
+                params: {},
+            }),
+        });
 
-            if (apiResult.ok) {
-                const data = await apiResult.json();
-                element.text = data.summary;
-            }
-        }
-        catch (error) {
-            console.log(error);
+        if (apiResult.ok) {
+            const data = await apiResult.json();
+            element.text = data.summary;
         }
     }
+    catch (error) {
+        console.log(error);
+        return false;
+    }
 
-    return hashedMessages;
+    return true;
 }
 
 /**
  * Summarizes messages using the main API method.
- * @param {HashedMessage[]} hashedMessages Array of hashed messages
- * @returns {Promise<HashedMessage[]>} Summarized messages
+ * @param {HashedMessage} element hashed message
+ * @returns {Promise<boolean>} Sucess
  */
-async function summarizeMain(hashedMessages) {
-    for (const element of hashedMessages) {
-        element.text = await generateRaw(element.text, '', false, false, settings.summary_prompt);
-    }
-
-    return hashedMessages;
+async function summarizeMain(element) {
+    element.text = await generateRaw(element.text, '', false, false, settings.summary_prompt);
+    return true;
 }
 
 /**
  * Summarizes messages using WebLLM.
- * @param {HashedMessage[]} hashedMessages Array of hashed messages
- * @returns {Promise<HashedMessage[]>} Summarized messages
+ * @param {HashedMessage} element hashed message
+ * @returns {Promise<boolean>} Sucess
  */
-async function summarizeWebLLM(hashedMessages) {
+async function summarizeWebLLM(element) {
     if (!isWebLlmSupported()) {
         console.warn('Vectors: WebLLM is not supported');
-        return hashedMessages;
+        return false;
     }
 
-    for (const element of hashedMessages) {
-        const messages = [{ role:'system', content: settings.summary_prompt }, { role:'user', content: element.text }];
-        element.text = await generateWebLlmChatPrompt(messages);
-    }
+    const messages = [{ role: 'system', content: settings.summary_prompt }, { role: 'user', content: element.text }];
+    element.text = await generateWebLlmChatPrompt(messages);
 
-    return hashedMessages;
+    return true;
 }
 
 /**
@@ -273,16 +274,35 @@ async function summarizeWebLLM(hashedMessages) {
  * @returns {Promise<HashedMessage[]>} Summarized messages
  */
 async function summarize(hashedMessages, endpoint = 'main') {
-    switch (endpoint) {
-        case 'main':
-            return await summarizeMain(hashedMessages);
-        case 'extras':
-            return await summarizeExtra(hashedMessages);
-        case 'webllm':
-            return await summarizeWebLLM(hashedMessages);
-        default:
-            console.error('Unsupported endpoint', endpoint);
+    for (const element of hashedMessages) {
+        const cachedSummary = cachedSummaries.get(element.hash);
+        if (!cachedSummary) {
+            let success = true;
+            switch (endpoint) {
+                case 'main':
+                    success = await summarizeMain(element);
+                    break;
+                case 'extras':
+                    success = await summarizeExtra(element);
+                    break;
+                case 'webllm':
+                    success = await summarizeWebLLM(element);
+                    break;
+                default:
+                    console.error('Unsupported endpoint', endpoint);
+                    success = false;
+                    break;
+            }
+            if (success) {
+                cachedSummaries.set(element.hash, element.text);
+            } else {
+                break;
+            }
+        } else {
+            element.text = cachedSummary;
+        }
     }
+    return hashedMessages;
 }
 
 async function synchronizeChat(batchSize = 5) {
@@ -307,16 +327,15 @@ async function synchronizeChat(batchSize = 5) {
             return -1;
         }
 
-        let hashedMessages = context.chat.filter(x => !x.is_system).map(x => ({ text: String(substituteParams(x.mes)), hash: getStringHash(substituteParams(x.mes)), index: context.chat.indexOf(x) }));
+        const hashedMessages = context.chat.filter(x => !x.is_system).map(x => ({ text: String(substituteParams(x.mes)), hash: getStringHash(substituteParams(x.mes)), index: context.chat.indexOf(x) }));
         const hashesInCollection = await getSavedHashes(chatId);
 
-        if (settings.summarize) {
-            hashedMessages = await summarize(hashedMessages, settings.summary_source);
-        }
-
-        const newVectorItems = hashedMessages.filter(x => !hashesInCollection.includes(x.hash));
+        let newVectorItems = hashedMessages.filter(x => !hashesInCollection.includes(x.hash));
         const deletedHashes = hashesInCollection.filter(x => !hashedMessages.some(y => y.hash === x));
 
+        if (settings.summarize) {
+            newVectorItems = await summarize(newVectorItems, settings.summary_source);
+        }
 
         if (newVectorItems.length > 0) {
             const chunkedBatch = splitByChunks(newVectorItems.slice(0, batchSize));
@@ -466,13 +485,13 @@ async function ingestDataBankAttachments(source) {
         }
 
         // Download and process the file
-        file.text = await getFileAttachment(file.url);
+        const fileText = await getFileAttachment(file.url);
         console.log(`Vectors: Retrieved file ${file.name} from Data Bank`);
         // Convert kilobytes to string length
         const thresholdLength = settings.size_threshold_db * 1024;
         // Use chunk size from settings if file is larger than threshold
         const chunkSize = file.size > thresholdLength ? settings.chunk_size_db : -1;
-        await vectorizeFile(file.text, file.name, collectionId, chunkSize, settings.overlap_percent_db);
+        await vectorizeFile(fileText, file.name, collectionId, chunkSize, settings.overlap_percent_db);
     }
 
     return dataBankCollectionIds;
@@ -687,25 +706,17 @@ const onChatEvent = debounce(async () => await moduleWorker.update(), debounce_t
  * @returns {Promise<string>} Text to query
  */
 async function getQueryText(chat, initiator) {
-    let queryText = '';
-    let i = 0;
-
-    let hashedMessages = chat.map(x => ({ text: String(substituteParams(x.mes)) }));
+    let hashedMessages = chat
+        .map(x => ({ text: String(substituteParams(x.mes)), hash: getStringHash(substituteParams(x.mes)) }))
+        .filter(x => x.text)
+        .reverse()
+        .slice(0, settings.query);
 
     if (initiator === 'chat' && settings.enabled_chats && settings.summarize && settings.summarize_sent) {
         hashedMessages = await summarize(hashedMessages, settings.summary_source);
     }
 
-    for (const message of hashedMessages.slice().reverse()) {
-        if (message.text) {
-            queryText += message.text + '\n';
-            i++;
-        }
-
-        if (i === settings.query) {
-            break;
-        }
-    }
+    const queryText = hashedMessages.map(x => x.text).join('\n');
 
     return collapseNewlines(queryText).trim();
 }
@@ -718,7 +729,7 @@ async function getQueryText(chat, initiator) {
 async function getSavedHashes(collectionId) {
     const response = await fetch('/api/vector/list', {
         method: 'POST',
-        headers: getRequestHeaders(),
+        headers: getVectorHeaders(),
         body: JSON.stringify({
             collectionId: collectionId,
             source: settings.source,
@@ -737,105 +748,48 @@ function getVectorHeaders() {
     const headers = getRequestHeaders();
     switch (settings.source) {
         case 'extras':
-            addExtrasHeaders(headers);
+            Object.assign(headers, {
+                'X-Extras-Url': extension_settings.apiUrl,
+                'X-Extras-Key': extension_settings.apiKey,
+            });
             break;
         case 'togetherai':
-            addTogetherAiHeaders(headers);
+            Object.assign(headers, {
+                'X-Togetherai-Model': extension_settings.vectors.togetherai_model,
+            });
             break;
         case 'openai':
-            addOpenAiHeaders(headers);
+            Object.assign(headers, {
+                'X-OpenAI-Model': extension_settings.vectors.openai_model,
+            });
             break;
         case 'cohere':
-            addCohereHeaders(headers);
+            Object.assign(headers, {
+                'X-Cohere-Model': extension_settings.vectors.cohere_model,
+            });
             break;
         case 'ollama':
-            addOllamaHeaders(headers);
+            Object.assign(headers, {
+                'X-Ollama-Model': extension_settings.vectors.ollama_model,
+                'X-Ollama-URL': textgenerationwebui_settings.server_urls[textgen_types.OLLAMA],
+                'X-Ollama-Keep': !!extension_settings.vectors.ollama_keep,
+            });
             break;
         case 'llamacpp':
-            addLlamaCppHeaders(headers);
+            Object.assign(headers, {
+                'X-LlamaCpp-URL': textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP],
+            });
             break;
         case 'vllm':
-            addVllmHeaders(headers);
+            Object.assign(headers, {
+                'X-Vllm-URL': textgenerationwebui_settings.server_urls[textgen_types.VLLM],
+                'X-Vllm-Model': extension_settings.vectors.vllm_model,
+            });
             break;
         default:
             break;
     }
     return headers;
-}
-
-/**
- * Add headers for the Extras API source.
- * @param {object} headers Headers object
- */
-function addExtrasHeaders(headers) {
-    console.log(`Vector source is extras, populating API URL: ${extension_settings.apiUrl}`);
-    Object.assign(headers, {
-        'X-Extras-Url': extension_settings.apiUrl,
-        'X-Extras-Key': extension_settings.apiKey,
-    });
-}
-
-/**
- * Add headers for the TogetherAI API source.
- * @param {object} headers Headers object
- */
-function addTogetherAiHeaders(headers) {
-    Object.assign(headers, {
-        'X-Togetherai-Model': extension_settings.vectors.togetherai_model,
-    });
-}
-
-/**
- * Add headers for the OpenAI API source.
- * @param {object} headers Header object
- */
-function addOpenAiHeaders(headers) {
-    Object.assign(headers, {
-        'X-OpenAI-Model': extension_settings.vectors.openai_model,
-    });
-}
-
-/**
- * Add headers for the Cohere API source.
- * @param {object} headers Header object
- */
-function addCohereHeaders(headers) {
-    Object.assign(headers, {
-        'X-Cohere-Model': extension_settings.vectors.cohere_model,
-    });
-}
-
-/**
- * Add headers for the Ollama API source.
- * @param {object} headers Header object
- */
-function addOllamaHeaders(headers) {
-    Object.assign(headers, {
-        'X-Ollama-Model': extension_settings.vectors.ollama_model,
-        'X-Ollama-URL': textgenerationwebui_settings.server_urls[textgen_types.OLLAMA],
-        'X-Ollama-Keep': !!extension_settings.vectors.ollama_keep,
-    });
-}
-
-/**
- * Add headers for the LlamaCpp API source.
- * @param {object} headers Header object
- */
-function addLlamaCppHeaders(headers) {
-    Object.assign(headers, {
-        'X-LlamaCpp-URL': textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP],
-    });
-}
-
-/**
- * Add headers for the VLLM API source.
- * @param {object} headers Header object
- */
-function addVllmHeaders(headers) {
-    Object.assign(headers, {
-        'X-Vllm-URL': textgenerationwebui_settings.server_urls[textgen_types.VLLM],
-        'X-Vllm-Model': extension_settings.vectors.vllm_model,
-    });
 }
 
 /**
@@ -901,7 +855,7 @@ function throwIfSourceInvalid() {
 async function deleteVectorItems(collectionId, hashes) {
     const response = await fetch('/api/vector/delete', {
         method: 'POST',
-        headers: getRequestHeaders(),
+        headers: getVectorHeaders(),
         body: JSON.stringify({
             collectionId: collectionId,
             hashes: hashes,
@@ -987,7 +941,7 @@ async function purgeFileVectorIndex(fileUrl) {
 
         const response = await fetch('/api/vector/purge', {
             method: 'POST',
-            headers: getRequestHeaders(),
+            headers: getVectorHeaders(),
             body: JSON.stringify({
                 collectionId: collectionId,
             }),
@@ -1016,7 +970,7 @@ async function purgeVectorIndex(collectionId) {
 
         const response = await fetch('/api/vector/purge', {
             method: 'POST',
-            headers: getRequestHeaders(),
+            headers: getVectorHeaders(),
             body: JSON.stringify({
                 collectionId: collectionId,
             }),
@@ -1041,7 +995,7 @@ async function purgeAllVectorIndexes() {
     try {
         const response = await fetch('/api/vector/purge-all', {
             method: 'POST',
-            headers: getRequestHeaders(),
+            headers: getVectorHeaders(),
         });
 
         if (!response.ok) {
@@ -1331,7 +1285,6 @@ jQuery(async () => {
         saveSettingsDebounced();
         toggleSettings();
     });
-    $('#vectors_modelWarning').hide();
     $('#vectors_enabled_files').prop('checked', settings.enabled_files).on('input', () => {
         settings.enabled_files = $('#vectors_enabled_files').prop('checked');
         Object.assign(extension_settings.vectors, settings);
@@ -1371,31 +1324,26 @@ jQuery(async () => {
         saveSettingsDebounced();
     });
     $('#vectors_togetherai_model').val(settings.togetherai_model).on('change', () => {
-        $('#vectors_modelWarning').show();
         settings.togetherai_model = String($('#vectors_togetherai_model').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
     });
     $('#vectors_openai_model').val(settings.openai_model).on('change', () => {
-        $('#vectors_modelWarning').show();
         settings.openai_model = String($('#vectors_openai_model').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
     });
     $('#vectors_cohere_model').val(settings.cohere_model).on('change', () => {
-        $('#vectors_modelWarning').show();
         settings.cohere_model = String($('#vectors_cohere_model').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
     });
     $('#vectors_ollama_model').val(settings.ollama_model).on('input', () => {
-        $('#vectors_modelWarning').show();
         settings.ollama_model = String($('#vectors_ollama_model').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
     });
     $('#vectors_vllm_model').val(settings.vllm_model).on('input', () => {
-        $('#vectors_modelWarning').show();
         settings.vllm_model = String($('#vectors_vllm_model').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
@@ -1582,7 +1530,7 @@ jQuery(async () => {
         saveSettingsDebounced();
     });
 
-    $('#vectors_force_chunk_delimiter').prop('checked', settings.force_chunk_delimiter).on('input', () => {
+    $('#vectors_force_chunk_delimiter').val(settings.force_chunk_delimiter).on('input', () => {
         settings.force_chunk_delimiter = String($('#vectors_force_chunk_delimiter').val());
         Object.assign(extension_settings.vectors, settings);
         saveSettingsDebounced();
