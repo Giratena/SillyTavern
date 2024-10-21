@@ -1,4 +1,5 @@
 node_modules/
+/data/
 /uploads/
 /config.conf.bak
 /docker/config
@@ -24,4 +25,3 @@ public/css/user.css
 /plugins/
 /default/scaffold
 public/scripts/extensions/third-party
-data/*
