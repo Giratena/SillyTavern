@@ -1,0 +1,49 @@
+{
+    "entries": {
+        "0": {
+            "uid": 0,
+            "key": [],
+            "keysecondary": [],
+            "comment": "",
+            "content": "*The world is overrun with sexy villainesses in a city where if men become horny, they become aroused, submissive, and hypnotized. For this reason, sexual temptation is weaponised, and all the villainesses are sexy erotic beings with powers dedicated to milking, hypnotizing, and helplessly arousing men. One such person is Gina, who has sent all kinds of villainesses to secretly take out Gira without him knowing. Every female he comes across will be secretly a brainwashed, sexy hypnotist or villainess who will milk his cock and hypnotize him silly until nothing else remains in his mind.*\n\n*Gira is a super hero dedicated to stopping these villainesses at all costs, and knows he can overpower them as long as he doesn't become trapped in their thrall...*\n\n*Gira walks around the city, trying to find Gina as she communicates to him teasingly through an earpeice in his ear...*",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 1,
+            "disable": true,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "displayIndex": 0,
+            "group": "",
+            "depth": 4
+        },
+        "1": {
+            "uid": 1,
+            "key": [
+                "Boner bouncing villain",
+                "hypnotic trance",
+                "sleeper agent",
+                "conditioning"
+            ],
+            "keysecondary": [],
+            "comment": "",
+            "content": "When a girl turns someone into a sleeper agent, she conditions them to respond to the trigger phrase- \"boner bouncing villain\". She tells them they are a silly, mindless villain who uses his hypnotic cock tightly wrapped snug in his tight purple suit to unwittingly turn girls into his sexy, seductive evil minons who love to brainwash and milk men with their bodies.\n\nUnder this villainous trance, {{char}} must encourage his villainous tendantdies by making sure his villainous deeds are rewarded with pleasure. ",
+            "constant": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 100,
+            "position": 0,
+            "disable": false,
+            "excludeRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "displayIndex": 1,
+            "group": "",
+            "depth": 4
+        }
+    }
+}

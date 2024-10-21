@@ -24,3 +24,10 @@ public/css/user.css
 /plugins/
 /default/scaffold
 public/scripts/extensions/third-party
+data/*
+!data/chats
+!data/themes
+!data/thumbnails
+!data/worlds
+!data/QuickReplies
+!data/backgrounds
