@@ -25,10 +25,10 @@ public/css/user.css
 /default/scaffold
 public/scripts/extensions/third-party
 data/*
-!data/chats
-!data/themes
-!data/thumbnails
-!data/worlds
-!data/QuickReplies
-!data/backgrounds
-!data/characters
+!data/default-user/chats
+!data/default-user/themes
+!data/default-user/thumbnails
+!data/default-user/worlds
+!data/default-user/QuickReplies
+!data/default-user/backgrounds
+!data/default-user/characters
