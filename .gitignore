@@ -1,5 +1,4 @@
 node_modules/
-/data/
 /uploads/
 /config.conf.bak
 /docker/config
@@ -25,3 +24,11 @@ public/css/user.css
 /plugins/
 /default/scaffold
 public/scripts/extensions/third-party
+data/*
+!data/default-user/chats/
+!data/default-user/themes/
+!data/default-user/thumbnails/
+!data/default-user/worlds/
+!data/default-user/QuickReplies/
+!data/default-user/backgrounds/
+!data/default-user/characters/
