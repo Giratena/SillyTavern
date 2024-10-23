@@ -33,4 +33,5 @@ data/*
 !data/default-user/QuickReplies/
 !data/default-user/backgrounds/
 !data/default-user/characters/
+data/default-user/*
 /certs
