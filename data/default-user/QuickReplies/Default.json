@@ -21,6 +21,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         },
         {
@@ -37,6 +38,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         },
         {
@@ -53,6 +55,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         }
     ],

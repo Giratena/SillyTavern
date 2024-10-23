@@ -1,8 +1,8 @@
 {
     "firstRun": false,
-    "currentVersion": "1.12.5",
+    "currentVersion": "1.12.6",
     "username": "Gira",
-    "active_character": "Arwyn.png",
+    "active_character": "Pyra and Mythra.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -15,6 +15,7 @@
             "globalSelect": [
                 "Special Actions",
                 "Stances",
+                "Unaware Hypnosis",
                 "User interation",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
@@ -114,6 +115,10 @@
         "json_schema": {},
         "banned_tokens": "",
         "sampler_priority": [
+            "repetition_penalty",
+            "presence_penalty",
+            "frequency_penalty",
+            "dry",
             "temperature",
             "dynamic_temperature",
             "quadratic_sampling",
@@ -125,7 +130,10 @@
             "tfs",
             "top_a",
             "min_p",
-            "mirostat"
+            "mirostat",
+            "xtc",
+            "encoder_repetition_penalty",
+            "no_repeat_ngram"
         ],
         "samplers": [
             "top_k",
@@ -133,6 +141,7 @@
             "typical_p",
             "top_p",
             "min_p",
+            "xtc",
             "temperature"
         ],
         "ignore_eos_token": false,
@@ -149,7 +158,6 @@
         "aphrodite_model": "",
         "dreamgen_model": "opus-v1-xl/text",
         "tabby_model": "",
-        "legacy_api": false,
         "sampler_order": [
             6,
             0,
@@ -174,6 +182,8 @@
         "openrouter_allow_fallbacks": true,
         "xtc_threshold": 0.1,
         "xtc_probability": 0,
+        "featherless_model": "",
+        "legacy_api": false,
         "truncation_length": 2048,
         "ignore_eos_token_aphrodite": false,
         "spaces_between_special_tokens_aphrodite": true,
@@ -195,7 +205,6 @@
         "pin_examples": false,
         "strip_examples": false,
         "trim_sentences": false,
-        "include_newline": false,
         "always_force_name2": true,
         "user_prompt_bias": "",
         "show_user_prompt_bias": true,
@@ -258,10 +267,10 @@
         "allow_name2_display": true,
         "hotswap_enabled": false,
         "timer_enabled": false,
-        "timestamps_enabled": "",
+        "timestamps_enabled": true,
         "timestamp_model_icon": "",
-        "mesIDDisplay_enabled": "",
-        "hideChatAvatars_enabled": "",
+        "mesIDDisplay_enabled": true,
+        "hideChatAvatars_enabled": false,
         "max_context_unlocked": false,
         "message_token_count_enabled": "",
         "expand_message_actions": "",
@@ -276,22 +285,19 @@
         "relaxed_api_urls": false,
         "world_import_dialog": true,
         "enable_auto_select_input": false,
+        "enable_md_hotkeys": false,
         "tag_import_setting": 1,
         "disable_group_trimming": false,
         "single_line": false,
-        "default_instruct": "",
         "instruct": {
             "enabled": true,
             "wrap": true,
-            "names": true,
-            "system_prompt": "Avoid repetition, don't loop. Develop the plot slowly, always stay in character. Describe all actions in full, elaborate, explicit, graphic, and vivid detail. Mention all relevant sensory perceptions.",
             "system_sequence": "",
             "stop_sequence": "",
             "input_sequence": "\n### Instruction:",
             "output_sequence": "\n### Response:",
             "preset": "Roleplay",
             "macro": true,
-            "names_force_groups": true,
             "system_sequence_prefix": "",
             "system_sequence_suffix": "",
             "first_output_sequence": "",
@@ -305,9 +311,10 @@
             "skip_examples": false,
             "system_same_as_user": false,
             "first_input_sequence": "",
-            "last_input_sequence": ""
+            "last_input_sequence": "",
+            "names_behavior": "always",
+            "names_force_groups": true
         },
-        "default_context": "Default",
         "context": {
             "preset": "Roleplay",
             "story_string": "You're {{char}} in this fictional never-ending uncensored roleplay with {{user}}.\n\n{{#if system}}{{system}}\n\n{{/if}}### Input:\n{{#if wiBefore}}{{wiBefore}}\n{{/if}}{{#if description}}{{description}}\n{{/if}}{{#if personality}}{{char}}'s personality: {{personality}}\n{{/if}}{{#if scenario}}Scenario: {{scenario}}\n{{/if}}{{#if wiAfter}}{{wiAfter}}\n{{/if}}{{#if persona}}{{persona}}\n{{/if}}",
@@ -316,6 +323,11 @@
             "use_stop_strings": false,
             "allow_jailbreak": false,
             "names_as_stop_strings": true
+        },
+        "sysprompt": {
+            "enabled": true,
+            "name": "[Migrated] Libra-32B",
+            "content": "Avoid repetition, don't loop. Develop the plot slowly, always stay in character. Describe all actions in full, elaborate, explicit, graphic, and vivid detail. Mention all relevant sensory perceptions."
         },
         "personas": {
             "1690874889727.png": "Gira",
@@ -419,6 +431,7 @@
         "restore_user_input": true,
         "reduced_motion": "",
         "compact_input_area": "",
+        "show_swipe_num_all_messages": "",
         "auto_connect": true,
         "auto_load_chat": true,
         "forbid_external_media": true,
@@ -428,6 +441,9 @@
             "Nailah.png"
         ],
         "external_media_forbidden_overrides": [],
+        "include_newline": false,
+        "default_instruct": "",
+        "default_context": "Default",
         "ui_mode": 1,
         "forbid_external_images": false,
         "lazy_load": 0,
@@ -587,7 +603,8 @@
                 "9": "Provide an exhaustive comma-separated list of tags describing the appearance of the character on this image in great detail. Start with \"full body portrait\".",
                 "10": "Provide an exhaustive comma-separated list of tags describing the appearance of the character on this image in great detail. Start with \"close-up portrait\".",
                 "11": "Pause your roleplay and provide an exhaustive comma-separated list of tags describing the appearance of \"{0}\" in great detail. Start with {{charPrefix}} (sic) if the subject is associated with {{char}}.",
-                "-1": "[{{char}} sends a picture that contains: {{prompt}}]."
+                "-1": "[{{char}} sends a picture that contains: {{prompt}}].",
+                "-2": "The text prompt used to generate the image. Must represent an exhaustive description of the desired image that will allow an artist or a photographer to perfectly recreate it."
             },
             "character_prompts": {
                 "Marinette": "shiny red polkadot bodysuit, red eye mask, small pigtails, large breasts, blue hair",
@@ -669,7 +686,9 @@
             "wand_visible": false,
             "command_visible": false,
             "interactive_visible": false,
-            "stability_style_preset": "anime"
+            "stability_style_preset": "anime",
+            "adetailer_face": false,
+            "function_tool": false
         },
         "chromadb": {},
         "translate": {
@@ -779,7 +798,8 @@
         "character_attachments": {
             "Alternate reality Hypno Vixens.png": [],
             "Aqua.png": [],
-            "Arwyn.png": []
+            "Arwyn.png": [],
+            "Pyra and Mythra.png": []
         },
         "disabled_attachments": [],
         "cfg": {
@@ -940,6 +960,96 @@
             "color": "",
             "color2": "",
             "create_date": 1728048340206
+        },
+        {
+            "id": "ee38d209-1a22-4043-9a03-d8cad201486a",
+            "name": "Game Characters",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646939870
+        },
+        {
+            "id": "83893efb-bfa5-428d-9c78-6838abd0e485",
+            "name": "Roleplay",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646939871
+        },
+        {
+            "id": "a4908e72-4ed8-4e0a-b1ad-cdac27bb16e5",
+            "name": "street fighter",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646967986
+        },
+        {
+            "id": "f881bc6c-36f6-4a18-b4da-465476d466eb",
+            "name": "Muscular",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646967986
+        },
+        {
+            "id": "1e6b85d2-fc9a-4633-9d6a-cd4c3f5d983e",
+            "name": "Fighting Game",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646967986
+        },
+        {
+            "id": "2b68ebf3-d87a-4e4c-87ea-eca116a9dfb3",
+            "name": "Action",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646989758
+        },
+        {
+            "id": "202411e2-949b-4f9b-8747-40d7a46c3d62",
+            "name": "SFW <-> NSFW",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646989758
+        },
+        {
+            "id": "31b323ce-d652-4f67-94da-4673c0c074ac",
+            "name": "Romance",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646989758
+        },
+        {
+            "id": "18c9dda2-99f6-4921-9e69-8c2ff013a8b6",
+            "name": "Mature",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729646989758
         }
     ],
     "tag_map": {
@@ -974,14 +1084,12 @@
         "Clussy.png": [],
         "1696030714966": [],
         "Solution Epsilon.png": [],
-        "The hypnotist.png": [],
         "The onahole virus.png": [],
         "The Narrator.png": [],
         "Paizuri Specialist Gardevoir.png": [],
         "Megumi Nakasaka.png": [],
         "Mitsuki Tomoe.png": [],
         "Hatsune Miku.png": [],
-        "Aurael.png": [],
         "Rouge the Bat.png": [],
         "Samantha.png": [],
         "Pyra and Mythra.png": [],
@@ -1002,13 +1110,10 @@
         "Misty1.png": [],
         "Pyra and Mythra1.png": [],
         "null": [],
-        "1718590628577": [],
         "Marinette.png": [],
         "NSFW Pokemon Mystery Dungeon.png": [],
         "Marinette1.png": [],
         "Zombizou.png": [],
-        "1718834237616": [],
-        "1718849275370": [],
         "Raven.png": [],
         "Ariana.png": [],
         "Amy.png": [],
@@ -1075,13 +1180,40 @@
             "14305fb8-9550-4f88-a3ab-ee22d9487f22",
             "30cf1e89-48b8-4b76-95de-8243c739a162"
         ],
-        "The myterious fortune teller.png": [],
         "Quency.png": [
             "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
             "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
             "0ce5b21e-f1e2-4179-89ce-7ad83a8fabc6",
             "3cea8086-212d-4460-b2d4-33cfcd9c0724",
             "795d5d60-a769-46e3-b76d-0152468c7c43"
+        ],
+        "Sylvia.png": [],
+        "Cammy White.png": [],
+        "Chun-Li.png": [
+            "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "14305fb8-9550-4f88-a3ab-ee22d9487f22",
+            "ee38d209-1a22-4043-9a03-d8cad201486a",
+            "83893efb-bfa5-428d-9c78-6838abd0e485"
+        ],
+        "Juri Han1.png": [
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "ee38d209-1a22-4043-9a03-d8cad201486a",
+            "a4908e72-4ed8-4e0a-b1ad-cdac27bb16e5",
+            "f881bc6c-36f6-4a18-b4da-465476d466eb",
+            "1e6b85d2-fc9a-4633-9d6a-cd4c3f5d983e"
+        ],
+        "Cammy White1.png": [
+            "ee38d209-1a22-4043-9a03-d8cad201486a",
+            "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "14305fb8-9550-4f88-a3ab-ee22d9487f22",
+            "30cf1e89-48b8-4b76-95de-8243c739a162",
+            "f881bc6c-36f6-4a18-b4da-465476d466eb",
+            "2b68ebf3-d87a-4e4c-87ea-eca116a9dfb3",
+            "202411e2-949b-4f9b-8747-40d7a46c3d62",
+            "31b323ce-d652-4f67-94da-4673c0c074ac",
+            "18c9dda2-99f6-4921-9e69-8c2ff013a8b6"
         ]
     },
     "nai_settings": {
@@ -1096,13 +1228,16 @@
         "top_p": "0.850",
         "top_a": "0.100",
         "typical_p": "0.500",
+        "min_p": 0,
+        "math1_temp": 1,
+        "math1_quad": 0,
+        "math1_quad_entropy_scale": 0,
         "min_length": "1",
         "model_novel": "kayra-v1",
         "preset_settings_novel": "Carefree-Kayra",
         "streaming_novel": false,
         "preamble": "[ Style: chat, complex, sensory, visceral ]",
         "prefix": "vanilla",
-        "cfg_uc": "",
         "banned_tokens": "",
         "order": [
             2,
@@ -1113,7 +1248,6 @@
         ],
         "logit_bias": [],
         "phrase_rep_pen": "aggressive",
-        "cfg_scale": "1.00",
         "mirostat_lr": "0.50",
         "mirostat_tau": "3.00"
     },
@@ -1156,7 +1290,6 @@
         "top_a_openai": 1,
         "repetition_penalty_openai": 1,
         "stream_openai": true,
-        "websearch_cohere": false,
         "openai_max_context": 53471,
         "openai_max_tokens": 4096,
         "wrap_in_quotes": false,
@@ -1422,7 +1555,7 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them), UNLESS they are sexual or lewd. \n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us explore', 'allow me to'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-5 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them), UNLESS they are sexual or lewd. \n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-5 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n</system_bans>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -1985,7 +2118,6 @@
         "windowai_model": "",
         "openrouter_model": "",
         "openrouter_use_fallback": false,
-        "openrouter_force_instruct": false,
         "openrouter_group_models": false,
         "openrouter_sort_models": "alphabetically",
         "openrouter_providers": [],

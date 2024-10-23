@@ -133,7 +133,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 10,
+            "delay": 8,
             "displayIndex": 2
         },
         "4": {
@@ -167,7 +167,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 18,
+            "delay": 16,
             "displayIndex": 2
         },
         "5": {
@@ -235,7 +235,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 22,
+            "delay": 24,
             "displayIndex": 2
         },
         "7": {
@@ -269,7 +269,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 8,
+            "delay": 6,
             "displayIndex": 2
         },
         "8": {
@@ -303,7 +303,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 20,
+            "delay": 22,
             "displayIndex": 2
         },
         "9": {
@@ -337,7 +337,7 @@
             "role": null,
             "sticky": 0,
             "cooldown": 0,
-            "delay": 16,
+            "delay": 14,
             "displayIndex": 2
         },
         "10": {
@@ -353,7 +353,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "preventRecursion": false,
             "delayUntilRecursion": false,
@@ -373,6 +373,74 @@
             "cooldown": 3,
             "delay": 1,
             "displayIndex": 10
+        },
+        "11": {
+            "uid": 11,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Scenario 5",
+            "content": "[PLOT NOTE: The current scenario is Scenario 5.  All topics must fit around or inside this scenario: {{setvar::CurrentScenario::5}}{{getvar::Scenario5}}]",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 905,
+            "position": 3,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 0,
+            "group": "Scenario",
+            "groupOverride": true,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 32,
+            "displayIndex": 2
+        },
+        "12": {
+            "uid": 12,
+            "key": [],
+            "keysecondary": [],
+            "comment": "Scenario 4 -> 5",
+            "content": "[PLOT NOTE: Continue scenario 4, but foreshadow the content of scenario 5 to subtly indicate the scenario is about to change: {{getvar::Scenario5}}]",
+            "constant": true,
+            "vectorized": false,
+            "selective": true,
+            "selectiveLogic": 0,
+            "addMemo": true,
+            "order": 905,
+            "position": 3,
+            "disable": false,
+            "excludeRecursion": false,
+            "preventRecursion": false,
+            "delayUntilRecursion": false,
+            "probability": 100,
+            "useProbability": true,
+            "depth": 0,
+            "group": "Scenario",
+            "groupOverride": true,
+            "groupWeight": 100,
+            "scanDepth": null,
+            "caseSensitive": null,
+            "matchWholeWords": null,
+            "useGroupScoring": null,
+            "automationId": "",
+            "role": null,
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 30,
+            "displayIndex": 2
         }
     }
 }

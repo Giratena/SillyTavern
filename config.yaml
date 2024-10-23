@@ -1,6 +1,7 @@
 port: 8000
 whitelist:
   - 127.0.0.1
+  - 192.168.1.59
   - 192.168.86.33
   - 192.168.1.120
   - 192.168.86.64
@@ -14,6 +15,7 @@ whitelist:
   - 192.168.1.69
   - 192.168.86.53
   - 192.168.78.204
+  - 192.168.86.226
 whitelistMode: true
 basicAuthMode: false
 basicAuthUser:
@@ -79,3 +81,7 @@ ollama:
   keepAlive: -1
 claude:
   enableSystemPromptCache: false
+autheliaAuth: false
+perUserBasicAuth: false
+chatBackupThrottleInterval: 10000
+promptPlaceholder: "[Start a new chat]"

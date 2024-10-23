@@ -172,3 +172,26 @@ themes/Dark V 1.0.json
 themes/Azure.json
 presets/context/Gemma 2.json
 presets/instruct/Gemma 2.json
+presets/novel/Erato-Dragonfruit.json
+presets/novel/Erato-Golden Arrow.json
+presets/novel/Erato-Shosetsu.json
+presets/novel/Erato-Wilder.json
+presets/novel/Erato-Zany Scribe.json
+presets/sysprompt/Actor.json
+presets/sysprompt/Assistant - Expert.json
+presets/sysprompt/Assistant - Simple.json
+presets/sysprompt/Chain of Thought.json
+presets/sysprompt/Roleplay - Detailed.json
+presets/sysprompt/Roleplay - Immersive.json
+presets/sysprompt/Roleplay - Simple.json
+presets/sysprompt/Text Adventure.json
+presets/sysprompt/Writer - Creative.json
+presets/sysprompt/Writer - Realistic.json
+presets/sysprompt/Blank.json
+presets/sysprompt/Neutral - Chat.json
+presets/instruct/Mistral V1.json
+presets/context/Mistral V1.json
+presets/instruct/Mistral V2 & V3.json
+presets/context/Mistral V2 & V3.json
+presets/instruct/Mistral V3-Tekken.json
+presets/context/Mistral V3-Tekken.json
