@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.6",
     "username": "Gira",
-    "active_character": "Ariana.png",
+    "active_character": "May.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -1049,6 +1049,16 @@
             "color": "",
             "color2": "",
             "create_date": 1729646989758
+        },
+        {
+            "id": "fcf0e47c-a616-49bc-8dad-1467ee030d71",
+            "name": "Pokemon",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1729764240565
         }
     ],
     "tag_map": {
@@ -1213,6 +1223,12 @@
             "202411e2-949b-4f9b-8747-40d7a46c3d62",
             "31b323ce-d652-4f67-94da-4673c0c074ac",
             "18c9dda2-99f6-4921-9e69-8c2ff013a8b6"
+        ],
+        "May.png": [
+            "0e03b14c-2dad-4ca3-8528-72c69732b2eb",
+            "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
+            "14305fb8-9550-4f88-a3ab-ee22d9487f22",
+            "fcf0e47c-a616-49bc-8dad-1467ee030d71"
         ]
     },
     "nai_settings": {

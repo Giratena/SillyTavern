@@ -26,12 +26,9 @@ public/css/user.css
 public/scripts/extensions/third-party
 data/*
 !data/default-user/
-!data/default-user/chats/
-!data/default-user/themes/
-!data/default-user/thumbnails/
-!data/default-user/worlds/
-!data/default-user/QuickReplies/
-!data/default-user/backgrounds/
-!data/default-user/characters/
-data/default-user/*
+data/default-user/backups
+data/default-user/chats
+data/default-user/group chats
+data/default-user/sysprompt
+data/default-user/sysprompt
 /certs
