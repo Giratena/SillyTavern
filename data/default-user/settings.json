@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.6",
     "username": "Gira",
-    "active_character": "May.png",
+    "active_character": "Delphox.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -15,6 +15,7 @@
             "globalSelect": [
                 "Special Actions",
                 "Stances",
+                "Unaware Hypnosis",
                 "User interation",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
