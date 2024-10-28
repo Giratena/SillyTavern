@@ -206,6 +206,54 @@ router.post('/searxng', jsonParser, async (request, response) => {
     }
 });
 
+router.post('/tavily', jsonParser, async (request, response) => {
+    try {
+        const apiKey = readSecret(request.user.directories, SECRET_KEYS.TAVILY);
+
+        if (!apiKey) {
+            console.log('No Tavily key found');
+            return response.sendStatus(400);
+        }
+
+        const { query } = request.body;
+
+        const body = {
+            query: query,
+            api_key: apiKey,
+            search_depth: 'basic',
+            topic: 'general',
+            include_answer: true,
+            include_raw_content: false,
+            include_images: false,
+            include_image_descriptions: false,
+            include_domains: [],
+            max_results: 10,
+        };
+
+        const result = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        console.log('Tavily query', query);
+
+        if (!result.ok) {
+            const text = await result.text();
+            console.log('Tavily request failed', result.statusText, text);
+            return response.status(500).send(text);
+        }
+
+        const data = await result.json();
+        return response.json(data);
+    } catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
 router.post('/visit', jsonParser, async (request, response) => {
     try {
         const url = request.body.url;
