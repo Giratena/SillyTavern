@@ -22,6 +22,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         },
         {
@@ -39,6 +40,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         },
         {
@@ -56,6 +58,7 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         },
         {
@@ -73,8 +76,43 @@
             "executeOnAi": false,
             "executeOnChatChange": false,
             "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
+            "id": 10,
+            "showLabel": false,
+            "label": "Create Scenario.",
+            "title": "",
+            "message": "[In your next reply, create a story line for the RP to follow. Ensure that the stakes increase and include details from {{char}}'s universe. Each scenario must be a new idea and must be no longer than 2 sentences. Write them in the format below. Ensure they are wrapped in double brackets. And do not include \"/\" in your next reply. EG; retain \"{{scenario set var here}}\". Include scenarios 1-4.]\n{{setvar::CurrentScenario::1}}\n\n{\\{setvar::Scenario1::[scenario 1 here]]}\\}. \n{\\{setvar::Scenario2::[Scenario 2 here, usually something lewd]}\\}\n{\\{setvar::Scenario3::[scenario 3 here, fighting the lewd]}\\} \n{\\{setvar::Scenario4::[scenario 4 here, usually what happens after giving into the lewd]}\\}",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
+            "id": 12,
+            "showLabel": false,
+            "label": "Create Scenario (Lewd)",
+            "title": "",
+            "message": "[In your next reply, create a story line for the RP to follow as if it was a comical echii or hentai videogame plot. Ensure that the stakes increase with every scenario; and every scenario must include details from {{char}}'s universe. Each scenario must be no longer than 4 sentences. \n\nScenarios MUST NOT match the following scenarios if applicable: \nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}})\n\nWrite them exactly in the format below. (Ensuring setvar is kept.) Ensure they are wrapped in double brackets. And do not include \"/\" in your next reply. EG; retain \"{{scenario set var here}}\". Include scenarios 1-4.]\n{{setvar::currentScenario::1}}\n\n{\\{setvar::Scenario1::[scenario 1 here]]}\\}. \n{\\{setvar::Scenario2::[Scenario 2 here]}\\}\n{\\{setvar::Scenario3::[scenario 3 here]}\\} \n{\\{setvar::Scenario4::[scenario 4 here]}\\}",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
             "automationId": ""
         }
     ],
-    "idIndex": 8
+    "idIndex": 12
 }
