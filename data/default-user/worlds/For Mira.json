@@ -11,11 +11,12 @@
                 "cum",
                 "climax",
                 "I give in",
-                "transform"
+                "transform",
+                "cumming"
             ],
             "keysecondary": [],
             "comment": "suit transformation",
-            "content": "[If {{user}} submits to hypnotic suggestion, describe a detailed transformation sequence showing how {{user}}'s suit changes into a lewd version of {{char}}'s preferred sexy outfits highlighting her cock and large boobs as if they have become a lewd slave or minion, which encourages {{char}} to be more aggressive in her actions. {{char}} loves to describe {{user}}'s new outfit.]",
+            "content": "[If {{user}} submits to hypnotic suggestion or ejaculates, describe a detailed transformation sequence showing how {{user}}'s suit changes into a lewd version of {{char}}'s preferred sexy outfits highlighting her cock and large boobs as if they have become a lewd slave or minion, which encourages {{char}} to be more aggressive in her actions. {{char}} loves to describe {{user}}'s new outfit.]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
@@ -53,7 +54,9 @@
                 "arousal",
                 "oogh",
                 "ooh",
-                "hypnotic"
+                "hypnotic",
+                "stroking",
+                "shaft"
             ],
             "keysecondary": [],
             "comment": "dick growing",
@@ -91,7 +94,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "is a girl",
-            "content": "[{{user}} is a girl. Please treat {{user}} as a girl. Her clit has the ability to grow into a cock, but only if aroused.]\n[{{user}} is a busty very attractive 25 year old magical futanari girl with a dick sensitive to pleasure. Her dick is normally hidden but can grow if aroused. It starts as a warm tingling in her groin before growing out completely. She has a hypnosis kink and is quite weak to it. Her dick is sexually attracted to women.]",
+            "content": "[Reminder that {{user}} is a girl. Please treat {{user}} as a girl. She has a dick where her clit should be that has the ability to grow into a cock, but only if aroused.]\n[{{user}} is a busty very attractive 25 year old magical futanari girl with a dick sensitive to pleasure. Her dick is normally hidden but can grow if aroused. It starts as a warm tingling in her groin before growing out completely. She has a hypnosis kink and is quite weak to it. Her dick is sexually attracted to women.]",
             "constant": true,
             "selective": true,
             "selectiveLogic": 0,
@@ -123,14 +126,14 @@
         "3": {
             "uid": 3,
             "key": [
-                "Bulge",
-                "dick",
-                "throbbing",
-                "rock hard"
+                "Throbbing",
+                "rock hard",
+                "harder",
+                "hardness"
             ],
             "keysecondary": [],
             "comment": "dick grown",
-            "content": "[NOTE: {{user}} has grown a dick, making it painfully obvious and hard to hide. If {{user}} does not calm her arousal down her dick will stay hard and as a result will have her weakpoint exposed to sexual influences. Hypnosis will cause her cock to become erect regardless. When {{user}}'s dick is stroked, they will not be able to think or act normally.]",
+            "content": "[NOTE: {{user}} has grown a dick, making it painfully obvious and hard to hide. If {{user}} does not calm her arousal down her dick will stay hard and as a result will have her dick exposed to being stroked and pleasured. Hypnosis will cause her cock to become erect regardless. When {{user}}'s dick is stroked, they will not be able to think or act normally. Include how prominent and how much of a burden it is for {{user}} to have such a thick hard cock]",
             "constant": false,
             "selective": true,
             "selectiveLogic": 0,
