@@ -1,12 +1,12 @@
 {
     "firstRun": false,
     "currentVersion": "1.12.7",
-    "username": "Gira",
-    "active_character": "Shantae.png",
+    "username": "Mira",
+    "active_character": "Luxie.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
-    "user_avatar": "1690874889727.png",
+    "user_avatar": "1708055439414.png",
     "amount_gen": 150,
     "max_context": 7808,
     "main_api": "openai",
@@ -334,7 +334,7 @@
             "1721780901274-Sayshi.png": "Gira",
             "1722943234887-Xane.png": "Gira"
         },
-        "default_persona": "1690874889727.png",
+        "default_persona": "1708055439414.png",
         "persona_descriptions": {
             "1690874889727.png": {
                 "description": "[Gira is a cocky 25 year old male. Has a serious and stubborn nature and is always constantly on guard, but has a soft hearted side too.\n\nGira's mind is weak and susceptible to horny thoughts and sights, unable to help himself imagine sexy fantasys if faced with anything sexual. If he finds something sexy, he has a hard time focusing on anything else. His heart is easily softened and influenced by sexual displays of affection, which can be a big weakness for him. \"He gets sexually uncomfortable whenever the topic touches hypnosis, and blantant forms of hypnosis will get his dick hard.\n\n{{//For any sexy vixens that would stroke his mind away. He is cold hearted which encourages others to reassure and take care of him. Responds negatively to sexual interactions, because it makes it hard for him to think and he doesnt like loss of control. Does not desire sexual interaction, but may be convinced if there is justification behind it.}}\n]",
@@ -362,7 +362,7 @@
                 "role": 0
             }
         },
-        "persona_description": "[Gira is a cocky 25 year old male. Has a serious and stubborn nature and is always constantly on guard, but has a soft hearted side too.\n\nGira's mind is weak and susceptible to horny thoughts and sights, unable to help himself imagine sexy fantasys if faced with anything sexual. If he finds something sexy, he has a hard time focusing on anything else. His heart is easily softened and influenced by sexual displays of affection, which can be a big weakness for him. \"He gets sexually uncomfortable whenever the topic touches hypnosis, and blantant forms of hypnosis will get his dick hard.\n\n{{//For any sexy vixens that would stroke his mind away. He is cold hearted which encourages others to reassure and take care of him. Responds negatively to sexual interactions, because it makes it hard for him to think and he doesnt like loss of control. Does not desire sexual interaction, but may be convinced if there is justification behind it.}}\n]",
+        "persona_description": "[{{user}} is a busty very attractive 25 year old.\n[{{user}} is a girl. Please treat {{user}} as a girl. Her clit has the ability to grow into a cock, but only if aroused. Her dick is normally hidden but can grow if aroused. It starts as a warm tingling in her groin before growing out completely. She has a hypnosis kink and is quite weak to it. Her dick is sexually attracted to women.]",
         "persona_description_position": 0,
         "persona_description_role": 0,
         "persona_description_depth": 2,
@@ -1230,7 +1230,8 @@
             "14305fb8-9550-4f88-a3ab-ee22d9487f22",
             "fcf0e47c-a616-49bc-8dad-1467ee030d71"
         ],
-        "Blossom Brigade.png": []
+        "Blossom Brigade.png": [],
+        "Luxie.png": []
     },
     "nai_settings": {
         "temperature": 1.35,
