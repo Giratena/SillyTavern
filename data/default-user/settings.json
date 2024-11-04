@@ -1,8 +1,8 @@
 {
     "firstRun": false,
-    "currentVersion": "1.12.6",
+    "currentVersion": "1.12.7",
     "username": "Gira",
-    "active_character": "Japanese Translation helper.png",
+    "active_character": "Shantae.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -261,7 +261,6 @@
         "console_log_prompts": false,
         "request_token_probabilities": false,
         "show_group_chat_queue": false,
-        "render_formulas": true,
         "allow_name1_display": true,
         "allow_name2_display": true,
         "hotswap_enabled": false,
@@ -440,6 +439,7 @@
             "Nailah.png"
         ],
         "external_media_forbidden_overrides": [],
+        "render_formulas": true,
         "include_newline": false,
         "default_instruct": "",
         "default_context": "Default",
@@ -1229,7 +1229,8 @@
             "80d560b3-5b3d-4b18-b04f-bbcb8ebb62a9",
             "14305fb8-9550-4f88-a3ab-ee22d9487f22",
             "fcf0e47c-a616-49bc-8dad-1467ee030d71"
-        ]
+        ],
+        "Blossom Brigade.png": []
     },
     "nai_settings": {
         "temperature": 1.35,
