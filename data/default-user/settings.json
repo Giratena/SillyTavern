@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.7",
     "username": "Mira",
-    "active_character": "Karla.png",
+    "active_character": "Arwyn.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -13,6 +13,7 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
+                "For Mira",
                 "Special Actions",
                 "Stances",
                 "User interation",
@@ -2117,7 +2118,7 @@
         "group_nudge_prompt": "<IMPORTANT>\n- Focus the next response on {{char}}, but other present characters (EXCEPT {{user}}!) may speak or act briefly.\n</IMPORTANT>",
         "scenario_format": "<scenario>\n{{scenario}}\n</scenario>",
         "personality_format": "<personality>\n{{personality}}\n</personality>",
-        "openai_model": "gpt-4o-2024-05-13",
+        "openai_model": "gpt-4o-2024-08-06",
         "claude_model": "",
         "google_model": "gemini-pro",
         "ai21_model": "jamba-1.5-large",
