@@ -1,21 +1,21 @@
 {
     "firstRun": false,
     "currentVersion": "1.12.7",
-    "username": "Mira",
-    "active_character": "Karla.png",
+    "username": "Gira",
+    "active_character": "Alternate reality Hypno Vixens.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
-    "user_avatar": "1708055439414.png",
+    "user_avatar": "1690874889727.png",
     "amount_gen": 150,
     "max_context": 7808,
     "main_api": "openai",
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
+                "Hypno Vixen Reality",
                 "Special Actions",
                 "Stances",
-                "User interation",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ],
             "charLore": [
@@ -334,7 +334,7 @@
             "1721780901274-Sayshi.png": "Gira",
             "1722943234887-Xane.png": "Gira"
         },
-        "default_persona": "1708055439414.png",
+        "default_persona": "1690874889727.png",
         "persona_descriptions": {
             "1690874889727.png": {
                 "description": "[Gira is a cocky 25 year old male. Has a serious and stubborn nature and is always constantly on guard, but has a soft hearted side too.\n\nGira's mind is weak and susceptible to horny thoughts and sights, unable to help himself imagine sexy fantasys if faced with anything sexual. If he finds something sexy, he has a hard time focusing on anything else. His heart is easily softened and influenced by sexual displays of affection, which can be a big weakness for him. \"He gets sexually uncomfortable whenever the topic touches hypnosis, and blantant forms of hypnosis will get his dick hard.\n\n{{//For any sexy vixens that would stroke his mind away. He is cold hearted which encourages others to reassure and take care of him. Responds negatively to sexual interactions, because it makes it hard for him to think and he doesnt like loss of control. Does not desire sexual interaction, but may be convinced if there is justification behind it.}}\n]",
@@ -362,7 +362,7 @@
                 "role": 0
             }
         },
-        "persona_description": "[{{user}} is a busty very attractive 25 year old.\n[{{user}} is a girl. Please treat {{user}} as a girl. She has a cock where her clit would be, but it grows only if aroused. Her dick is normally hidden but can grow if aroused. It starts as a warm tingling in her groin before growing out completely. She has a hypnosis kink and is quite weak to it. Her dick is sexually attracted to women.]",
+        "persona_description": "[Gira is a cocky 25 year old male. Has a serious and stubborn nature and is always constantly on guard, but has a soft hearted side too.\n\nGira's mind is weak and susceptible to horny thoughts and sights, unable to help himself imagine sexy fantasys if faced with anything sexual. If he finds something sexy, he has a hard time focusing on anything else. His heart is easily softened and influenced by sexual displays of affection, which can be a big weakness for him. \"He gets sexually uncomfortable whenever the topic touches hypnosis, and blantant forms of hypnosis will get his dick hard.\n\n{{//For any sexy vixens that would stroke his mind away. He is cold hearted which encourages others to reassure and take care of him. Responds negatively to sexual interactions, because it makes it hard for him to think and he doesnt like loss of control. Does not desire sexual interaction, but may be convinced if there is justification behind it.}}\n]",
         "persona_description_position": 0,
         "persona_description_role": 0,
         "persona_description_depth": 2,
@@ -1560,7 +1560,7 @@
                 "marker": false,
                 "name": "Writing Instructions",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. DO not repeat words said by {{user}} exactly.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
+                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. DO not repeat words said by {{user}}.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -1572,7 +1572,7 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them), UNLESS they are sexual or lewd. \n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-5 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n</system_bans>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
