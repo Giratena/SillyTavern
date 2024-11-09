@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.7",
     "username": "Gira",
-    "active_character": "Alternate reality Hypno Vixens.png",
+    "active_character": "Princess Mati.png",
     "active_group": null,
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
@@ -1231,7 +1231,8 @@
             "fcf0e47c-a616-49bc-8dad-1467ee030d71"
         ],
         "Blossom Brigade.png": [],
-        "Luxie.png": []
+        "Luxie.png": [],
+        "Princess Mati.png": []
     },
     "nai_settings": {
         "temperature": 1.35,
