@@ -847,7 +847,7 @@
             "config": {
                 "setList": [
                     {
-                        "set": "Text",
+                        "set": "Default",
                         "isVisible": true
                     }
                 ]
