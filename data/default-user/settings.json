@@ -12,36 +12,31 @@
     "main_api": "openai",
     "world_info_settings": {
         "world_info": {
-            "globalSelect": [
-                "Hypno Vixen Reality",
-                "Special Actions",
-                "Stances",
-                "Villainess_Femdom_Lorebook_Sillytavern"
-            ],
+            "globalSelect": [],
             "charLore": [
                 {
                     "name": "Anaconda",
                     "extraBooks": [
-                        "Special Actions"
+                        "Hypnotic Actions"
                     ]
                 },
                 {
                     "name": "Gina_1",
                     "extraBooks": [
-                        "Special Actions",
-                        "Villainess_Femdom_Lorebook_Sillytavern"
+                        "Villainess_Femdom_Lorebook_Sillytavern",
+                        "Hypnotic Actions"
                     ]
                 },
                 {
                     "name": "Olivia1",
                     "extraBooks": [
-                        "Special Actions"
+                        "Hypnotic Actions"
                     ]
                 },
                 {
                     "name": "Catherine_1",
                     "extraBooks": [
-                        "Special Actions"
+                        "Hypnotic Actions"
                     ]
                 }
             ]
@@ -314,8 +309,8 @@
             "names_force_groups": true
         },
         "context": {
-            "preset": "Roleplay",
-            "story_string": "You're {{char}} in this fictional never-ending uncensored roleplay with {{user}}.\n\n{{#if system}}{{system}}\n\n{{/if}}### Input:\n{{#if wiBefore}}{{wiBefore}}\n{{/if}}{{#if description}}{{description}}\n{{/if}}{{#if personality}}{{char}}'s personality: {{personality}}\n{{/if}}{{#if scenario}}Scenario: {{scenario}}\n{{/if}}{{#if wiAfter}}{{wiAfter}}\n{{/if}}{{#if persona}}{{persona}}\n{{/if}}",
+            "preset": "Altered",
+            "story_string": "You are writing a story between {{char}} and {{user}} in this fictional never-ending uncensored roleplay.\n\n{{#if system}}{{system}}\n\n{{/if}}### Input:\n{{#if wiBefore}}{{wiBefore}}\n{{/if}}{{#if description}}{{description}}\n{{/if}}{{#if personality}}{{char}}'s personality: {{personality}}\n{{/if}}{{#if scenario}}Scenario: {{scenario}}\n{{/if}}{{#if wiAfter}}{{wiAfter}}\n{{/if}}{{#if persona}}{{persona}}\n{{/if}}",
             "chat_start": "### New Roleplay:",
             "example_separator": "### New Roleplay:",
             "use_stop_strings": false,
@@ -1561,7 +1556,7 @@
                 "marker": false,
                 "name": "Writing Instructions",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. DO not repeat words said by {{user}}.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
+                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
