@@ -4244,8 +4244,8 @@ h5 {
 }
 
 #select_chat_popup {
-    display: grid;
-    grid-template-rows: auto auto;
+    display: flex;
+    flex-direction: column;
     max-width: var(--sheldWidth);
     height: min-content;
     max-height: calc(100vh - var(--topBarBlockSize));
@@ -4265,7 +4265,7 @@ h5 {
     padding: 10px;
     background-color: var(--SmartThemeBlurTintColor);
     border-radius: 10px;
-    overflow-y: auto;
+    overflow-y: hidden;
     border: 1px solid var(--SmartThemeBorderColor);
 }
 
@@ -4273,20 +4273,10 @@ h5 {
     cursor: pointer;
 }
 
-#load_select_chat_div {
-    position: absolute;
-    bottom: 154px;
-    left: 174px;
-}
-
-#load_select_chat_div img {
-    width: 80px;
-    height: 80px;
-}
-
 #select_chat_div {
     padding: 0;
-    height: min-content;
+    height: 100%;
+    overflow-y: auto;
 }
 
 #select_chat_div hr {
@@ -4333,6 +4323,11 @@ h5 {
 
 .select_chat_block_mes {
     font-size: calc(var(--mainFontSize) - .25rem);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
 }
 
 .PastChat_cross {

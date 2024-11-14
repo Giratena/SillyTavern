@@ -54,6 +54,7 @@ const sources = {
     stability: 'stability',
     blockentropy: 'blockentropy',
     huggingface: 'huggingface',
+    nanogpt: 'nanogpt',
 };
 
 const initiators = {
@@ -1236,6 +1237,7 @@ async function onModelChange() {
         sources.stability,
         sources.blockentropy,
         sources.huggingface,
+        sources.nanogpt,
     ];
 
     if (cloudSources.includes(extension_settings.sd.source)) {
@@ -1454,6 +1456,9 @@ async function loadSamplers() {
         case sources.huggingface:
             samplers = ['N/A'];
             break;
+        case sources.nanogpt:
+            samplers = ['N/A'];
+            break;
     }
 
     for (const sampler of samplers) {
@@ -1646,6 +1651,9 @@ async function loadModels() {
         case sources.huggingface:
             models = [{ value: '', text: '<Enter Model ID above>' }];
             break;
+        case sources.nanogpt:
+            models = await loadNanoGPTModels();
+            break;
     }
 
     for (const model of models) {
@@ -1719,6 +1727,25 @@ async function loadBlockEntropyModels() {
     if (result.ok) {
         const data = await result.json();
         console.log(data);
+        return data;
+    }
+
+    return [];
+}
+
+async function loadNanoGPTModels() {
+    if (!secret_state[SECRET_KEYS.NANOGPT]) {
+        console.debug('NanoGPT API key is not set.');
+        return [];
+    }
+
+    const result = await fetch('/api/sd/nanogpt/models', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+    });
+
+    if (result.ok) {
+        const data = await result.json();
         return data;
     }
 
@@ -1997,6 +2024,9 @@ async function loadSchedulers() {
         case sources.huggingface:
             schedulers = ['N/A'];
             break;
+        case sources.nanogpt:
+            schedulers = ['N/A'];
+            break;
     }
 
     for (const scheduler of schedulers) {
@@ -2077,6 +2107,9 @@ async function loadVaes() {
             vaes = ['N/A'];
             break;
         case sources.huggingface:
+            vaes = ['N/A'];
+            break;
+        case sources.nanogpt:
             vaes = ['N/A'];
             break;
     }
@@ -2631,6 +2664,8 @@ async function sendGenerationRequest(generationType, prompt, additionalNegativeP
             case sources.huggingface:
                 result = await generateHuggingFaceImage(prefixedPrompt, signal);
                 break;
+            case sources.nanogpt:
+                result = await generateNanoGPTImage(prefixedPrompt, negativePrompt, signal);
         }
 
         if (!result.data) {
@@ -3308,6 +3343,40 @@ async function generateHuggingFaceImage(prompt, signal) {
     }
 }
 
+/**
+ * Generates an image using the NanoGPT API.
+ * @param {string} prompt - The main instruction used to guide the image generation.
+ * @param {string} negativePrompt - The instruction used to restrict the image generation.
+ * @param {AbortSignal} signal - An AbortSignal object that can be used to cancel the request.
+ * @returns {Promise<{format: string, data: string}>} - A promise that resolves when the image generation and processing are complete.
+ */
+async function generateNanoGPTImage(prompt, negativePrompt, signal) {
+    const result = await fetch('/api/sd/nanogpt/generate', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        signal: signal,
+        body: JSON.stringify({
+            model: extension_settings.sd.model,
+            prompt: prompt,
+            negative_prompt: negativePrompt,
+            num_steps: parseInt(extension_settings.sd.steps),
+            scale: parseFloat(extension_settings.sd.scale),
+            width: parseInt(extension_settings.sd.width),
+            height: parseInt(extension_settings.sd.height),
+            resolution: `${extension_settings.sd.width}x${extension_settings.sd.height}`,
+            showExplicitContent:  true,
+            nImages: 1,
+        }),
+    });
+
+    if (result.ok) {
+        const data = await result.json();
+        return { format: 'jpg', data: data.image };
+    } else {
+        const text = await result.text();
+        throw new Error(text);
+    }
+}
 
 async function onComfyOpenWorkflowEditorClick() {
     let workflow = await (await fetch('/api/sd/comfy/workflow', {
@@ -3591,6 +3660,8 @@ function isValidState() {
             return secret_state[SECRET_KEYS.BLOCKENTROPY];
         case sources.huggingface:
             return secret_state[SECRET_KEYS.HUGGINGFACE];
+        case sources.nanogpt:
+            return secret_state[SECRET_KEYS.NANOGPT];
     }
 }
 

@@ -11,103 +11,105 @@ declare var SillyTavern: {
     libs: typeof libs;
 };
 
-// Jquery plugins
-interface JQuery {
-    nanogallery2(options?: any): JQuery;
-    nanogallery2(method: string, options?: any): JQuery;
-    pagination(method: 'getCurrentPageNum'): number;
-    pagination(method: string, options?: any): JQuery;
-    pagination(options?: any): JQuery;
-    transition(options?: any, complete?: function): JQuery;
-    autocomplete(options?: any): JQuery;
-    autocomplete(method: string, options?: any): JQuery;
-    slider(options?: any): JQuery;
-    slider(method: string, func: string, options?: any): JQuery;
-    cropper(options?: any): JQuery;
-    izoomify(options?: any): JQuery;
+declare global {
+    // Jquery plugins
+    interface JQuery {
+        nanogallery2(options?: any): JQuery;
+        nanogallery2(method: string, options?: any): JQuery;
+        pagination(method: 'getCurrentPageNum'): number;
+        pagination(method: string, options?: any): JQuery;
+        pagination(options?: any): JQuery;
+        transition(options?: any, complete?: function): JQuery;
+        autocomplete(options?: any): JQuery;
+        autocomplete(method: string, options?: any): JQuery;
+        slider(options?: any): JQuery;
+        slider(method: string, func: string, options?: any): JQuery;
+        cropper(options?: any): JQuery;
+        izoomify(options?: any): JQuery;
 
-    //#region select2
+        //#region select2
 
-    /**
-     * Initializes or modifies a select2 instance with provided options
-     *
-     * @param options - Configuration options for the select2 instance
-     * @returns The jQuery object for chaining
-     */
-    select2(options?: Select2Options): JQuery;
+        /**
+         * Initializes or modifies a select2 instance with provided options
+         *
+         * @param options - Configuration options for the select2 instance
+         * @returns The jQuery object for chaining
+         */
+        select2(options?: Select2Options): JQuery;
 
-    /**
-     * Retrieves data currently selected in the select2 instance
-     *
-     * @param field - A string specifying the 'data' method
-     * @returns An array of selected items
-     */
-    select2(field: 'data'): any[];
+        /**
+         * Retrieves data currently selected in the select2 instance
+         *
+         * @param field - A string specifying the 'data' method
+         * @returns An array of selected items
+         */
+        select2(field: 'data'): any[];
 
-    /**
-     * Calls the specified select2 method
-     *
-     * @param method - The name of the select2 method to invoke
-     * @returns The jQuery object for chaining
-     */
-    select2(method: 'open' | 'close' | 'destroy' | 'focus' | 'val', value?: any): JQuery;
+        /**
+         * Calls the specified select2 method
+         *
+         * @param method - The name of the select2 method to invoke
+         * @returns The jQuery object for chaining
+         */
+        select2(method: 'open' | 'close' | 'destroy' | 'focus' | 'val', value?: any): JQuery;
 
-    //#endregion
+        //#endregion
 
-    //#region sortable
+        //#region sortable
 
-    /**
-     * Initializes or updates a sortable instance with the provided options
-     *
-     * @param options - Configuration options for the sortable instance
-     * @returns The jQuery object for chaining
-     */
-    sortable(options?: SortableOptions): JQuery;
+        /**
+         * Initializes or updates a sortable instance with the provided options
+         *
+         * @param options - Configuration options for the sortable instance
+         * @returns The jQuery object for chaining
+         */
+        sortable(options?: SortableOptions): JQuery;
 
-    /**
-     * Calls a sortable method to perform actions on the instance
-     *
-     * @param method - The name of the sortable method to invoke
-     * @returns The jQuery object for chaining
-     */
-    sortable(method: 'destroy' | 'disable' | 'enable' | 'refresh' | 'toArray'): JQuery;
+        /**
+         * Calls a sortable method to perform actions on the instance
+         *
+         * @param method - The name of the sortable method to invoke
+         * @returns The jQuery object for chaining
+         */
+        sortable(method: 'destroy' | 'disable' | 'enable' | 'refresh' | 'toArray'): JQuery;
 
-    /**
-     * Retrieves the sortable's instance object. If the element does not have an associated instance, undefined is returned.
-     *
-     * @returns The instance of the sortable object
-     */
-    sortable(method: 'instance'): object;
+        /**
+         * Retrieves the sortable's instance object. If the element does not have an associated instance, undefined is returned.
+         *
+         * @returns The instance of the sortable object
+         */
+        sortable(method: 'instance'): object;
 
-    /**
-     * Retrieves the current option value for the specified option
-     *
-     * @param method - The string 'option' to retrieve an option value
-     * @param optionName - The name of the option to retrieve
-     * @returns The value of the specified option
-     */
-    sortable(method: 'option', optionName: string): any;
+        /**
+         * Retrieves the current option value for the specified option
+         *
+         * @param method - The string 'option' to retrieve an option value
+         * @param optionName - The name of the option to retrieve
+         * @returns The value of the specified option
+         */
+        sortable(method: 'option', optionName: string): any;
 
-    /**
-     * Sets the value of the specified option
-     *
-     * @param method - The string 'option' to set an option value
-     * @param optionName - The name of the option to set
-     * @param value - The value to assign to the option
-     * @returns The jQuery object for chaining
-     */
-    sortable(method: 'option', optionName: string, value: any): JQuery;
+        /**
+         * Sets the value of the specified option
+         *
+         * @param method - The string 'option' to set an option value
+         * @param optionName - The name of the option to set
+         * @param value - The value to assign to the option
+         * @returns The jQuery object for chaining
+         */
+        sortable(method: 'option', optionName: string, value: any): JQuery;
 
-    /**
-     * Sets multiple options using an object
-     *
-     * @param method - The string 'option' to set options
-     * @param options - An object containing multiple option key-value pairs
-     * @returns The jQuery object for chaining
-     */
-    sortable(method: 'option', options: SortableOptions): JQuery;
+        /**
+         * Sets multiple options using an object
+         *
+         * @param method - The string 'option' to set options
+         * @param options - An object containing multiple option key-value pairs
+         * @returns The jQuery object for chaining
+         */
+        sortable(method: 'option', options: SortableOptions): JQuery;
 
-    //#endregion
+        //#endregion
+    }
 }
 
 //#region select2

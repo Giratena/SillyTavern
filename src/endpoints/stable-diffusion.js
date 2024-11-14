@@ -1001,6 +1001,89 @@ huggingface.post('/generate', jsonParser, async (request, response) => {
     }
 });
 
+const nanogpt = express.Router();
+
+nanogpt.post('/models', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.NANOGPT);
+
+        if (!key) {
+            console.log('NanoGPT key not found.');
+            return response.sendStatus(400);
+        }
+
+        const modelsResponse = await fetch('https://nano-gpt.com/api/models', {
+            method: 'GET',
+            headers: {
+                'x-api-key': key,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!modelsResponse.ok) {
+            console.log('NanoGPT returned an error.');
+            return response.sendStatus(500);
+        }
+
+        /** @type {any} */
+        const data = await modelsResponse.json();
+        const imageModels = data?.models?.image;
+
+        if (!imageModels || typeof imageModels !== 'object') {
+            console.log('NanoGPT returned invalid data.');
+            return response.sendStatus(500);
+        }
+
+        const models = Object.values(imageModels).map(x => ({ value: x.model, text: x.name }));
+        return response.send(models);
+    }
+    catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
+
+nanogpt.post('/generate', jsonParser, async (request, response) => {
+    try {
+        const key = readSecret(request.user.directories, SECRET_KEYS.NANOGPT);
+
+        if (!key) {
+            console.log('NanoGPT key not found.');
+            return response.sendStatus(400);
+        }
+
+        console.log('NanoGPT request:', request.body);
+
+        const result = await fetch('https://nano-gpt.com/api/generate-image', {
+            method: 'POST',
+            body: JSON.stringify(request.body),
+            headers: {
+                'x-api-key': key,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!result.ok) {
+            console.log('NanoGPT returned an error.');
+            return response.sendStatus(500);
+        }
+
+        /** @type {any} */
+        const data = await result.json();
+
+        const image = data?.data?.[0]?.b64_json;
+        if (!image) {
+            console.log('NanoGPT returned invalid data.');
+            return response.sendStatus(500);
+        }
+
+        return response.send({ image });
+    }
+    catch (error) {
+        console.log(error);
+        return response.sendStatus(500);
+    }
+});
 
 router.use('/comfy', comfy);
 router.use('/together', together);
@@ -1009,3 +1092,4 @@ router.use('/pollinations', pollinations);
 router.use('/stability', stability);
 router.use('/blockentropy', blockentropy);
 router.use('/huggingface', huggingface);
+router.use('/nanogpt', nanogpt);

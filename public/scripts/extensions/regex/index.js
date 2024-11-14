@@ -9,6 +9,7 @@ import { SlashCommandEnumValue, enumTypes } from '../../slash-commands/SlashComm
 import { SlashCommandParser } from '../../slash-commands/SlashCommandParser.js';
 import { download, getFileText, getSortableDelay, uuidv4 } from '../../utils.js';
 import { regex_placement, runRegexScript } from './engine.js';
+import { t } from '../../i18n.js';
 
 /**
  * @typedef {object} RegexScript
@@ -275,7 +276,7 @@ async function onRegexEditorOpenClick(existingId, isScoped) {
 
     editorHtml.find('input, textarea, select').on('input', updateTestResult);
 
-    const popupResult = await callPopup(editorHtml, 'confirm', undefined, { okButton: 'Save' });
+    const popupResult = await callPopup(editorHtml, 'confirm', undefined, { okButton: t`Save` });
     if (popupResult) {
         const newRegexScript = {
             id: existingId ? String(existingId) : uuidv4(),

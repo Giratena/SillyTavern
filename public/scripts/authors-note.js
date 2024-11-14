@@ -327,7 +327,7 @@ export function setFloatingPrompt() {
     shouldWIAddPrompt = shouldAddPrompt;
 
     let prompt = shouldAddPrompt ? $('#extension_floating_prompt').val() : '';
-    if (shouldAddPrompt && extension_settings.note.chara && getContext().characterId) {
+    if (shouldAddPrompt && extension_settings.note.chara && getContext().characterId !== undefined) {
         const charaNote = extension_settings.note.chara.find((e) => e.name === getCharaFilename());
 
         // Only replace with the chara note if the user checked the box

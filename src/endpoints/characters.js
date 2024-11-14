@@ -1010,6 +1010,11 @@ router.post('/chats', jsonParser, async function (request, response) {
 
     try {
         const chatsDirectory = path.join(request.user.directories.chats, characterDirectory);
+
+        if (!fs.existsSync(chatsDirectory)) {
+            return response.send({ error: true });
+        }
+
         const files = fs.readdirSync(chatsDirectory);
         const jsonFiles = files.filter(file => path.extname(file) === '.jsonl');
 

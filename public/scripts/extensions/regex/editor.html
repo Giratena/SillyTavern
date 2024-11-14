@@ -70,25 +70,25 @@
         <div class="flex-container">
             <div class="flex1 wi-enter-footer-text flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small data-i18n="ext_regex_affects">Affects</small>
-                <div title="Messages sent by the user.">
+                <div data-i18n="[title]ext_regex_user_input_desc" title="Messages sent by the user.">
                     <label class="checkbox flex-container">
                         <input type="checkbox" name="replace_position" value="1">
                         <span data-i18n="ext_regex_user_input">User Input</span>
                     </label>
                 </div>
-                <div title="Messages received from the Generation API.">
+                <div data-i18n="[title]ext_regex_ai_input_desc" title="Messages received from the Generation API.">
                     <label class="checkbox flex-container">
                         <input type="checkbox" name="replace_position" value="2">
                         <span data-i18n="ext_regex_ai_output">AI Output</span>
                     </label>
                 </div>
-                <div title="Messages sent using STscript commands.">
+                <div data-i18n="[title]ext_regex_slash_desc" title="Messages sent using STscript commands.">
                     <label class="checkbox flex-container">
                         <input type="checkbox" name="replace_position" value="3">
                         <span data-i18n="Slash Commands">Slash Commands</span>
                     </label>
                 </div>
-                <div title="Lorebook/World Info entry contents. Requires 'Only Format Prompt' to be checked!">
+                <div data-i18n="[title]ext_regex_wi_desc" title="Lorebook/World Info entry contents. Requires 'Only Format Prompt' to be checked!">
                     <label class="checkbox flex-container">
                         <input type="checkbox" name="replace_position" value="5">
                         <span data-i18n="World Info">World Info</span>
@@ -117,7 +117,7 @@
                     <input type="checkbox" name="disabled" />
                     <span data-i18n="Disabled">Disabled</span>
                 </label>
-                <label class="checkbox flex-container" title="Run the regex script when the message belonging a to specified role(s) is edited.">
+                <label class="checkbox flex-container" data-i18n="[title]ext_regex_run_on_edit_desc" title="Run the regex script when the message belonging a to specified role(s) is edited.">
                     <input type="checkbox" name="run_on_edit" />
                     <span data-i18n="Run On Edit">Run On Edit</span>
                 </label>

@@ -685,7 +685,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai">
                                     <div class="range-block-title" data-i18n="Frequency Penalty">
                                         Frequency Penalty
                                     </div>
@@ -698,7 +698,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai">
                                     <div class="range-block-title" data-i18n="Presence Penalty">
                                         Presence Penalty
                                     </div>
@@ -1397,8 +1397,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Enable for llama.cpp when the PR is merged: https://github.com/ggerganov/llama.cpp/pull/6839 -->
-                                    <div data-tg-type="ooba, koboldcpp, tabby" id="dryBlock" class="wide100p">
+                                    <div data-tg-type="ooba, koboldcpp, tabby, llamacpp" id="dryBlock" class="wide100p">
                                         <h4 class="wide100p textAlignCenter" title="DRY penalizes tokens that would extend the end of the input into a sequence that has previously occurred in the input. Set multiplier to 0 to disable." data-i18n="[title]DRY_Repetition_Penalty_desc">
                                             <label data-i18n="DRY Repetition Penalty">DRY Repetition Penalty</label>
                                             <a href="https://github.com/oobabooga/text-generation-webui/pull/5677" target="_blank">
@@ -2602,6 +2601,7 @@
                                 <option value="groq">Groq</option>
                                 <option value="makersuite">Google AI Studio</option>
                                 <option value="mistralai">MistralAI</option>
+                                <option value="nanogpt">NanoGPT</option>
                                 <option value="openrouter">OpenRouter</option>
                                 <option value="perplexity">Perplexity</option>
                                 <option value="scale">Scale</option>
@@ -2782,7 +2782,7 @@
                             </div>
                         </form>
                         <form id="claude_form" data-source="claude" action="javascript:void(null);" method="post" enctype="multipart/form-data">
-                            <h4>Claude API Key</h4>
+                            <h4 data-i18n="Claude API Key">Claude API Key</h4>
                             <div>
                                 <span data-i18n="Get your key from">Get your key from </span> <a target="_blank" href="https://console.anthropic.com/account/keys" data-i18n="Anthropic's developer console">Anthropic's developer console</a>.
                             </div>
@@ -2800,6 +2800,8 @@
                                         <option value="claude-3-5-sonnet-latest">claude-3-5-sonnet-latest</option>
                                         <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
                                         <option value="claude-3-5-sonnet-20240620">claude-3-5-sonnet-20240620</option>
+                                        <option value="claude-3-5-haiku-latest">claude-3-5-haiku-latest</option>
+                                        <option value="claude-3-5-haiku-20241022">claude-3-5-haiku-20241022</option>
                                         <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>
                                         <option value="claude-3-sonnet-20240229">claude-3-sonnet-20240229</option>
                                         <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
@@ -3083,6 +3085,22 @@
                                     <option value="llava-v1.5-7b-4096-preview">llava-v1.5-7b-4096-preview</option>
                                 </optgroup>
                             </select>
+                        </div>
+                        <div id="nanogpt_form" data-source="nanogpt">
+                            <h4 data-i18n="NanoGPT API Key">NanoGPT API Key</h4>
+                            <div class="flex-container">
+                                <input id="api_key_nanogpt" name="api_key_nanogpt" class="text_pole flex1" value="" type="text" autocomplete="off">
+                                <div title="Clear your API key" data-i18n="[title]Clear your API key" class="menu_button fa-solid fa-circle-xmark clear-api-key" data-key="api_key_nanogpt"></div>
+                            </div>
+                            <div data-for="api_key_nanogpt" class="neutral_warning" data-i18n="For privacy reasons, your API key will be hidden after you reload the page.">
+                                For privacy reasons, your API key will be hidden after you reload the page.
+                            </div>
+                            <div>
+                                <h4 data-i18n="NanoGPT Model">NanoGPT Model</h4>
+                                <select id="model_nanogpt_select">
+                                    <option value="" data-i18n="-- Connect to the API --">-- Connect to the API --</option>
+                                </select>
+                            </div>
                         </div>
                         <div id="perplexity_form" data-source="perplexity">
                             <h4 data-i18n="Perplexity API Key">Perplexity API Key</h4>
@@ -5445,7 +5463,7 @@
                     </div>
                     <div id="selectChatPopupHeaderText" class="TxtLrgBoldCenter">
                         <span id="ChatHistoryCharName"></span><span data-i18n="Chat History">Chat History</span>
-                        <a href="https://docs.sillytavern.app/usage/core-concepts/chatfilemanagement/#chat-import" class="notes-link" target="_blank"><span class="fa-solid fa-circle-question note-link-span"></span></a>
+                        <a href="https://docs.sillytavern.app/usage/core-concepts/chatfilemanagement/" class="notes-link" target="_blank"><span class="fa-solid fa-circle-question note-link-span"></span></a>
                     </div>
                     <div id="newChatFromManageScreenButton" class="menu_button menu_button_icon">
                         <i class="fa-solid fa-plus"></i>
@@ -5455,13 +5473,10 @@
                         <i class="fa-solid fa-file-import"></i>
                         <span data-i18n="Import Chat">Import Chat</span>
                     </div>
-                    <input type="text" id="select_chat_search" class="text_pole flex1" data-i18n="[placeholder]Search..." placeholder="Search..." autocomplete="off">
+                    <input type="search" id="select_chat_search" class="text_pole flex1" data-i18n="[placeholder]Search..." placeholder="Search..." autocomplete="off">
                     <div id="select_chat_cross" class="opacity50p hoverglow fa-solid fa-circle-xmark fontsize120p" alt="Close Past Chat Popup"></div>
                 </div>
                 <div id="select_chat_div"></div>
-                <div id="load_select_chat_div">
-                    <div class="fa-solid fa-hourglass fa-spin"></div>
-                </div>
             </div>
         </div>
         <div id="background_template" class="template_element">
@@ -5534,11 +5549,11 @@
             <div class="select_chat_block_wrapper flex-container">
                 <div class="select_chat_block  wide100p flex-container" file_name="">
                     <div id="select_chat_name_wrapper" class="flex-container alignitemscenter justifySpaceBetween wide100p">
-                        <div>
+                        <div class="flex-container alignItemsCenter">
                             <small class="select_chat_block_filename select_chat_block_filename_item"></small>
-                            <div title="Rename chat file" class="renameChatButton hoverglow opacity50p fa-solid fa-pencil" data-i18n="[title]Rename chat file"></div>
+                            <div title="Rename chat file" class="renameChatButton hoverglow opacity50p fa-solid fa-pencil fa-sm" data-i18n="[title]Rename chat file"></div>
                         </div>
-                        <div class="flex-container gap10px">
+                        <div class="flex-container gap10px alignItemsCenter">
                             <div class="select_chat_info flex-container">
                                 <small class="chat_messages_date select_chat_block_filename_item"></small>
                                 <small class="chat_file_size select_chat_block_filename_item"></small>
@@ -5986,7 +6001,7 @@
                             </div>
                         </div>
                         <div class="completion_prompt_manager_popup_entry_form_control">
-                            <div class="flex-container alignItemsCenter">
+                            <div class="flex-container alignItemsCenter" data-i18n="[external_piece_text]The content of this prompt is pulled from elsewhere and cannot be edited here." external_piece_text="The content of this prompt is pulled from elsewhere and cannot be edited here.">
                                 <div class="flex1">
                                     <label for="completion_prompt_manager_popup_entry_form_prompt">
                                         <span data-i18n="Prompt">Prompt</span>

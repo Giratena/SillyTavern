@@ -1,4 +1,4 @@
-import { characters, substituteParams, this_chid } from '../../../script.js';
+import { characters, substituteParams, substituteParamsExtended, this_chid } from '../../../script.js';
 import { extension_settings } from '../../extensions.js';
 import { regexFromString } from '../../utils.js';
 export {
@@ -21,6 +21,28 @@ const regex_placement = {
     // 4 - sendAs (legacy)
     WORLD_INFO: 5,
 };
+
+function sanitizeRegexMacro(x) {
+    return (x && typeof x === 'string') ?
+        x.replaceAll(/[\n\r\t\v\f\0.^$*+?{}[\]\\/|()]/gs, function (s) {
+            switch (s) {
+                case '\n':
+                    return '\\n';
+                case '\r':
+                    return '\\r';
+                case '\t':
+                    return '\\t';
+                case '\v':
+                    return '\\v';
+                case '\f':
+                    return '\\f';
+                case '\0':
+                    return '\\0';
+                default:
+                    return '\\' + s;
+            }
+        }) : x;
+}
 
 function getScopedRegex() {
     const isAllowed = extension_settings?.character_allowed_regex?.includes(characters?.[this_chid]?.avatar);
@@ -109,7 +131,10 @@ function runRegexScript(regexScript, rawString, { characterOverride } = {}) {
         return newString;
     }
 
-    const findRegex = regexFromString(regexScript.substituteRegex ? substituteParams(regexScript.findRegex) : regexScript.findRegex);
+    const regexString = regexScript.substituteRegex
+        ? substituteParamsExtended(regexScript.findRegex, {}, sanitizeRegexMacro)
+        : regexScript.findRegex;
+    const findRegex = regexFromString(regexString);
 
     // The user skill issued. Return with nothing.
     if (!findRegex) {

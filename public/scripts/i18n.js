@@ -1,4 +1,3 @@
-import { moment } from '../lib.js';
 import { registerDebugFunction } from './power-user.js';
 import { updateSecretDisplay } from './secrets.js';
 

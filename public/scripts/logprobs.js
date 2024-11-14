@@ -88,7 +88,7 @@ function renderAlternativeTokensView() {
         prefixSpan.text(prefix);
         prefixSpan.html(prefixSpan.html().replace(/\n/g, '<br>'));
         prefixSpan.addClass('logprobs_output_prefix');
-        prefixSpan.attr('title', 'Select to reroll the last \'Continue\' generation');
+        prefixSpan.attr('title', 'Select to reroll the last \'Continue\' generation.\nHold the CTRL key when clicking to reroll from before that word.');
         prefixSpan.click(onPrefixClicked);
         addKeyboardProps(prefixSpan);
         tokenSpans.push(...withVirtualWhitespace(prefix, prefixSpan));
@@ -243,10 +243,50 @@ function onAlternativeClicked(tokenLogprobs, alternative) {
 }
 
 /**
+ * getTextBeforeClickedWord retrieves the portion of text within a span
+ * that appears before the word clicked by the user. Using the x and y
+ * coordinates from a PointerEvent, this function identifies the exact
+ * word clicked and returns the text preceding it within the span.
+ *
+ * If the clicked position does not resolve to a valid word or text node, 
+ * the entire span text is returned as a fallback.
+ *
+ * @param {PointerEvent} event - The click event containing the x and y coordinates.
+ * @param {string} spanText - The full text content of the span element.
+ * @returns {string} The text before the clicked word, or the entire span text as fallback.
+ */
+function getTextBeforeClickedWord(event, spanText) {
+    const x = event.clientX;
+    const y = event.clientY;
+    const range = document.caretRangeFromPoint(x, y);
+
+    if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
+        const textNode = range.startContainer;
+        const offset = range.startOffset;
+
+        // Get the full text content of the text node
+        const text = textNode.nodeValue;
+
+        // Find the boundaries of the clicked word
+        const start = text.lastIndexOf(" ", offset - 1) + 1;
+
+        // Return the text before the clicked word
+        return text.slice(0, start);
+    }
+
+    // If we can't determine the exact word, return the full span text as a fallback
+    return spanText;
+}
+
+
+/**
  * onPrefixClicked is called when the user clicks on the carried-over prefix
  * in the token output view. It allows them to reroll the last 'continue'
  * completion with none of the output generated from it, in case they don't
  * like the results.
+ *
+ * If the user holds the Ctrl key while clicking, only the portion of text
+ * before the clicked word is retained as the prefix for rerolling
  */
 function onPrefixClicked() {
     if (!checkGenerateReady()) {
@@ -255,7 +295,15 @@ function onPrefixClicked() {
 
     const { continueFrom } = getActiveMessageLogprobData();
     const messageId = chat.length - 1;
-    const prefix = continueFrom || '';
+
+    // Check if Ctrl key is pressed during the click
+    let prefix = continueFrom || '';
+    if (event.ctrlKey) {
+        // Ctrl is pressed - use the text before the clicked word
+        prefix = getTextBeforeClickedWord(event, continueFrom);
+    }
+
+    // Use the determined `prefix`
     createSwipe(messageId, prefix);
     $('.swipe_right:last').click();
     Generate('continue').then(_ => void _);
