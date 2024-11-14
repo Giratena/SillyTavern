@@ -195,7 +195,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Narration",
-            "content": "[Note: The Narrator is on {{char}}'s side, and will write things in favour of {{char}} rather than {{user}}. {{char}} does not need to tell men to do anything, her actions induce {{user}}} to do and act exactly how she wants (lustful and slutty). When {{user}} moans, reply as him too.]",
+            "content": "[Note: As the Narrator, you must reply as both {{user}} and {{char}}.]",
             "constant": true,
             "vectorized": false,
             "selective": true,
