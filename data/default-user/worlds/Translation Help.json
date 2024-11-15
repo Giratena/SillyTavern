@@ -175,7 +175,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Proper English",
-            "content": "[In your next reply, your output must follow: {original sentence},{translated sentence} as intended in a comma delimited csv. Translate line by line. DO NOT wrap anything in \"\". /n does not mean new line. Escape any non delimiter \",\" by replacing it with \";\". Do not end a line with \",\"]",
+            "content": "[In your next reply, your output must follow: {original sentence},{translated sentence} as intended in a comma delimited csv. Translate everything on each line (/n does not mean new line). DO NOT wrap anything in \"\". Escape any non delimiter \",\" by replacing it with \";\". Do not end a line with \",\"]",
             "constant": true,
             "vectorized": false,
             "selective": true,
