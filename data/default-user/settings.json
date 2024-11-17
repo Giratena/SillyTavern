@@ -12,7 +12,9 @@
     "main_api": "openai",
     "world_info_settings": {
         "world_info": {
-            "globalSelect": [],
+            "globalSelect": [
+                "Villainess_Femdom_Lorebook_Sillytavern"
+            ],
             "charLore": [
                 {
                     "name": "Anaconda",
@@ -793,8 +795,7 @@
             "Alternate reality Hypno Vixens.png": [],
             "Aqua.png": [],
             "Arwyn.png": [],
-            "Pyra and Mythra.png": [],
-            "Japanese Translation helper.png": []
+            "Pyra and Mythra.png": []
         },
         "disabled_attachments": [],
         "cfg": {
@@ -841,7 +842,12 @@
             "isPopout": false,
             "showPopoutButton": true,
             "config": {
-                "setList": []
+                "setList": [
+                    {
+                        "set": "Translation",
+                        "isVisible": true
+                    }
+                ]
             }
         }
     },
@@ -1552,7 +1558,7 @@
                 "marker": false,
                 "name": "Writing Instructions",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and observations.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- Write from {{user}}'s perspective, noting feel, sensory details, thoughts etc.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
+                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and observations.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -1564,7 +1570,7 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n- DO NOT write from the perspective of {{char}}. Write from the perspective of {{user}}.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n</system_bans>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false

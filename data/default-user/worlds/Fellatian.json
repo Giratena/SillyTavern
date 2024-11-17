@@ -33,7 +33,10 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": ""
+            "automationId": "",
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         },
         "1": {
             "uid": 1,
@@ -70,7 +73,10 @@
             "caseSensitive": null,
             "matchWholeWords": null,
             "useGroupScoring": null,
-            "automationId": ""
+            "automationId": "",
+            "sticky": 0,
+            "cooldown": 0,
+            "delay": 0
         }
     }
 }
