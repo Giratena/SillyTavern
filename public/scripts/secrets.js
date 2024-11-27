@@ -37,6 +37,7 @@ export const SECRET_KEYS = {
     CUSTOM_OPENAI_TTS: 'api_key_custom_openai_tts',
     NANOGPT: 'api_key_nanogpt',
     TAVILY: 'api_key_tavily',
+    BFL: 'api_key_bfl',
 };
 
 const INPUT_MAP = {

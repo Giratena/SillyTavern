@@ -264,7 +264,7 @@ export async function convertSoloToGroupChat() {
         return;
     }
 
-    const confirm = await Popup.show.confirm(t`Convert to group chat`, t`Are you sure you want to convert this chat to a group chat?` + `<br />` + t`This cannot be reverted.`);
+    const confirm = await Popup.show.confirm(t`Convert to group chat`, t`Are you sure you want to convert this chat to a group chat?` + '<br />' + t`This cannot be reverted.`);
     if (!confirm) {
         return;
     }

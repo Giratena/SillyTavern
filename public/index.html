@@ -91,9 +91,6 @@
                                 <div class="margin0 title_restorable standoutHeader">
                                     <strong>
                                         <span data-i18n="kobldpresets">Kobold Presets</span>
-                                        <a href="https://docs.sillytavern.app/usage/api-connections/koboldai/" class="notes-link" target="_blank">
-                                            <span class="fa-solid fa-circle-question note-link-span"></span>
-                                        </a>
                                     </strong>
 
                                     <div class="flex-container gap3px">
@@ -1294,6 +1291,14 @@
                                         <input class="neo-range-slider" type="range" id="epsilon_cutoff_textgenerationwebui" name="volume" min="0" max="9" step="0.01">
                                         <input class="neo-range-input" type="number" min="0" max="9" step="0.01" data-for="epsilon_cutoff_textgenerationwebui" id="epsilon_cutoff_counter_textgenerationwebui">
                                     </div>
+                                    <div data-tg-type="aphrodite" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
+                                        <small>
+                                            <span data-i18n="Top nsigma">Top nsigma</span>
+                                            <div class="fa-solid fa-circle-info opacity50p" title="A sampling method that filters logits based on their statistical properties. It keeps tokens within n standard deviations of the maximum logit value, providing a simpler alternative to top-p/top-k sampling while maintaining sampling stability across different temperatures."></div>
+                                        </small>
+                                        <input class="neo-range-slider" type="range" id="nsigma_textgenerationwebui" name="volume" min="0" max="5" step="0.01">
+                                        <input class="neo-range-input" type="number" min="0" max="5" step="0.01" data-for="nsigma_textgenerationwebui" id="nsigma_counter_textgenerationwebui">
+                                    </div>
                                     <div data-tg-type="ooba,mancer,aphrodite" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
                                         <small>
                                             <span data-i18n="Eta Cutoff">Eta Cutoff</span>
@@ -1337,12 +1342,12 @@
                                         <input class="neo-range-slider" type="range" id="presence_pen_textgenerationwebui" name="volume" min="-2" max="2" step="0.01" />
                                         <input class="neo-range-input" type="number" min="-2" max="2" step="0.01" data-for="presence_pen_textgenerationwebui" id="presence_pen_counter_textgenerationwebui">
                                     </div>
-                                    <div data-tg-type="ooba" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
+                                    <div data-tg-type="aphrodite, ooba" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
                                         <small data-i18n="No Repeat Ngram Size">No Repeat Ngram Size</small>
                                         <input class="neo-range-slider" type="range" id="no_repeat_ngram_size_textgenerationwebui" name="volume" min="0" max="20" step="1">
                                         <input class="neo-range-input" type="number" min="0" max="20" step="1" data-for="no_repeat_ngram_size_textgenerationwebui" id="no_repeat_ngram_size_counter_textgenerationwebui">
                                     </div>
-                                    <div data-tg-type="tabby" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
+                                    <div data-tg-type="tabby, aphrodite" class="alignitemscenter flex-container flexFlowColumn flexBasis30p flexGrow flexShrink gap0">
                                         <small data-i18n="Skew">Skew</small>
                                         <input class="neo-range-slider" type="range" id="skew_textgenerationwebui" name="volume" min="-5" max="5" step="0.01" />
                                         <input class="neo-range-input" type="number" min="-5" max="5" step="0.01" data-for="skew_textgenerationwebui" id="skew_counter_textgenerationwebui">
@@ -1397,7 +1402,7 @@
                                         </div>
                                     </div>
 
-                                    <div data-tg-type="ooba, koboldcpp, tabby, llamacpp" id="dryBlock" class="wide100p">
+                                    <div data-tg-type="aphrodite, ooba, koboldcpp, tabby, llamacpp" id="dryBlock" class="wide100p">
                                         <h4 class="wide100p textAlignCenter" title="DRY penalizes tokens that would extend the end of the input into a sequence that has previously occurred in the input. Set multiplier to 0 to disable." data-i18n="[title]DRY_Repetition_Penalty_desc">
                                             <label data-i18n="DRY Repetition Penalty">DRY Repetition Penalty</label>
                                             <a href="https://github.com/oobabooga/text-generation-webui/pull/5677" target="_blank">
@@ -1954,18 +1959,9 @@
                                                 Send the system prompt for supported models. If disabled, the user message is added to the beginning of the prompt.
                                             </span>
                                         </div>
-                                        <div id="claude_human_sysprompt_message_block" class="wide100p">
-                                            <div class="range-block-title openai_restorable">
-                                                <span data-i18n="User first message">User first message</span>
-                                                <div id="claude_human_sysprompt_message_restore" title="Restore User first message" data-i18n="[title]Restore User first message" class="right_menu_button">
-                                                    <div class="fa-solid fa-clock-rotate-left"></div>
-                                                </div>
-                                            </div>
-                                            <textarea id="claude_human_sysprompt_textarea" class="text_pole textarea_compact autoSetHeight" rows="2" data-i18n="[placeholder]Human message" placeholder="Human message, instruction, etc.&#10;Adds nothing when empty, i.e. requires a new prompt with the role 'user'."></textarea>
-                                        </div>
                                     </div>
                                 </div>
-                                <div class="range-block m-t-1" data-source="openai,openrouter,scale">
+                                <div class="range-block m-t-1" data-source="openai,openrouter,scale,custom">
                                     <div id="logit_bias_openai" class="range-block-title openai_restorable" data-i18n="Logit Bias">
                                         Logit Bias
                                     </div>
@@ -2740,6 +2736,7 @@
                                     </optgroup>
                                     <optgroup label="GPT-4o">
                                         <option value="gpt-4o">gpt-4o</option>
+                                        <option value="gpt-4o-2024-11-20">gpt-4o-2024-11-20</option>
                                         <option value="gpt-4o-2024-08-06">gpt-4o-2024-08-06</option>
                                         <option value="gpt-4o-2024-05-13">gpt-4o-2024-05-13</option>
                                         <option value="chatgpt-4o-latest">chatgpt-4o-latest</option>
@@ -2807,9 +2804,6 @@
                                         <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
                                         <option value="claude-2.1">claude-2.1</option>
                                         <option value="claude-2.0">claude-2.0</option>
-                                        <option value="claude-1.3">claude-1.3</option>
-                                        <option value="claude-instant-1.2">claude-instant-1.2</option>
-                                        <option value="claude-instant-1.1">claude-instant-1.1</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -2979,6 +2973,8 @@
                                         <option value="chat-bison-001">PaLM 2 Chat (Legacy)</option>
                                     </optgroup>
                                     <optgroup label="Subversions">
+                                        <option value="gemini-exp-1121">Gemini Experimental 2024-11-21</option>
+                                        <option value="gemini-exp-1114">Gemini Experimental 2024-11-14</option>
                                         <option value="gemini-1.5-pro-exp-0801">Gemini 1.5 Pro Experiment 2024-08-01</option>
                                         <option value="gemini-1.5-pro-exp-0827">Gemini 1.5 Pro Experiment 2024-08-27</option>
                                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro [latest]</option>
@@ -3025,6 +3021,7 @@
                                         <option value="codestral-latest">codestral-latest</option>
                                         <option value="codestral-mamba-latest">codestral-mamba-latest</option>
                                         <option value="pixtral-12b-latest">pixtral-12b-latest</option>
+                                        <option value="pixtral-large-latest">pixtral-large-latest</option>
                                     </optgroup>
                                     <optgroup label="Sub-versions">
                                         <option value="open-mistral-nemo-2407">open-mistral-nemo-2407</option>
@@ -3039,10 +3036,12 @@
                                         <option value="mistral-medium-2312">mistral-medium-2312</option>
                                         <option value="mistral-large-2402">mistral-large-2402</option>
                                         <option value="mistral-large-2407">mistral-large-2407</option>
+                                        <option value="mistral-large-2411">mistral-large-2411</option>
                                         <option value="codestral-2405">codestral-2405</option>
                                         <option value="codestral-2405-blue">codestral-2405-blue</option>
                                         <option value="codestral-mamba-2407">codestral-mamba-2407</option>
                                         <option value="pixtral-12b-2409">pixtral-12b-2409</option>
+                                        <option value="pixtral-large-2411">pixtral-large-2411</option>
                                     </optgroup>
                                     <optgroup id="mistralai_other_models" label="Other"></optgroup>
                                 </select>
@@ -3155,6 +3154,8 @@
                                 <h4 data-i18n="Cohere Model">Cohere Model</h4>
                                 <select id="model_cohere_select">
                                     <optgroup label="Stable">
+                                        <option value="c4ai-aya-expanse-32b">c4ai-aya-expanse-32b</option>
+                                        <option value="c4ai-aya-expanse-8b">c4ai-aya-expanse-8b</option>
                                         <option value="c4ai-aya-23-35b">c4ai-aya-23-35b</option>
                                         <option value="c4ai-aya-23-8b">c4ai-aya-23-8b</option>
                                         <option value="command-light">command-light</option>
@@ -3266,8 +3267,14 @@
             </div>
             <div id="AdvancedFormatting" class="drawer-content">
                 <div class="flex-container alignItemsBaseline">
-                    <h3 class="margin0 flex1" data-i18n="Advanced Formatting">
-                        Advanced Formatting
+                    <h3 class="margin0 flex1 flex-container alignItemsBaseline">
+                        <span data-i18n="Advanced Formatting">
+                            Advanced Formatting
+                        </span>
+
+                        <a href="https://docs.sillytavern.app/usage/prompts/" class="notes-link" target="_blank">
+                            <span class="fa-solid fa-circle-question note-link-span"></span>
+                        </a>
                     </h3>
                     <div class="flex-container">
                         <input id="af_master_import_file" type="file" hidden accept=".json" class="displayNone">
@@ -3287,9 +3294,12 @@
                             <h4 class="standoutHeader title_restorable">
                                 <div>
                                     <span data-i18n="Context Template">Context Template</span>
-                                    <a href="https://docs.sillytavern.app/usage/core-concepts/advancedformatting/#context-template" class="notes-link" target="_blank">
-                                        <span class="fa-solid fa-circle-question note-link-span"></span>
-                                    </a>
+                                </div>
+                                <div class="flex-container">
+                                    <label for="context_derived" class="checkbox_label flex1" title="Derive from Model Metadata, if possible." data-i18n="[title]context_derived">
+                                        <input id="context_derived" type="checkbox" style="display:none;" />
+                                        <small><i class="fa-solid fa-bolt menu_button margin0"></i></small>
+                                    </label>
                                 </div>
                             </h4>
                             <div class="flex-container" title="Select your current Context Template" data-i18n="[title]Select your current Context Template">
@@ -3386,11 +3396,12 @@
                         <h4 class="standoutHeader title_restorable justifySpaceBetween">
                             <div class="flex-container">
                                 <span data-i18n="Instruct Template">Instruct Template</span>
-                                <a href="https://docs.sillytavern.app/usage/core-concepts/instructmode/" class="notes-link" target="_blank">
-                                    <span class="fa-solid fa-circle-question note-link-span"></span>
-                                </a>
                             </div>
                             <div class="flex-container">
+                                <label for="instruct_derived" class="checkbox_label flex1" title="Derive from Model Metadata, if possible." data-i18n="[title]instruct_derived">
+                                    <input id="instruct_derived" type="checkbox" style="display:none;" />
+                                    <small><i class="fa-solid fa-bolt menu_button margin0"></i></small>
+                                </label>
                                 <label for="instruct_bind_to_context" class="checkbox_label flex1" title="Bind to Context&#10If enabled, Context templates will be automatically selected based on selected Instruct template name or by preference." data-i18n="[title]instruct_bind_to_context">
                                     <input id="instruct_bind_to_context" type="checkbox" style="display:none;" />
                                     <small><i class="fa-solid fa-link menu_button margin0"></i></small>
@@ -3571,9 +3582,6 @@
                         <h4 class="standoutHeader title_restorable justifySpaceBetween">
                             <div class="flex-container">
                                 <span data-i18n="System Prompt">System Prompt</span>
-                                <a href="https://docs.sillytavern.app/usage/core-concepts/advancedformatting/#system-prompt" class="notes-link" target="_blank">
-                                    <span class="fa-solid fa-circle-question note-link-span"></span>
-                                </a>
                             </div>
                             <div class="flex-container">
                                 <label id="sysprompt_enabled_label" for="sysprompt_enabled" class="checkbox_label flex1" title="Enable System Prompt" data-i18n="[title]sysprompt_enabled">
@@ -3641,7 +3649,7 @@
                         <div name="tokenizerSettingsBlock">
                             <div name="tokenizerSelectorBlock">
                                 <h4 class="standoutHeader"><span data-i18n="Tokenizer">Tokenizer</span>
-                                    <a href="https://docs.sillytavern.app/usage/core-concepts/advancedformatting/#tokenizer" class="notes-link" target="_blank">
+                                    <a href="https://docs.sillytavern.app/usage/prompts/tokenizer/" class="notes-link" target="_blank">
                                         <span class="fa-solid fa-circle-question note-link-span"></span>
                                     </a>
                                 </h4>
@@ -3667,10 +3675,8 @@
                             </div>
                             <div class="range-block flex-container flexnowrap" name="tokenPaddingBlock">
                                 <div class="range-block-title justifyLeft">
-                                    <small data-i18n="Token Padding" class="flex-container">Token Padding
-                                        <a href="https://docs.sillytavern.app/usage/core-concepts/advancedformatting/#token-padding" class="notes-link" target="_blank">
-                                            <span class="fa-solid fa-circle-question note-link-span"></span>
-                                        </a>
+                                    <small data-i18n="Token Padding">
+                                        Token Padding
                                     </small>
                                 </div>
                                 <input id="token_padding" class="text_pole textarea_compact" type="number" min="-2048" max="2048" />
@@ -3728,7 +3734,7 @@
                     </div>
                     <h3 class="margin0">
                         <span data-i18n="Worlds/Lorebooks">Worlds/Lorebooks</span>
-                        <a href="https://docs.sillytavern.app/usage/core-concepts/worldinfo/" class="notes-link" target="_blank">
+                        <a href="https://docs.sillytavern.app/usage/worldinfo/" class="notes-link" target="_blank">
                             <span class="fa-solid fa-circle-question note-link-span"></span>
                         </a>
                     </h3>
@@ -4255,7 +4261,7 @@
                                 <audio id="audio_message_sound" src="sounds/message.mp3" hidden></audio>
                                 <span>
                                     <small data-i18n="Message Sound">Message Sound</small>
-                                    <a href="https://docs.sillytavern.app/usage/core-concepts/uicustomization/#message-sound" class="notes-link" target="_blank">
+                                    <a href="https://docs.sillytavern.app/usage/user_settings/uicustomization/#message-sound" class="notes-link" target="_blank">
                                         <span class="fa-solid fa-circle-question note-link-span"></span>
                                     </a>
                                 </span>
@@ -4472,7 +4478,7 @@
                                 </div>
                                 <div nane="AutoContiueBlock" class="inline-drawer wide100p flexFlowColumn">
                                     <div class="inline-drawer-toggle inline-drawer-header userSettingsInnerExpandable" title="Automatically 'continue' a response if the model stopped before reaching a certain amount of tokens.">
-                                        <b><span data-i18n="Auto-swipe">Auto-Continue</span></b>
+                                        <b><span data-i18n="Auto-Continue">Auto-Continue</span></b>
                                         <div class="fa-solid fa-circle-chevron-down inline-drawer-icon down"></div>
                                     </div>
                                     <div class="inline-drawer-content">
@@ -4502,7 +4508,7 @@
                                 </div>
                             </div>
                             <div name="AutoCompleteToggle" class="inline-drawer wide100p flexFlowColumn">
-                                <div class="inline-drawer-toggle inline-drawer-header userSettingsInnerExpandable" title="Options for the various autocompelte input boxes.">
+                                <div class="inline-drawer-toggle inline-drawer-header userSettingsInnerExpandable" title="Options for the various autocomplete input boxes.">
                                     <b><span data-i18n="AutoComplete Settings">AutoComplete Settings</span></b>
                                     <div class="fa-solid fa-circle-chevron-down inline-drawer-icon down"></div>
                                 </div>
@@ -5051,6 +5057,7 @@
                                                 <span data-i18n="Group reply strategy">Group reply strategy</span>
                                             </label>
                                             <select id="rm_group_activation_strategy">
+                                                <option value="2" data-i18n="Manual">Manual</option>
                                                 <option value="0" data-i18n="Natural order">Natural order</option>
                                                 <option value="1" data-i18n="List order">List order</option>
                                             </select>
@@ -5232,19 +5239,19 @@
                         <span class="ch_name flex1"></span>
                         <div class="avatar-buttons">
                             <button class="menu_button bind_user_name" title="Bind user name to that avatar" data-i18n="[title]Bind user name to that avatar">
-                                <i class="fa-fw fa-solid fa-user-edit"></i>
+                                <i class="fa-fw fa-solid fa-user-edit fa-sm"></i>
                             </button>
                             <button class="menu_button set_persona_image" title="Change persona image" data-i18n="[title]Change persona image">
-                                <i class="fa-fw fa-solid fa-image"></i>
+                                <i class="fa-fw fa-solid fa-image fa-sm"></i>
                             </button>
                             <button class="menu_button set_default_persona" title="Select this as default persona for the new chats." data-i18n="[title]Select this as default persona for the new chats.">
-                                <i class="fa-fw fa-solid fa-crown"></i>
+                                <i class="fa-fw fa-solid fa-crown fa-sm"></i>
                             </button>
                             <button class="menu_button duplicate_persona" title="Duplicate persona" data-i18n="[title]Duplicate persona">
-                                <i class="fa-fw fa-solid fa-clone"></i>
+                                <i class="fa-fw fa-solid fa-clone fa-sm"></i>
                             </button>
                             <button class="menu_button delete_avatar" title="Delete persona" data-i18n="[title]Delete persona">
-                                <i class="fa-fw fa-solid fa-trash-alt"></i>
+                                <i class="fa-fw fa-solid fa-trash-alt fa-sm"></i>
                             </button>
                         </div>
                     </div>
@@ -5786,7 +5793,7 @@
                                     <div class="flex-container justifySpaceBetween">
                                         <small for="group">
                                             <span data-i18n="Inclusion Group">Inclusion Group</span>
-                                            <a href="https://docs.sillytavern.app/usage/core-concepts/worldinfo/#inclusion-group" class="notes-link" target="_blank" title="Inclusion Groups ensure only one entry from a group is activated at a time, if multiple are triggered.&#13;Supports multiple comma-separated groups.&#13;&#13;Documentation: World Info - Inclusion Group" data-i18n="[title]Inclusion Groups ensure only one entry from a group is activated at a time, if multiple are triggered.Documentation: World Info - Inclusion Group">
+                                            <a href="https://docs.sillytavern.app/usage/worldinfo/#inclusion-group" class="notes-link" target="_blank" title="Inclusion Groups ensure only one entry from a group is activated at a time, if multiple are triggered.&#13;Supports multiple comma-separated groups.&#13;&#13;Documentation: World Info - Inclusion Group" data-i18n="[title]Inclusion Groups ensure only one entry from a group is activated at a time, if multiple are triggered.Documentation: World Info - Inclusion Group">
                                                 <span class="fa-solid fa-circle-question note-link-span"></span>
                                             </a>
                                         </small>
@@ -6630,8 +6637,11 @@
                 </div>
             </div>
             <div class="logprobs_panel_content inline-drawer-content flex-container flexFlowColumn">
-                <small>
+                <small class="flex-container alignItemsCenter justifySpaceBetween flexNoWrap">
                     <b data-i18n="Select a token to see alternatives considered by the AI.">Select a token to see alternatives considered by the AI.</b>
+                    <button id="logprobsReroll" class="menu_button margin0" title="Reroll with the entire prefix" data-i18n="[title]Reroll with the entire prefix">
+                        <span class="fa-solid fa-redo logprobs_reroll"></span>
+                    </button>
                 </small>
                 <hr>
                 <div id="logprobs_generation_output"></div>

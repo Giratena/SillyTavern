@@ -6,7 +6,7 @@ import { publicLibConfig } from '../../webpack.config.js';
 export default function getWebpackServeMiddleware() {
     const compiler = webpack(publicLibConfig);
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' || process.platform === 'android') {
         compiler.hooks.done.tap('serve', () => {
             if (compiler.watching) {
                 compiler.watching.close(() => { });

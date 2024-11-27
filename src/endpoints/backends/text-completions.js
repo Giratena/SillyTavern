@@ -16,6 +16,7 @@ import {
 } from '../../constants.js';
 import { forwardFetchResponse, trimV1, getConfigValue } from '../../util.js';
 import { setAdditionalHeaders } from '../../additional-headers.js';
+import { createHash } from 'node:crypto';
 
 export const router = express.Router();
 
@@ -221,6 +222,40 @@ router.post('/status', jsonParser, async function (request, response) {
         }
 
         return response.send({ result, data: data.data });
+    } catch (error) {
+        console.error(error);
+        return response.status(500);
+    }
+});
+
+router.post('/props', jsonParser, async function (request, response) {
+    if (!request.body.api_server) return response.sendStatus(400);
+
+    try {
+        const baseUrl = trimV1(request.body.api_server);
+        const args = {
+            headers: {},
+        };
+
+        setAdditionalHeaders(request, args, baseUrl);
+
+        const apiType = request.body.api_type;
+        const propsUrl = baseUrl + '/props';
+        const propsReply = await fetch(propsUrl, args);
+
+        if (!propsReply.ok) {
+            return response.status(400);
+        }
+
+        /** @type {any} */
+        const props = await propsReply.json();
+        // TEMPORARY: llama.cpp's /props endpoint has a bug which replaces the last newline with a \0
+        if (apiType === TEXTGEN_TYPES.LLAMACPP && props['chat_template'].endsWith('\u0000')) {
+            props['chat_template'] = props['chat_template'].slice(0, -1) + '\n';
+        }
+        props['chat_template_hash'] = createHash('sha256').update(props['chat_template']).digest('hex');
+        console.log(`Model properties: ${JSON.stringify(props)}`);
+        return response.send(props);
     } catch (error) {
         console.error(error);
         return response.status(500);

@@ -226,6 +226,7 @@ let power_user = {
         macro: true,
         names_behavior: names_behavior_types.FORCE,
         activation_regex: '',
+        derived: false,
         bind_to_context: false,
         user_alignment_message: '',
         system_same_as_user: false,
@@ -242,6 +243,8 @@ let power_user = {
         allow_jailbreak: false,
         names_as_stop_strings: true,
     },
+
+    context_derived: false,
 
     sysprompt: {
         enabled: true,
@@ -639,6 +642,10 @@ async function CreateZenSliders(elmnt) {
         numSteps = 50;
         decimals = 1;
     }
+    if (sliderID == 'nsigma') {
+        numSteps = 50;
+        decimals = 1;
+    }
     //customize steps
     if (sliderID == 'mirostat_mode_textgenerationwebui' ||
         sliderID == 'mirostat_mode_kobold') {
@@ -683,6 +690,7 @@ async function CreateZenSliders(elmnt) {
         sliderID == 'penalty_alpha_textgenerationwebui' ||
         sliderID == 'length_penalty_textgenerationwebui' ||
         sliderID == 'epsilon_cutoff_textgenerationwebui' ||
+        sliderID == 'nsigma' ||
         sliderID == 'rep_pen_range' ||
         sliderID == 'eta_cutoff_textgenerationwebui' ||
         sliderID == 'top_a_textgenerationwebui' ||
@@ -1472,6 +1480,7 @@ async function loadPowerUserSettings(settings, data) {
     $('#encode_tags').prop('checked', power_user.encode_tags);
     $('#example_messages_behavior').val(getExampleMessagesBehavior());
     $(`#example_messages_behavior option[value="${getExampleMessagesBehavior()}"]`).prop('selected', true);
+    $('#context_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.context_derived);
 
     $('#console_log_prompts').prop('checked', power_user.console_log_prompts);
     $('#request_token_probabilities').prop('checked', power_user.request_token_probabilities);
@@ -3055,6 +3064,16 @@ $(document).ready(() => {
         const value = !!$(this).prop('checked');
         power_user.single_line = value;
         saveSettingsDebounced();
+    });
+
+    $('#context_derived').on('input', function () {
+        const value = !!$(this).prop('checked');
+        power_user.context_derived = value;
+        saveSettingsDebounced();
+    });
+
+    $('#context_derived').on('change', function () {
+        $('#context_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.context_derived);
     });
 
     $('#always-force-name2-checkbox').change(function () {

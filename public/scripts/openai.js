@@ -99,7 +99,6 @@ const default_wi_format = '{0}';
 const default_new_chat_prompt = '[Start a new Chat]';
 const default_new_group_chat_prompt = '[Start a new group chat. Group members: {{group}}]';
 const default_new_example_chat_prompt = '[Example Chat]';
-const default_claude_human_sysprompt_message = 'Let\'s get started. Please generate your response based on the information and instructions provided above.';
 const default_continue_nudge_prompt = '[Continue the following message. Do not include ANY parts of the original message. Use capitalization and punctuation as if your reply is a part of the original message: {{lastChatMessage}}]';
 const default_bias = 'Default (none)';
 const default_personality_format = '[{{char}}\'s personality: {{personality}}]';
@@ -276,7 +275,6 @@ const default_settings = {
     proxy_password: '',
     assistant_prefill: '',
     assistant_impersonation: '',
-    human_sysprompt_message: default_claude_human_sysprompt_message,
     claude_use_sysprompt: false,
     use_makersuite_sysprompt: true,
     use_alt_scale: false,
@@ -353,7 +351,6 @@ const oai_settings = {
     proxy_password: '',
     assistant_prefill: '',
     assistant_impersonation: '',
-    human_sysprompt_message: default_claude_human_sysprompt_message,
     claude_use_sysprompt: false,
     use_makersuite_sysprompt: true,
     use_alt_scale: false,
@@ -752,7 +749,8 @@ async function populateChatHistory(messages, prompts, chatCompletion, type = nul
             if (type === 'continue' && oai_settings.continue_prefill && chatPrompt === firstNonInjected) {
                 // in case we are using continue_prefill and the latest message is an assistant message, we want to prepend the users assistant prefill on the message
                 if (chatPrompt.role === 'assistant') {
-                    const continueMessage = await Message.createAsync(chatMessage.role, substituteParams(oai_settings.assistant_prefill + '\n\n') + chatMessage.content, chatMessage.identifier);
+                    const messageContent = [substituteParams(oai_settings.assistant_prefill), chatMessage.content].filter(x => x).join('\n\n');
+                    const continueMessage = await Message.createAsync(chatMessage.role, messageContent, chatMessage.identifier);
                     const collection = new MessageCollection('continuePrefill', continueMessage);
                     chatCompletion.add(collection, -1);
                     continue;
@@ -1312,6 +1310,11 @@ export async function prepareOpenAIMessages({
     return [chat, promptManager.tokenHandler.counts];
 }
 
+/**
+ * Handles errors during streaming requests.
+ * @param {Response} response
+ * @param {string} decoded - response text or decoded stream data
+ */
 function tryParseStreamingError(response, decoded) {
     try {
         const data = JSON.parse(decoded);
@@ -1322,6 +1325,9 @@ function tryParseStreamingError(response, decoded) {
 
         checkQuotaError(data);
         checkModerationError(data);
+
+        // these do not throw correctly (equiv to Error("[object Object]"))
+        // if trying to fix "[object Object]" displayed to users, start here
 
         if (data.error) {
             toastr.error(data.error.message || response.statusText, 'Chat Completion API');
@@ -1338,15 +1344,22 @@ function tryParseStreamingError(response, decoded) {
     }
 }
 
-async function checkQuotaError(data) {
-    const errorText = await renderTemplateAsync('quotaError');
-
+/**
+ * Checks if the response contains a quota error and displays a popup if it does.
+ * @param data
+ * @returns {void}
+ * @throws {object} - response JSON
+ */
+function checkQuotaError(data) {
     if (!data) {
         return;
     }
 
     if (data.quota_error) {
-        callPopup(errorText, 'text');
+        renderTemplateAsync('quotaError').then((html) => Popup.show.text('Quota Error', html));
+
+        // this does not throw correctly (equiv to Error("[object Object]"))
+        // if trying to fix "[object Object]" displayed to users, start here
         throw new Error(data);
     }
 }
@@ -1765,6 +1778,15 @@ async function sendAltScaleRequest(messages, logit_bias, signal, type) {
     return data.output;
 }
 
+/**
+ * Send a chat completion request to backend
+ * @param {string} type (impersonate, quiet, continue, etc)
+ * @param {Array} messages
+ * @param {AbortSignal?} signal
+ * @returns {Promise<unknown>}
+ * @throws {Error}
+ */
+
 async function sendOpenAIRequest(type, messages, signal) {
     // Provide default abort signal
     if (!signal) {
@@ -1867,7 +1889,6 @@ async function sendOpenAIRequest(type, messages, signal) {
         generate_data['top_k'] = Number(oai_settings.top_k_openai);
         generate_data['claude_use_sysprompt'] = oai_settings.claude_use_sysprompt;
         generate_data['stop'] = getCustomStoppingStrings(); // Claude shouldn't have limits on stop strings.
-        generate_data['human_sysprompt_message'] = substituteParams(oai_settings.human_sysprompt_message);
         // Don't add a prefill on quiet gens (summarization) and when using continue prefill.
         if (!isQuiet && !(isContinue && oai_settings.continue_prefill)) {
             generate_data['assistant_prefill'] = isImpersonate ? substituteParams(oai_settings.assistant_impersonation) : substituteParams(oai_settings.assistant_prefill);
@@ -2027,12 +2048,13 @@ async function sendOpenAIRequest(type, messages, signal) {
     else {
         const data = await response.json();
 
-        await checkQuotaError(data);
+        checkQuotaError(data);
         checkModerationError(data);
 
         if (data.error) {
-            toastr.error(data.error.message || response.statusText, t`API returned an error`);
-            throw new Error(data);
+            const message = data.error.message || response.statusText || t`Unknown error`;
+            toastr.error(message, t`API returned an error`);
+            throw new Error(message);
         }
 
         if (type !== 'quiet') {
@@ -3004,7 +3026,6 @@ function loadOpenAISettings(data, settings) {
     oai_settings.proxy_password = settings.proxy_password ?? default_settings.proxy_password;
     oai_settings.assistant_prefill = settings.assistant_prefill ?? default_settings.assistant_prefill;
     oai_settings.assistant_impersonation = settings.assistant_impersonation ?? default_settings.assistant_impersonation;
-    oai_settings.human_sysprompt_message = settings.human_sysprompt_message ?? default_settings.human_sysprompt_message;
     oai_settings.image_inlining = settings.image_inlining ?? default_settings.image_inlining;
     oai_settings.inline_image_quality = settings.inline_image_quality ?? default_settings.inline_image_quality;
     oai_settings.bypass_status_check = settings.bypass_status_check ?? default_settings.bypass_status_check;
@@ -3044,7 +3065,6 @@ function loadOpenAISettings(data, settings) {
     $('#openai_proxy_password').val(oai_settings.proxy_password);
     $('#claude_assistant_prefill').val(oai_settings.assistant_prefill);
     $('#claude_assistant_impersonation').val(oai_settings.assistant_impersonation);
-    $('#claude_human_sysprompt_textarea').val(oai_settings.human_sysprompt_message);
     $('#openai_image_inlining').prop('checked', oai_settings.image_inlining);
     $('#openai_bypass_status_check').prop('checked', oai_settings.bypass_status_check);
 
@@ -3374,7 +3394,6 @@ async function saveOpenAIPreset(name, settings, triggerUi = true) {
         show_external_models: settings.show_external_models,
         assistant_prefill: settings.assistant_prefill,
         assistant_impersonation: settings.assistant_impersonation,
-        human_sysprompt_message: settings.human_sysprompt_message,
         claude_use_sysprompt: settings.claude_use_sysprompt,
         use_makersuite_sysprompt: settings.use_makersuite_sysprompt,
         use_alt_scale: settings.use_alt_scale,
@@ -3613,7 +3632,7 @@ async function onExportPresetClick() {
     const fieldValues = sensitiveFields.filter(field => preset[field]).map(field => `<b>${field}</b>: <code>${preset[field]}</code>`);
     const shouldConfirm = fieldValues.length > 0;
     const textHeader = t`Your preset contains proxy and/or custom endpoint settings.`;
-    const textMessage = `<div>` + t`Do you want to remove these fields before exporting?` + `</div><br>${DOMPurify.sanitize(fieldValues.join('<br>'))}`;
+    const textMessage = '<div>' + t`Do you want to remove these fields before exporting?` + `</div><br>${DOMPurify.sanitize(fieldValues.join('<br>'))}`;
     const cancelButton = { text: 'Cancel', result: POPUP_RESULT.CANCELLED, appendAtEnd: true };
     const popupOptions = { customButtons: [cancelButton] };
     const popupResult = await Popup.show.confirm(textHeader, textMessage, popupOptions);
@@ -3799,7 +3818,6 @@ function onSettingsPresetChange() {
         proxy_password: ['#openai_proxy_password', 'proxy_password', false],
         assistant_prefill: ['#claude_assistant_prefill', 'assistant_prefill', false],
         assistant_impersonation: ['#claude_assistant_impersonation', 'assistant_impersonation', false],
-        human_sysprompt_message: ['#claude_human_sysprompt_textarea', 'human_sysprompt_message', false],
         claude_use_sysprompt: ['#claude_use_sysprompt', 'claude_use_sysprompt', true],
         use_makersuite_sysprompt: ['#use_makersuite_sysprompt', 'use_makersuite_sysprompt', true],
         use_alt_scale: ['#use_alt_scale', 'use_alt_scale', true],
@@ -4056,6 +4074,8 @@ async function onModelChange() {
     if (oai_settings.chat_completion_source == chat_completion_sources.MAKERSUITE) {
         if (oai_settings.max_context_unlocked) {
             $('#openai_max_context').attr('max', max_2mil);
+        } else if (value.includes('gemini-exp-1114') || value.includes('gemini-exp-1121')) {
+            $('#openai_max_context').attr('max', max_32k);
         } else if (value.includes('gemini-1.5-pro')) {
             $('#openai_max_context').attr('max', max_2mil);
         } else if (value.includes('gemini-1.5-flash')) {
@@ -4163,7 +4183,7 @@ async function onModelChange() {
             $('#openai_max_context').attr('max', unlocked_max);
         } else if (oai_settings.mistralai_model.includes('codestral-mamba')) {
             $('#openai_max_context').attr('max', max_256k);
-        } else if (['mistral-large-2407', 'mistral-large-latest'].includes(oai_settings.mistralai_model)) {
+        } else if (['mistral-large-2407', 'mistral-large-2411', 'mistral-large-latest'].includes(oai_settings.mistralai_model)) {
             $('#openai_max_context').attr('max', max_128k);
         } else if (oai_settings.mistralai_model.includes('mistral-nemo')) {
             $('#openai_max_context').attr('max', max_128k);
@@ -4194,10 +4214,10 @@ async function onModelChange() {
         else if (['command-light-nightly', 'command-nightly'].includes(oai_settings.cohere_model)) {
             $('#openai_max_context').attr('max', max_8k);
         }
-        else if (oai_settings.cohere_model.includes('command-r')) {
+        else if (oai_settings.cohere_model.includes('command-r') || ['c4ai-aya-expanse-32b'].includes(oai_settings.cohere_model)) {
             $('#openai_max_context').attr('max', max_128k);
         }
-        else if (['c4ai-aya-23'].includes(oai_settings.cohere_model)) {
+        else if (['c4ai-aya-23', 'c4ai-aya-expanse-8b'].includes(oai_settings.cohere_model)) {
             $('#openai_max_context').attr('max', max_8k);
         }
         else {
@@ -4370,7 +4390,7 @@ async function onOpenrouterModelSortChange() {
 async function onNewPresetClick() {
     const popupText = `
         <h3>` + t`Preset name:` + `</h3>
-        <h4>` + t`Hint: Use a character/group name to bind preset to a specific chat.` + `</h4>`;
+        <h4>` + t`Hint: Use a character/group name to bind preset to a specific chat.` + '</h4>';
     const name = await callPopup(popupText, 'input', oai_settings.preset_settings_openai);
 
     if (!name) {
@@ -4649,10 +4669,6 @@ function toggleChatCompletionForms() {
         const validSources = $(this).data('source').split(',');
         $(this).toggle(validSources.includes(oai_settings.chat_completion_source));
     });
-
-    if (chat_completion_sources.CLAUDE == oai_settings.chat_completion_source) {
-        $('#claude_human_sysprompt_message_block').toggle(oai_settings.claude_use_sysprompt);
-    }
 }
 
 async function testApiConnection() {
@@ -4742,6 +4758,8 @@ export function isImageInliningSupported() {
         'gemini-1.5-flash-8b',
         'gemini-1.5-flash-8b-exp-0827',
         'gemini-1.5-flash-8b-exp-0924',
+        'gemini-exp-1114',
+        'gemini-exp-1121',
         'gemini-1.0-pro-vision-latest',
         'gemini-1.5-pro',
         'gemini-1.5-pro-latest',
@@ -4761,6 +4779,8 @@ export function isImageInliningSupported() {
         'pixtral-12b-latest',
         'pixtral-12b',
         'pixtral-12b-2409',
+        'pixtral-large-latest',
+        'pixtral-large-2411',
     ];
 
     switch (oai_settings.chat_completion_source) {
@@ -5004,7 +5024,6 @@ export function initOpenAI() {
 
     $('#claude_use_sysprompt').on('change', function () {
         oai_settings.claude_use_sysprompt = !!$('#claude_use_sysprompt').prop('checked');
-        $('#claude_human_sysprompt_message_block').toggle(oai_settings.claude_use_sysprompt);
         saveSettingsDebounced();
     });
 
@@ -5078,12 +5097,6 @@ export function initOpenAI() {
     $('#newchat_prompt_restore').on('click', function () {
         oai_settings.new_chat_prompt = default_new_chat_prompt;
         $('#newchat_prompt_textarea').val(oai_settings.new_chat_prompt);
-        saveSettingsDebounced();
-    });
-
-    $('#claude_human_sysprompt_message_restore').on('click', function () {
-        oai_settings.human_sysprompt_message = default_claude_human_sysprompt_message;
-        $('#claude_human_sysprompt_textarea').val(oai_settings.human_sysprompt_message);
         saveSettingsDebounced();
     });
 
@@ -5175,11 +5188,6 @@ export function initOpenAI() {
 
     $('#claude_assistant_impersonation').on('input', function () {
         oai_settings.assistant_impersonation = String($(this).val());
-        saveSettingsDebounced();
-    });
-
-    $('#claude_human_sysprompt_textarea').on('input', function () {
-        oai_settings.human_sysprompt_message = String($('#claude_human_sysprompt_textarea').val());
         saveSettingsDebounced();
     });
 

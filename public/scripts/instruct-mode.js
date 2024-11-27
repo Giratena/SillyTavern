@@ -39,6 +39,7 @@ const controls = [
     { id: 'instruct_first_input_sequence', property: 'first_input_sequence', isCheckbox: false },
     { id: 'instruct_last_input_sequence', property: 'last_input_sequence', isCheckbox: false },
     { id: 'instruct_activation_regex', property: 'activation_regex', isCheckbox: false },
+    { id: 'instruct_derived', property: 'derived', isCheckbox: true },
     { id: 'instruct_bind_to_context', property: 'bind_to_context', isCheckbox: true },
     { id: 'instruct_skip_examples', property: 'skip_examples', isCheckbox: true },
     { id: 'instruct_names_behavior', property: 'names_behavior', isCheckbox: false },
@@ -100,6 +101,7 @@ export async function loadInstructMode(data) {
 
     $('#instruct_enabled').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.enabled);
     $('#instructSettingsBlock, #InstructSequencesColumn').toggleClass('disabled', !power_user.instruct.enabled);
+    $('#instruct_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.derived);
     $('#instruct_bind_to_context').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.bind_to_context);
 
     controls.forEach(control => {
@@ -146,6 +148,12 @@ export async function loadInstructMode(data) {
  * @param {boolean} [options.isAuto=false] Is auto-select.
  */
 export function selectContextPreset(preset, { quiet = false, isAuto = false } = {}) {
+    const presetExists = context_presets.some(x => x.name === preset);
+    if (!presetExists) {
+        console.warn(`Context template "${preset}" not found`);
+        return;
+    }
+
     // If context template is not already selected, select it
     if (preset !== power_user.context.preset) {
         $('#context_presets').val(preset).trigger('change');
@@ -163,6 +171,12 @@ export function selectContextPreset(preset, { quiet = false, isAuto = false } = 
  * @param {boolean} [options.isAuto=false] Is auto-select.
  */
 export function selectInstructPreset(preset, { quiet = false, isAuto = false } = {}) {
+    const presetExists = instruct_presets.some(x => x.name === preset);
+    if (!presetExists) {
+        console.warn(`Instruct template "${preset}" not found`);
+        return;
+    }
+
     // If instruct preset is not already selected, select it
     if (preset !== power_user.instruct.preset) {
         $('#instruct_presets').val(preset).trigger('change');
@@ -713,6 +727,10 @@ jQuery(() => {
         if (power_user.instruct.enabled) {
             selectMatchingContextTemplate(power_user.instruct.preset);
         }
+    });
+
+    $('#instruct_derived').on('change', function () {
+        $('#instruct_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.instruct.derived);
     });
 
     $('#instruct_bind_to_context').on('change', function () {

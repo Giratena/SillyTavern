@@ -24,6 +24,8 @@ const defaultAvatarPath = './public/img/ai4.png';
 
 // KV-store for parsed character data
 const characterDataCache = new Map();
+// Some Android devices require tighter memory management
+const isAndroid = process.platform === 'android';
 
 /**
  * Reads the character card from the specified image file.
@@ -39,7 +41,7 @@ async function readCharacterData(inputFile, inputFormat = 'png') {
     }
 
     const result = parse(inputFile, inputFormat);
-    characterDataCache.set(cacheKey, result);
+    !isAndroid && characterDataCache.set(cacheKey, result);
     return result;
 }
 

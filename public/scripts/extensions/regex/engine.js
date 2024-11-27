@@ -22,6 +22,12 @@ const regex_placement = {
     WORLD_INFO: 5,
 };
 
+export const substitute_find_regex = {
+    NONE: 0,
+    RAW: 1,
+    ESCAPED: 2,
+};
+
 function sanitizeRegexMacro(x) {
     return (x && typeof x === 'string') ?
         x.replaceAll(/[\n\r\t\v\f\0.^$*+?{}[\]\\/|()]/gs, function (s) {
@@ -131,9 +137,20 @@ function runRegexScript(regexScript, rawString, { characterOverride } = {}) {
         return newString;
     }
 
-    const regexString = regexScript.substituteRegex
-        ? substituteParamsExtended(regexScript.findRegex, {}, sanitizeRegexMacro)
-        : regexScript.findRegex;
+    const getRegexString = () => {
+        switch(Number(regexScript.substituteRegex)) {
+            case substitute_find_regex.NONE:
+                return regexScript.findRegex;
+            case substitute_find_regex.RAW:
+                return substituteParamsExtended(regexScript.findRegex);
+            case substitute_find_regex.ESCAPED:
+                return substituteParamsExtended(regexScript.findRegex, {}, sanitizeRegexMacro);
+            default:
+                console.warn(`runRegexScript: Unknown substituteRegex value ${regexScript.substituteRegex}. Using raw regex.`);
+                return regexScript.findRegex;
+        }
+    };
+    const regexString = getRegexString();
     const findRegex = regexFromString(regexString);
 
     // The user skill issued. Return with nothing.

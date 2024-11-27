@@ -703,16 +703,13 @@ const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
  */
 function autoFitSendTextArea() {
     const originalScrollBottom = chatBlock.scrollHeight - (chatBlock.scrollTop + chatBlock.offsetHeight);
-    if (Math.ceil(sendTextArea.scrollHeight + 3) >= Math.floor(sendTextArea.offsetHeight)) {
-        const sendTextAreaMinHeight = '0px';
-        sendTextArea.style.height = sendTextAreaMinHeight;
-    }
-    const newHeight = sendTextArea.scrollHeight + 3;
+
+    sendTextArea.style.height = '1px'; // Reset height to 1px to force recalculation of scrollHeight
+    const newHeight = sendTextArea.scrollHeight;
     sendTextArea.style.height = `${newHeight}px`;
 
     if (!isFirefox) {
-        const newScrollTop = Math.round(chatBlock.scrollHeight - (chatBlock.offsetHeight + originalScrollBottom));
-        chatBlock.scrollTop = newScrollTop;
+        chatBlock.scrollTop = chatBlock.scrollHeight - (chatBlock.offsetHeight + originalScrollBottom);
     }
 }
 export const autoFitSendTextAreaDebounced = debounce(autoFitSendTextArea, debounce_timeout.short);

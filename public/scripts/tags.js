@@ -28,6 +28,7 @@ import { debounce_timeout } from './constants.js';
 import { INTERACTABLE_CONTROL_CLASS } from './keyboard.js';
 import { commonEnumProviders } from './slash-commands/SlashCommandCommonEnumsProvider.js';
 import { renderTemplateAsync } from './templates.js';
+import { t } from './i18n.js';
 
 export {
     TAG_FOLDER_TYPES,
@@ -1299,7 +1300,7 @@ export function createTagInput(inputSelector, listSelector, tagListOptions = {})
 async function onViewTagsListClick() {
     const html = $(document.createElement('div'));
     html.attr('id', 'tag_view_list');
-    html.append(await renderTemplateAsync('tagManagement', {bogus_folders: power_user.bogus_folders, auto_sort_tags: power_user.auto_sort_tags}));
+    html.append(await renderTemplateAsync('tagManagement', { bogus_folders: power_user.bogus_folders, auto_sort_tags: power_user.auto_sort_tags }));
 
     const tagContainer = $('<div class="tag_view_list_tags ui-sortable"></div>');
     html.append(tagContainer);

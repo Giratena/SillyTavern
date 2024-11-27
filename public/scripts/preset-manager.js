@@ -584,6 +584,7 @@ class PresetManager {
             'openrouter_providers',
             'openrouter_allow_fallbacks',
             'tabby_model',
+            'derived',
         ];
         const settings = Object.assign({}, getSettingsByApiId(this.apiId));
 

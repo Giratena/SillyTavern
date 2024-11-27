@@ -121,12 +121,16 @@
                     <input type="checkbox" name="run_on_edit" />
                     <span data-i18n="Run On Edit">Run On Edit</span>
                 </label>
-                <label class="checkbox flex-container" data-i18n="[title]ext_regex_substitute_regex_desc" title="Substitute &lcub;&lcub;macros&rcub;&rcub; in Find Regex before running it">
-                    <input type="checkbox" name="substitute_regex" />
+                <label class="checkbox flex-container flexNoGap marginBot5" data-i18n="[title]ext_regex_substitute_regex_desc" title="Substitute &lcub;&lcub;macros&rcub;&rcub; in Find Regex before running it">
                     <span>
-                        <span data-i18n="Substitute Regex">Substitute Regex</span>
+                        <small data-i18n="Macro in Find Regex">Macros in Find Regex</small>
                         <span class="fa-solid fa-circle-question note-link-span"></span>
                     </span>
+                    <select name="substitute_regex" class="text_pole textarea_compact margin0">
+                        <option value="0" data-i18n="Don't substitute">Don't substitute</option>
+                        <option value="1" data-i18n="Substitute (raw)">Substitute (raw)</option>
+                        <option value="2" data-i18n="Substitute (escaped)">Substitute (escaped)</option>
+                    </select>
                 </label>
                 <span>
                     <small data-i18n="ext_regex_other_options" data-i18n="Ephemerality">Ephemerality</small>
