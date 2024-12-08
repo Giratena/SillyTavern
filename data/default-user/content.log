@@ -385,3 +385,6 @@ presets/context/Mistral V1.json
 presets/instruct/Mistral V2 & V3.json
 presets/context/Mistral V2 & V3.json
 presets/instruct/Mistral V3-Tekken.json
+Char_Avatar_Comfy_Workflow.json
+presets/instruct/Mistral V7.json
+presets/context/Mistral V7.json
