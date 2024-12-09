@@ -81,7 +81,9 @@ ollama:
   keepAlive: -1
 claude:
   enableSystemPromptCache: false
+  cachingAtDepth: -1
 autheliaAuth: false
 perUserBasicAuth: false
 chatBackupThrottleInterval: 10000
 promptPlaceholder: "[Start a new chat]"
+cardsCacheCapacity: 100

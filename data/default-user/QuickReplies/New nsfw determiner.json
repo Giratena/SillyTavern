@@ -8,6 +8,24 @@
     "onlyBorderColor": false,
     "qrList": [
         {
+            "id": 14,
+            "icon": "fa-arrow-down-long",
+            "showLabel": false,
+            "label": "",
+            "title": "",
+            "message": "{{input}}\n[Increase Wholesome Value, Decrease Lewd Value]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
             "id": 2,
             "showLabel": false,
             "label": "Asexual",
@@ -80,7 +98,25 @@
             "showLabel": false,
             "label": "Perverted",
             "title": "",
-            "message": "{{input}}\n[OCC: begin your reply with (wholesome 0/100 lewd) ]",
+            "message": "{{input}}\n[OCC: begin your reply with (wholesome 0/100 lewd) (0:100)\n*Only sex and descriptions of genitalia are present, uncontrollable unhinged horniness. With {{user}} having sex* ]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
+            "id": 12,
+            "icon": "fa-arrow-up-long",
+            "showLabel": false,
+            "label": "",
+            "title": "",
+            "message": "{{input}}\n[Decrease Wholesome Value, Increase Lewd Value]",
             "contextList": [],
             "preventAutoExecute": true,
             "isHidden": false,
@@ -93,5 +129,5 @@
             "automationId": ""
         }
     ],
-    "idIndex": 10
+    "idIndex": 14
 }
