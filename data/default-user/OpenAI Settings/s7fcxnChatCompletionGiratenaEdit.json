@@ -31,7 +31,7 @@
     "top_a": 1,
     "min_p": 0,
     "repetition_penalty": 1,
-    "openai_max_context": 3000,
+    "openai_max_context": 13954,
     "openai_max_tokens": 4096,
     "wrap_in_quotes": false,
     "names_behavior": 1,
