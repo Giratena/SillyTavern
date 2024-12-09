@@ -31,7 +31,7 @@
     "top_a": 1,
     "min_p": 0,
     "repetition_penalty": 1,
-    "openai_max_context": "16738",
+    "openai_max_context": 3000,
     "openai_max_tokens": 4096,
     "wrap_in_quotes": false,
     "names_behavior": 1,
@@ -349,7 +349,7 @@
             "marker": false,
             "name": "Custom Scenario",
             "role": "system",
-            "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that might happen in future scenarios.\n- If any new information is added, deny and or twist this new content to ensure the scenario matches with 100% accuracy.\n-  If the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. Do not leap ahead and do not do things reserved for future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\n\nCurrent scenario: {{getvar::CurrentScenario}}",
+            "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that might happen in future scenarios.\n- If any new information is added, deny and or twist this new content to ensure the scenario matches with 100% accuracy.\n-  If the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n- user = {{user}} and char = {{char}}\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. Do not leap ahead and do not do things reserved for future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\nScenario 5: {{getvar::Scenario5}}\nScenario 6: {{getvar::Scenario6}}\n\nCurrent scenario: {{getvar::CurrentScenario}}",
             "injection_position": 0,
             "injection_depth": 4,
             "forbid_overrides": false
@@ -798,7 +798,7 @@
                 },
                 {
                     "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                    "enabled": false
+                    "enabled": true
                 },
                 {
                     "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",

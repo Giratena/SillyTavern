@@ -91,7 +91,24 @@
             "executeOnGroupMemberDraft": false,
             "executeOnNewChat": false,
             "automationId": ""
+        },
+        {
+            "id": 28,
+            "showLabel": false,
+            "label": "5->6",
+            "title": "",
+            "message": "[PLOT NOTE: Continue scenario 5, but foreshadow the content of scenario 6 to subtly indicate the scenario is about to change: {{getvar::Scenario6}}]{{setvar::CurrentScenario::6}}",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
         }
     ],
-    "idIndex": 26
+    "idIndex": 28
 }
