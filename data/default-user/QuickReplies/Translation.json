@@ -1,0 +1,63 @@
+{
+    "version": 2,
+    "name": "Translation",
+    "disableSend": false,
+    "placeBeforeInput": false,
+    "injectInput": false,
+    "color": "rgba(0, 0, 0, 0)",
+    "onlyBorderColor": false,
+    "qrList": [
+        {
+            "id": 2,
+            "showLabel": false,
+            "label": "Touch up gramma",
+            "title": "",
+            "message": "[Touch up/reword sentence to make it a more natural English sentence]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
+            "id": 4,
+            "showLabel": false,
+            "label": "Detail",
+            "title": "",
+            "message": "[Re-write with more detail and adjectives in place of the Japanese sfx, with the intention of making it more sexy. The next reply should only have 2-5 more words ONLY]",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        },
+        {
+            "id": 6,
+            "showLabel": false,
+            "label": "New chat",
+            "title": "",
+            "message": "/newchat",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        }
+    ],
+    "idIndex": 6
+}
