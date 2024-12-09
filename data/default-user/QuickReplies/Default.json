@@ -3,7 +3,7 @@
     "name": "Default",
     "disableSend": true,
     "placeBeforeInput": true,
-    "injectInput": false,
+    "injectInput": true,
     "color": "rgba(0, 0, 0, 0)",
     "onlyBorderColor": false,
     "qrList": [
