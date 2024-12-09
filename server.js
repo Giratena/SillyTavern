@@ -627,10 +627,6 @@ const tavernUrl = new URL(
     (':' + server_port),
 );
 
-function prepareFrontendBundle() {
-    return new Promise((resolve) => webpackMiddleware.waitUntilValid(resolve));
-}
-
 /**
  * Tasks that need to be run before the server starts listening.
  */
@@ -682,7 +678,7 @@ const preSetupTasks = async function () {
     initRequestProxy({ enabled: proxyEnabled, url: proxyUrl, bypass: proxyBypass });
 
     // Wait for frontend libs to compile
-    await prepareFrontendBundle();
+    await webpackMiddleware.runWebpackCompiler();
 };
 
 /**

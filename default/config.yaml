@@ -1,6 +1,8 @@
 # -- DATA CONFIGURATION --
 # Root directory for user data storage
 dataRoot: ./data
+# The maximum amount of memory that parsed character cards can use in MB
+cardsCacheCapacity: 100
 # -- SERVER CONFIGURATION --
 # Listen for incoming connections
 listen: false

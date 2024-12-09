@@ -947,7 +947,7 @@ export class ToolManager {
                     enumProvider: toolsEnumProvider,
                 }),
             ],
-            callback: async (name) => {
+            callback: async (_, name) => {
                 if (typeof name !== 'string' || !name) {
                     throw new Error('The unnamed argument must be a non-empty string.');
                 }

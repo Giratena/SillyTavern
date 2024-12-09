@@ -53,13 +53,13 @@ import { SlashCommandEnumValue, enumTypes } from './slash-commands/SlashCommandE
 import { commonEnumProviders, enumIcons } from './slash-commands/SlashCommandCommonEnumsProvider.js';
 import { POPUP_TYPE, callGenericPopup } from './popup.js';
 import { loadSystemPrompts } from './sysprompt.js';
+import { fuzzySearchCategories } from './filters.js';
 
 export {
     loadPowerUserSettings,
     loadMovingUIState,
     collapseNewlines,
     playMessageSound,
-    sortEntitiesList,
     fixMarkdown,
     power_user,
     send_on_enter_options,
@@ -245,6 +245,7 @@ let power_user = {
     },
 
     context_derived: false,
+    context_size_derived: false,
 
     sysprompt: {
         enabled: true,
@@ -471,9 +472,9 @@ function switchCompactInputArea() {
     $('#compact_input_area').prop('checked', power_user.compact_input_area);
 }
 
-export function switchSwipeNumAllMessages() {
+function switchSwipeNumAllMessages() {
     $('#show_swipe_num_all_messages').prop('checked', power_user.show_swipe_num_all_messages);
-    $('.mes:not(.last_mes) .swipes-counter').css('opacity', '').toggle(power_user.show_swipe_num_all_messages);
+    $('body').toggleClass('swipeAllMessages', !!power_user.show_swipe_num_all_messages);
 }
 
 var originalSliderValues = [];
@@ -1481,6 +1482,7 @@ async function loadPowerUserSettings(settings, data) {
     $('#example_messages_behavior').val(getExampleMessagesBehavior());
     $(`#example_messages_behavior option[value="${getExampleMessagesBehavior()}"]`).prop('selected', true);
     $('#context_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.context_derived);
+    $('#context_size_derived').prop('checked', !!power_user.context_size_derived);
 
     $('#console_log_prompts').prop('checked', power_user.console_log_prompts);
     $('#request_token_probabilities').prop('checked', power_user.request_token_probabilities);
@@ -1754,7 +1756,7 @@ async function loadContextSettings() {
         } else {
             $element.val(power_user.context[control.property]);
         }
-        console.log(`Setting ${$element.prop('id')} to ${power_user.context[control.property]}`);
+        console.debug(`Setting ${$element.prop('id')} to ${power_user.context[control.property]}`);
 
         // If the setting already exists, no need to duplicate it
         // TODO: Maybe check the power_user object for the setting instead of a flag?
@@ -1765,7 +1767,7 @@ async function loadContextSettings() {
             } else {
                 power_user.context[control.property] = value;
             }
-            console.log(`Setting ${$element.prop('id')} to ${value}`);
+            console.debug(`Setting ${$element.prop('id')} to ${value}`);
             if (!CSS.supports('field-sizing', 'content') && $(this).is('textarea')) {
                 await resetScrollHeight($(this));
             }
@@ -1829,27 +1831,27 @@ async function loadContextSettings() {
     });
 }
 
+
 /**
- * Fuzzy search characters by a search term
+ * Common function to perform fuzzy search with optional caching
+ * @param {string} type - Type of search from fuzzySearchCategories
+ * @param {any[]} data - Data array to search in
+ * @param {Array<{name: string, weight: number, getFn?: (obj: any) => string}>} keys - Fuse.js keys configuration
  * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
  * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
  */
-export function fuzzySearchCharacters(searchValue) {
-    // @ts-ignore
-    const fuse = new Fuse(characters, {
-        keys: [
-            { name: 'data.name', weight: 20 },
-            { name: '#tags', weight: 10, getFn: (character) => getTagsList(character.avatar).map(x => x.name).join('||') },
-            { name: 'data.description', weight: 3 },
-            { name: 'data.mes_example', weight: 3 },
-            { name: 'data.scenario', weight: 2 },
-            { name: 'data.personality', weight: 2 },
-            { name: 'data.first_mes', weight: 2 },
-            { name: 'data.creator_notes', weight: 2 },
-            { name: 'data.creator', weight: 1 },
-            { name: 'data.tags', weight: 1 },
-            { name: 'data.alternate_greetings', weight: 1 },
-        ],
+function performFuzzySearch(type, data, keys, searchValue, fuzzySearchCaches = null) {
+    // Check cache if provided
+    if (fuzzySearchCaches) {
+        const cache = fuzzySearchCaches[type];
+        if (cache?.resultMap.has(searchValue)) {
+            return cache.resultMap.get(searchValue);
+        }
+    }
+
+    const fuse = new Fuse(data, {
+        keys: keys,
         includeScore: true,
         ignoreLocation: true,
         useExtendedSearch: true,
@@ -1857,109 +1859,110 @@ export function fuzzySearchCharacters(searchValue) {
     });
 
     const results = fuse.search(searchValue);
-    console.debug('Characters fuzzy search results for ' + searchValue, results);
+
+    // Store in cache if provided
+    if (fuzzySearchCaches) {
+        fuzzySearchCaches[type].resultMap.set(searchValue, results);
+    }
     return results;
+}
+
+/**
+ * Fuzzy search characters by a search term
+ * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
+ * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
+ */
+export function fuzzySearchCharacters(searchValue, fuzzySearchCaches = null) {
+    const keys = [
+        { name: 'data.name', weight: 20 },
+        { name: '#tags', weight: 10, getFn: (character) => getTagsList(character.avatar).map(x => x.name).join('||') },
+        { name: 'data.description', weight: 3 },
+        { name: 'data.mes_example', weight: 3 },
+        { name: 'data.scenario', weight: 2 },
+        { name: 'data.personality', weight: 2 },
+        { name: 'data.first_mes', weight: 2 },
+        { name: 'data.creator_notes', weight: 2 },
+        { name: 'data.creator', weight: 1 },
+        { name: 'data.tags', weight: 1 },
+        { name: 'data.alternate_greetings', weight: 1 },
+    ];
+
+    return performFuzzySearch(fuzzySearchCategories.characters, characters, keys, searchValue, fuzzySearchCaches);
 }
 
 /**
  * Fuzzy search world info entries by a search term
  * @param {*[]} data - WI items data array
  * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
  * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
  */
-export function fuzzySearchWorldInfo(data, searchValue) {
-    // @ts-ignore
-    const fuse = new Fuse(data, {
-        keys: [
-            { name: 'key', weight: 20 },
-            { name: 'group', weight: 15 },
-            { name: 'comment', weight: 10 },
-            { name: 'keysecondary', weight: 10 },
-            { name: 'content', weight: 3 },
-            { name: 'uid', weight: 1 },
-            { name: 'automationId', weight: 1 },
-        ],
-        includeScore: true,
-        ignoreLocation: true,
-        useExtendedSearch: true,
-        threshold: 0.2,
-    });
+export function fuzzySearchWorldInfo(data, searchValue, fuzzySearchCaches = null) {
+    const keys = [
+        { name: 'key', weight: 20 },
+        { name: 'group', weight: 15 },
+        { name: 'comment', weight: 10 },
+        { name: 'keysecondary', weight: 10 },
+        { name: 'content', weight: 3 },
+        { name: 'uid', weight: 1 },
+        { name: 'automationId', weight: 1 },
+    ];
 
-    const results = fuse.search(searchValue);
-    console.debug('World Info fuzzy search results for ' + searchValue, results);
-    return results;
+    return performFuzzySearch(fuzzySearchCategories.worldInfo, data, keys, searchValue, fuzzySearchCaches);
 }
 
 /**
  * Fuzzy search persona entries by a search term
  * @param {*[]} data - persona data array
  * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
  * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
  */
-export function fuzzySearchPersonas(data, searchValue) {
-    data = data.map(x => ({ key: x, name: power_user.personas[x] ?? '', description: power_user.persona_descriptions[x]?.description ?? '' }));
-    // @ts-ignore
-    const fuse = new Fuse(data, {
-        keys: [
-            { name: 'name', weight: 20 },
-            { name: 'description', weight: 3 },
-        ],
-        includeScore: true,
-        ignoreLocation: true,
-        useExtendedSearch: true,
-        threshold: 0.2,
-    });
+export function fuzzySearchPersonas(data, searchValue, fuzzySearchCaches = null) {
+    const mappedData = data.map(x => ({
+        key: x,
+        name: power_user.personas[x] ?? '',
+        description: power_user.persona_descriptions[x]?.description ?? '',
+    }));
 
-    const results = fuse.search(searchValue);
-    console.debug('Personas fuzzy search results for ' + searchValue, results);
-    return results;
+    const keys = [
+        { name: 'name', weight: 20 },
+        { name: 'description', weight: 3 },
+    ];
+
+    return performFuzzySearch(fuzzySearchCategories.personas, mappedData, keys, searchValue, fuzzySearchCaches);
 }
 
 /**
  * Fuzzy search tags by a search term
  * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
  * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
  */
-export function fuzzySearchTags(searchValue) {
-    // @ts-ignore
-    const fuse = new Fuse(tags, {
-        keys: [
-            { name: 'name', weight: 1 },
-        ],
-        includeScore: true,
-        ignoreLocation: true,
-        useExtendedSearch: true,
-        threshold: 0.2,
-    });
+export function fuzzySearchTags(searchValue, fuzzySearchCaches = null) {
+    const keys = [
+        { name: 'name', weight: 1 },
+    ];
 
-    const results = fuse.search(searchValue);
-    console.debug('Tags fuzzy search results for ' + searchValue, results);
-    return results;
+    return performFuzzySearch(fuzzySearchCategories.tags, tags, keys, searchValue, fuzzySearchCaches);
 }
 
 /**
  * Fuzzy search groups by a search term
  * @param {string} searchValue - The search term
+ * @param {Object.<string, { resultMap: Map<string, any> }>} [fuzzySearchCaches=null] - Optional fuzzy search caches
  * @returns {import('fuse.js').FuseResult<any>[]} Results as items with their score
  */
-export function fuzzySearchGroups(searchValue) {
-    // @ts-ignore
-    const fuse = new Fuse(groups, {
-        keys: [
-            { name: 'name', weight: 20 },
-            { name: 'members', weight: 15 },
-            { name: '#tags', weight: 10, getFn: (group) => getTagsList(group.id).map(x => x.name).join('||') },
-            { name: 'id', weight: 1 },
-        ],
-        includeScore: true,
-        ignoreLocation: true,
-        useExtendedSearch: true,
-        threshold: 0.2,
-    });
+export function fuzzySearchGroups(searchValue, fuzzySearchCaches = null) {
+    const keys = [
+        { name: 'name', weight: 20 },
+        { name: 'members', weight: 15 },
+        { name: '#tags', weight: 10, getFn: (group) => getTagsList(group.id).map(x => x.name).join('||') },
+        { name: 'id', weight: 1 },
+    ];
 
-    const results = fuse.search(searchValue);
-    console.debug('Groups fuzzy search results for ' + searchValue, results);
-    return results;
+    return performFuzzySearch(fuzzySearchCategories.groups, groups, keys, searchValue, fuzzySearchCaches);
 }
 
 /**
@@ -2075,18 +2078,21 @@ const compareFunc = (first, second) => {
 /**
  * Sorts an array of entities based on the current sort settings
  * @param {any[]} entities An array of objects with an `item` property
+ * @param {boolean} forceSearch Whether to force search sorting
+ * @param {import('./filters.js').FilterHelper} [filterHelper=null] Filter helper to use
  */
-function sortEntitiesList(entities) {
+export function sortEntitiesList(entities, forceSearch, filterHelper = null) {
+    filterHelper = filterHelper ?? entitiesFilter;
     if (power_user.sort_field == undefined || entities.length === 0) {
         return;
     }
 
-    if (power_user.sort_order === 'random') {
+    const isSearch = forceSearch || $('#character_sort_order option[data-field="search"]').is(':selected');
+
+    if (!isSearch && power_user.sort_order === 'random') {
         shuffle(entities);
         return;
     }
-
-    const isSearch = $('#character_sort_order option[data-field="search"]').is(':selected');
 
     entities.sort((a, b) => {
         // Sort tags/folders will always be at the top
@@ -2099,8 +2105,8 @@ function sortEntitiesList(entities) {
 
         // If we have search sorting, we take scores and use those
         if (isSearch) {
-            const aScore = entitiesFilter.getScore(FILTER_TYPES.SEARCH, `${a.type}.${a.id}`);
-            const bScore = entitiesFilter.getScore(FILTER_TYPES.SEARCH, `${b.type}.${b.id}`);
+            const aScore = filterHelper.getScore(FILTER_TYPES.SEARCH, `${a.type}.${a.id}`);
+            const bScore = filterHelper.getScore(FILTER_TYPES.SEARCH, `${b.type}.${b.id}`);
             return (aScore - bScore);
         }
 
@@ -3074,6 +3080,16 @@ $(document).ready(() => {
 
     $('#context_derived').on('change', function () {
         $('#context_derived').parent().find('i').toggleClass('toggleEnabled', !!power_user.context_derived);
+    });
+
+    $('#context_size_derived').on('input', function () {
+        const value = !!$(this).prop('checked');
+        power_user.context_size_derived = value;
+        saveSettingsDebounced();
+    });
+
+    $('#context_size_derived').on('change', function () {
+        $('#context_size_derived').prop('checked', !!power_user.context_size_derived);
     });
 
     $('#always-force-name2-checkbox').change(function () {

@@ -53,6 +53,12 @@ const hash_derivations = {
         // command-r-08-2024
         'Command R'
     ,
+
+    // Tulu
+    'ac7498a36a719da630e99d48e6ebc4409de85a77556c2b6159eeb735bcbd11df':
+        // Tulu-3-8B
+        // Tulu-3-70B
+        'Tulu'
 };
 
 const substr_derivations = {

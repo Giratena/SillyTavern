@@ -669,7 +669,7 @@
                                         </span>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,claude,windowai,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai">
+                                <div class="range-block" data-source="openai,claude,windowai,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt">
                                     <div class="range-block-title" data-i18n="Temperature">
                                         Temperature
                                     </div>
@@ -682,7 +682,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt">
                                     <div class="range-block-title" data-i18n="Frequency Penalty">
                                         Frequency Penalty
                                     </div>
@@ -695,7 +695,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt">
                                     <div class="range-block-title" data-i18n="Presence Penalty">
                                         Presence Penalty
                                     </div>
@@ -721,7 +721,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,claude,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai">
+                                <div class="range-block" data-source="openai,claude,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt">
                                     <div class="range-block-title" data-i18n="Top P">
                                         Top P
                                     </div>
@@ -820,8 +820,8 @@
                                             </div>
                                         </div>
                                         <div class="range-block m-t-1">
-                                            <div class="range-block-title openai_restorable" data-i18n="World Info Format Template">
-                                                <span>World Info format template</span>
+                                            <div class="range-block-title openai_restorable">
+                                                <span data-i18n="World Info Format Template">World Info format template</span>
                                                 <div id="wi_format_restore" data-i18n="[title]Restore default format" title="Restore default format" class="right_menu_button">
                                                     <div class="fa-solid fa-clock-rotate-left"></div>
                                                 </div>
@@ -958,7 +958,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,mistralai,custom,cohere,groq">
+                                <div class="range-block" data-source="openai,openrouter,mistralai,custom,cohere,groq,nanogpt">
                                     <div class="range-block-title justifyLeft" data-i18n="Seed">
                                         Seed
                                     </div>
@@ -1425,7 +1425,7 @@
                                                 <input class="neo-range-slider" type="range" id="dry_allowed_length_textgenerationwebui" min="1" max="20" step="1" />
                                                 <input class="neo-range-input" type="number" min="1" max="20" step="1" data-for="dry_allowed_length_textgenerationwebui" id="dry_allowed_length_counter_textgenerationwebui">
                                             </div>
-                                            <div class="alignItemsCenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0" data-tg-type="llamacpp, koboldcpp, tabby">
+                                            <div class="alignItemsCenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0" data-tg-type="llamacpp, koboldcpp, tabby, aphrodite">
                                                 <small data-i18n="Penalty Range">Penalty Range</small>
                                                 <input class="neo-range-slider" type="range" id="dry_penalty_last_n_textgenerationwebui" min="0" max="8192" step="1" />
                                                 <input class="neo-range-input" type="number" min="0" max="8192" step="1" data-for="dry_penalty_last_n_textgenerationwebui" id="dry_penalty_last_n_counter_textgenerationwebui">
@@ -1524,15 +1524,15 @@
                                             <div class="">
                                                 <label class="checkbox_label" for="early_stopping_textgenerationwebui">
                                                     <input type="checkbox" id="early_stopping_textgenerationwebui" />
-                                                    <small data-i18n="Early Stopping">Early Stopping
-                                                        <div class="fa-solid fa-circle-info opacity50p" data-i18n="[title]Controls the stopping condition for beam search. If checked, the generation stops as soon as there are '# of Beams' sequences. If not checked, a heuristic is applied and the generation is stopped when it's very unlikely to find better candidates." title="Controls the stopping condition for beam search. If checked, the generation stops as soon as there are '# of Beams' sequences. If not checked, a heuristic is applied and the generation is stopped when it's very unlikely to find better candidates."></div>
-                                                    </small>
+                                                    <small data-i18n="Early Stopping">Early Stopping</small>
+                                                    <div class="fa-solid fa-circle-info opacity50p" data-i18n="[title]Controls the stopping condition for beam search. If checked, the generation stops as soon as there are '# of Beams' sequences. If not checked, a heuristic is applied and the generation is stopped when it's very unlikely to find better candidates." title="Controls the stopping condition for beam search. If checked, the generation stops as soon as there are '# of Beams' sequences. If not checked, a heuristic is applied and the generation is stopped when it's very unlikely to find better candidates."></div>
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
                                     <div data-tg-type="ooba" id="contrastiveSearchBlock" name="contrastiveSearchBlock" class="alignitemscenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0">
-                                        <h4 class="textAlignCenter" data-i18n="Contrastive search">Contrastive Search
+                                        <h4 class="textAlignCenter">
+                                            <span data-i18n="Contrastive search">Contrastive Search</span>
                                             <div class=" fa-solid fa-circle-info opacity50p " data-i18n="Contrastive_search_txt" title="A sampler that encourages diversity while maintaining coherence, by exploiting the isotropicity of the representation space of most LLMs. For details, see the paper A Contrastive Framework for Neural Text Generation by Su et al. (2022)."></div>
                                         </h4>
                                         <div class="alignitemscenter flex-container flexFlowColumn wide100p gap0">
@@ -1566,9 +1566,8 @@
                                             </label>
                                             <label data-tg-type="vllm, aphrodite, infermaticai" class="checkbox_label" for="ignore_eos_token_textgenerationwebui">
                                                 <input type="checkbox" id="ignore_eos_token_textgenerationwebui" />
-                                                <small data-i18n="Ignore EOS Token">Ignore EOS Token
-                                                    <div class="fa-solid fa-circle-info opacity50p " data-i18n="[title]Ignore the EOS Token even if it generates." title="Ignore the EOS Token even if it generates."></div>
-                                                </small>
+                                                <small data-i18n="Ignore EOS Token">Ignore EOS Token</small>
+                                                <div class="fa-solid fa-circle-info opacity50p " data-i18n="[title]Ignore the EOS Token even if it generates." title="Ignore the EOS Token even if it generates."></div>
                                             </label>
                                             <label class="checkbox_label flexGrow flexShrink" for="skip_special_tokens_textgenerationwebui">
                                                 <input type="checkbox" id="skip_special_tokens_textgenerationwebui" />
@@ -1629,7 +1628,8 @@
                                     </div>
                                     <div id="cfg_block_ooba" data-tg-type="ooba, tabby" class="wide100p">
                                         <hr class="width100p">
-                                        <h4 data-i18n="CFG" class="textAlignCenter">CFG
+                                        <h4 class="textAlignCenter">
+                                            <span data-i18n="CFG">CFG</span>
                                             <div class="margin5 fa-solid fa-circle-info opacity50p " data-i18n="[title]Classifier Free Guidance. More helpful tip coming soon" title="Classifier Free Guidance. More helpful tip coming soon."></div>
                                         </h4>
                                         <div class="alignitemscenter flex-container flexFlowColumn flexShrink gap0">
@@ -1965,8 +1965,10 @@
                                     <div id="logit_bias_openai" class="range-block-title openai_restorable" data-i18n="Logit Bias">
                                         Logit Bias
                                     </div>
-                                    <div class="toggle-description justifyLeft" data-i18n="Helps to ban or reenforce the usage of certain words">
-                                        Helps to ban or reinforce the usage of certain tokens. Confirm token parsing with <a target="_blank" href="https://platform.openai.com/tokenizer/">Tokenizer</a>.
+                                    <div class="toggle-description justifyLeft">
+                                        <span data-i18n="Helps to ban or reenforce the usage of certain words">Helps to ban or reinforce the usage of certain tokens.</span>
+                                        <span data-i18n="Confirm token parsing with">Confirm token parsing with</span>
+                                        <a target="_blank" href="https://platform.openai.com/tokenizer/" data-i18n="Tokenizer">Tokenizer</a>.
                                     </div>
                                     <div class="openai_logit_bias_preset_form">
                                         <select id="openai_logit_bias_preset">
@@ -2267,8 +2269,8 @@
                             <div data-tg-type="mancer" class="flex-container flexFlowColumn">
                                 <div class="flex-container flexFlowColumn">
                                 </div>
-                                <h4 data-i18n="Mancer API key">
-                                    Mancer API key
+                                <h4>
+                                    <span data-i18n="Mancer API key">Mancer API key</span>
                                     <a href="https://mancer.tech/" class="notes-link" target="_blank">
                                         <span class="fa-solid fa-circle-question note-link-span"></span>
                                     </a>
@@ -2564,15 +2566,21 @@
                                     <input id="koboldcpp_api_url_text" class="text_pole wide100p" value="" autocomplete="off" data-server-history="koboldcpp">
                                 </div>
                             </div>
+                            <div class="flex-container flexFlowColumn marginTopBot5">
+                                <label data-tg-type="ooba" class="checkbox_label" for="bypass_status_check_textgenerationwebui">
+                                    <input type="checkbox" id="bypass_status_check_textgenerationwebui" />
+                                    <span data-i18n="Bypass status check">Bypass status check</span>
+                                </label>
+                                <label data-tg-type="koboldcpp, llamacpp" class="checkbox_label" for="context_size_derived">
+                                    <input type="checkbox" id="context_size_derived" />
+                                    <span data-i18n="Derive context size from backend">Derive context size from backend</span>
+                                </label>
+                            </div>
                             <div class="flex-container">
                                 <div id="api_button_textgenerationwebui" class="api_button menu_button menu_button_icon" type="submit" data-i18n="Connect" data-server-connect="ooba_blocking,vllm,aphrodite,tabby,koboldcpp,ollama,llamacpp,huggingface">Connect</div>
                                 <div data-tg-type="openrouter" class="menu_button menu_button_icon openrouter_authorize" title="Get your OpenRouter API token using OAuth flow. You will be redirected to openrouter.ai" data-i18n="Authorize;[title]Get your OpenRouter API token using OAuth flow. You will be redirected to openrouter.ai">Authorize</div>
                                 <div class="api_loading menu_button menu_button_icon" data-i18n="Cancel">Cancel</div>
                             </div>
-                            <label data-tg-type="ooba" class="checkbox_label margin-bot-10px" for="bypass_status_check_textgenerationwebui">
-                                <input type="checkbox" id="bypass_status_check_textgenerationwebui" />
-                                <span data-i18n="Bypass status check">Bypass status check</span>
-                            </label>
                         </form>
                         <div class="online_status">
                             <div class="online_status_indicator"></div>
@@ -2615,8 +2623,9 @@
                                 </div>
                                 <div class="toggle-description justifyLeft">
                                     <span data-i18n="Saved addresses and passwords.">
-                                        Saved addresses and passwords.<br>
+                                        Saved addresses and passwords.
                                     </span>
+                                    <br>
                                 </div>
                                 <div class="openai_logit_bias_preset_form">
                                     <select id="openai_proxy_preset">
@@ -2629,8 +2638,9 @@
                                 </div>
                                 <div class="toggle-description justifyLeft">
                                     <span data-i18n="This will show up as your saved preset.">
-                                        This will show up as your saved preset.<br>
+                                        This will show up as your saved preset.
                                     </span>
+                                    <br>
                                 </div>
                                 <div class="wide100p">
                                     <input id="openai_reverse_proxy_name" type="text" class="text_pole" placeholder="..." />
@@ -2640,8 +2650,9 @@
                                 </div>
                                 <div class="toggle-description justifyLeft wide100p">
                                     <span data-i18n="Alternative server URL (leave empty to use the default value).">
-                                        Alternative server URL (leave empty to use the default value).<br>
+                                        Alternative server URL (leave empty to use the default value).
                                     </span>
+                                    <br>
                                 </div>
                                 <div class="wide100p">
                                     <input id="openai_reverse_proxy" type="text" class="text_pole" placeholder="https://api.openai.com/v1" />
@@ -2654,8 +2665,9 @@
                                 </div>
                                 <div class="toggle-description justifyLeft">
                                     <span data-i18n="Will be used as a password for the proxy instead of API key.">
-                                        Will be used as a password for the proxy instead of API key.<br>
+                                        Will be used as a password for the proxy instead of API key.
                                     </span>
+                                    <br>
                                 </div>
                                 <div class="flex-container width100p">
                                     <input id="openai_proxy_password" type="password" class="text_pole flex1" placeholder="" form="openai_form" autocomplete="off" />
@@ -2975,6 +2987,7 @@
                                     <optgroup label="Subversions">
                                         <option value="gemini-exp-1121">Gemini Experimental 2024-11-21</option>
                                         <option value="gemini-exp-1114">Gemini Experimental 2024-11-14</option>
+                                        <option value="gemini-exp-1206">Gemini Experimental 2024-12-06</option>
                                         <option value="gemini-1.5-pro-exp-0801">Gemini 1.5 Pro Experiment 2024-08-01</option>
                                         <option value="gemini-1.5-pro-exp-0827">Gemini 1.5 Pro Experiment 2024-08-27</option>
                                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro [latest]</option>
@@ -3272,7 +3285,7 @@
                             Advanced Formatting
                         </span>
 
-                        <a href="https://docs.sillytavern.app/usage/prompts/" class="notes-link" target="_blank">
+                        <a href="https://docs.sillytavern.app/usage/core-concepts/advancedformatting/" class="notes-link" target="_blank">
                             <span class="fa-solid fa-circle-question note-link-span"></span>
                         </a>
                     </h3>
@@ -3734,7 +3747,7 @@
                     </div>
                     <h3 class="margin0">
                         <span data-i18n="Worlds/Lorebooks">Worlds/Lorebooks</span>
-                        <a href="https://docs.sillytavern.app/usage/worldinfo/" class="notes-link" target="_blank">
+                        <a href="https://docs.sillytavern.app/usage/core-concepts/worldinfo/" class="notes-link" target="_blank">
                             <span class="fa-solid fa-circle-question note-link-span"></span>
                         </a>
                     </h3>
@@ -3743,7 +3756,11 @@
                     <div id="wiTopBlock" class="flex-container">
                         <div id="WIMultiSelector" class="flex1 flex alignSelfStart range-block">
                             <div class="range-block-title justifyLeft">
-                                <span data-i18n="Active World(s) for all chats"><small>Active World(s) for all chats</small></span>
+                                <span>
+                                    <small data-i18n="Active World(s) for all chats">
+                                        Active World(s) for all chats
+                                    </small>
+                                </span>
                             </div>
                             <div class="range-block-range">
                                 <select id="world_info" class="select2_multi_sameline" multiple>
@@ -3928,7 +3945,13 @@
                     <div name="userSettingsRowOne" class="flex-container flexFlowRow alignitemscenter spaceBetween">
                         <div class="flex-container">
                             <div class="flex-container flexnowrap alignItemsBaseline">
-                                <h3 class="margin0"><span data-i18n="User Settings">User Settings</span></h3>
+                                <h3 class="margin0">
+                                    <span data-i18n="User Settings">User Settings</span>
+
+                                    <a href="https://docs.sillytavern.app/usage/user_settings/" class="notes-link" target="_blank">
+                                        <span class="fa-solid fa-circle-question note-link-span"></span>
+                                    </a>
+                                </h3>
                             </div>
                         </div>
                         <div id="UI-language-block" class="flex-container alignItemsBaseline">
@@ -4062,7 +4085,10 @@
 
                                 <div class="alignitemscenter flex-container flexFlowColumn flexBasis48p flexGrow flexShrink gap0">
                                     <small>
-                                        <span data-i18n="Chat Width">Chat Width <i class="fa-solid fa-desktop"></i></span>
+                                        <span>
+                                            <span data-i18n="Chat Width">Chat Width</span>
+                                            <i class="fa-solid fa-desktop"></i>
+                                        </span>
                                         <div class="fa-solid fa-circle-info opacity50p" data-i18n="[title]Width of the main chat window in % of screen width" title="Width of the main chat window in % of screen width"></div>
                                     </small>
                                     <input class="neo-range-slider" type="range" id="chat_width_slider" name="chat_width_slider" min="25" max="100" step="1">
@@ -4158,7 +4184,7 @@
                                 </label>
                                 <label for="show_swipe_num_all_messages" class="checkbox_label" title="Display swipe numbers for all messages, not just the last." data-i18n="[title]Display swipe numbers for all messages, not just the last.">
                                     <input id="show_swipe_num_all_messages" type="checkbox" />
-                                    <small data-i18n="Swipe # for All Messages">Swipe # for All Messages</small><i class="fa-solid fa-mobile-screen-button"></i>
+                                    <small data-i18n="Swipe # for All Messages">Swipe # for All Messages</small>
                                 </label>
                                 <label for="hotswapEnabled" class="checkbox_label" title="In the Character Management panel, show quick selection buttons for favorited characters." data-i18n="[title]In the Character Management panel, show quick selection buttons for favorited characters">
                                     <input id="hotswapEnabled" type="checkbox" />
@@ -4234,7 +4260,7 @@
                                 <div id="reload_chat" class="menu_button whitespacenowrap" data-i18n="[title]Reload and redraw the currently open chat" title="Reload and redraw the currently open chat.">
                                     <small data-i18n="Reload Chat">Reload Chat</small>
                                 </div>
-                                <div id="debug_menu" class="menu_button whitespacenowrap" data-i18n="Debug Menu">
+                                <div id="debug_menu" class="menu_button whitespacenowrap">
                                     <small data-i18n="Debug Menu">Debug Menu</small>
                                 </div>
                             </div>
@@ -4261,9 +4287,6 @@
                                 <audio id="audio_message_sound" src="sounds/message.mp3" hidden></audio>
                                 <span>
                                     <small data-i18n="Message Sound">Message Sound</small>
-                                    <a href="https://docs.sillytavern.app/usage/user_settings/uicustomization/#message-sound" class="notes-link" target="_blank">
-                                        <span class="fa-solid fa-circle-question note-link-span"></span>
-                                    </a>
                                 </span>
                             </label>
                             <label for="play_sound_unfocused" class="checkbox_label" title="Only play a sound when ST's browser tab is unfocused." data-i18n="[title]Only play a sound when ST's browser tab is unfocused">
@@ -4356,8 +4379,10 @@
                                     </div>
                                 </div>
                                 <div id="examples-behavior-block">
-                                    <label data-i18n="Example Messages Behavior">
-                                        <small>Example Messages Behavior:</small>
+                                    <label>
+                                        <small data-i18n="Example Messages Behavior">
+                                            Example Messages Behavior:
+                                        </small>
                                     </label>
                                     <select id="example_messages_behavior">
                                         <option value="normal" data-i18n="Gradual push-out">Gradual push-out</option>
@@ -4521,7 +4546,9 @@
                                     </label>
                                     <div class="flex-container">
                                         <div class="flex1" title="Determines how entries are found for autocomplete." data-i18n="[title]Determines how entries are found for autocomplete.">
-                                            <label for="stscript_matching" data-i18n="Autocomplete Matching"><small>Matching</small></label>
+                                            <label for="stscript_matching">
+                                                <small data-i18n="Autocomplete Matching">Matching</small>
+                                            </label>
                                             <select id="stscript_matching">
                                                 <option data-i18n="Starts with" value="strict">Starts with</option>
                                                 <option data-i18n="Includes" value="includes">Includes</option>
@@ -4529,7 +4556,9 @@
                                             </select>
                                         </div>
                                         <div class="flex1" title="Sets the style of the autocomplete." data-i18n="[title]Sets the style of the autocomplete.">
-                                            <label for="stscript_autocomplete_style" data-i18n="Autocomplete Style"><small>Style</small></label>
+                                            <label for="stscript_autocomplete_style">
+                                                <small data-i18n="Autocomplete Style">Style</small>
+                                            </label>
                                             <div class="flex-container flexFlowRow alignItemsBaseline">
                                                 <select id="stscript_autocomplete_style">
                                                     <option data-i18n="Follow Theme" value="theme">Follow Theme</option>
@@ -4541,8 +4570,8 @@
                                         </div>
                                     </div>
                                     <div title="Determines which keys select an item from the AutoComplete suggestions">
-                                        <label data-i18n="Keyboard">
-                                            <small>Keyboard:</small>
+                                        <label>
+                                            <small data-i18n="Keyboard">Keyboard:</small>
                                         </label>
                                         <select id="stscript_autocomplete_select">
                                             <option value="3" data-i18n="Select with Tab or Enter">Select with Tab or Enter</option>
@@ -4556,7 +4585,9 @@
                                         <input class="neo-range-input" type="number" min="0.5" max="2" step="0.01" data-for="stscript_autocomplete_font_scale" id="stscript_autocomplete_font_scale_counter">
                                     </div>
                                     <div title="Sets the width of the autocomplete." data-i18n="[title]Sets the width of the autocomplete.">
-                                        <label for="stscript_autocomplete_width" data-i18n="Autocomplete Width"><small>Width</small></label>
+                                        <label for="stscript_autocomplete_width">
+                                            <small data-i18n="Autocomplete Width">Width</small>
+                                        </label>
                                         <div class="doubleRangeContainer">
                                             <div class="doubleRangeInputContainer">
                                                 <input type="range" id="stscript_autocomplete_width_left" min="0" max="2" step="1">
@@ -4584,14 +4615,18 @@
                                     <label><small data-i18n="Parser Flags">Parser Flags</small></label>
                                     <label class="checkbox_label" title="Switch to stricter escaping, allowing all delimiting characters to be escaped with a backslash, and backslashes to be escaped as well." data-i18n="[title]Switch to stricter escaping, allowing all delimiting characters to be escaped with a backslash, and backslashes to be escaped as well.">
                                         <input id="stscript_parser_flag_strict_escaping" type="checkbox" />
-                                        <span data-i18n="STRICT_ESCAPING"><small>STRICT_ESCAPING</small></span>
+                                        <span>
+                                            <small data-i18n="STRICT_ESCAPING">STRICT_ESCAPING</small>
+                                        </span>
                                         <a href="https://docs.sillytavern.app/usage/st-script/#strict-escaping" target="_blank" class="notes-link">
                                             <span class="fa-solid fa-circle-question note-link-span"></span>
                                         </a>
                                     </label>
                                     <label class="checkbox_label" title="Prevents {{getvar::}} {{getglobalvar::}} macros from having literal macro-like values auto-evaluated.&NewLine;e.g. &quot;{{newline}}&quot; remains as literal string &quot;{{newline}}&quot;&NewLine;&NewLine;(This is done by internally replacing {{getvar::}} {{getglobalvar::}} macros with scoped variables.)" data-i18n="[title]stscript_parser_flag_replace_getvar_label">
                                         <input id="stscript_parser_flag_replace_getvar" type="checkbox" />
-                                        <span data-i18n="REPLACE_GETVAR"><small>REPLACE_GETVAR</small></span>
+                                        <span>
+                                            <small data-i18n="REPLACE_GETVAR">REPLACE_GETVAR</small>
+                                        </span>
                                         <a href="https://docs.sillytavern.app/usage/st-script/#replace-variable-macros" target="_blank" class="notes-link">
                                             <span class="fa-solid fa-circle-question note-link-span"></span>
                                         </a>
@@ -4722,10 +4757,12 @@
                 <div class="flex-container wide100p alignitemscenter spaceBetween flexNoGap">
                     <div class="flex-container alignItemsBaseline wide100p">
                         <div class="flex1 flex-container alignItemsBaseline">
-                            <h3 class="margin0" data-i18n="Persona Management">Persona Management</h3>
-                            <a href="https://docs.sillytavern.app/usage/core-concepts/personas/" target="_blank" data-i18n="How do I use this?">
-                                <span class="fa-solid fa-circle-question note-link-span"></span>
-                            </a>
+                            <h3 class="margin0" >
+                                <span data-i18n="Persona Management">Persona Management</span>
+                                <a href="https://docs.sillytavern.app/usage/core-concepts/personas/" target="_blank">
+                                    <span class="fa-solid fa-circle-question note-link-span"></span>
+                                </a>
+                            </h3>
                         </div>
                         <div class="flex-container">
                             <div class="menu_button menu_button_icon user_stats_button" data-i18n="[title]Click for stats!" title="Click for stats!">
@@ -5446,7 +5483,12 @@
                         <span data-i18n="Examples of dialogue" class="mdhotkey_location">Examples of dialogue</span>
                         <i class="editor_maximize fa-solid fa-maximize right_menu_button" data-for="mes_example_textarea" title="Expand the editor" data-i18n="[title]Expand the editor"></i>
                     </h4>
-                    <h5 data-i18n="Important to set the character's writing style.">Important to set the character's writing style. <a href="https://docs.sillytavern.app/usage/core-concepts/characterdesign/#examples-of-dialogue" class="notes-link" target="_blank"><span class="fa-solid fa-circle-question note-link-span"></span></a></h5>
+                    <h5>
+                        <span data-i18n="Important to set the character's writing style.">Important to set the character's writing style.</span>
+                        <a href="https://docs.sillytavern.app/usage/core-concepts/characterdesign/#examples-of-dialogue" class="notes-link" target="_blank">
+                            <span class="fa-solid fa-circle-question note-link-span"></span>
+                        </a>
+                    </h5>
                 </div>
                 <textarea id="mes_example_textarea" class="flexGrow mdHotkeys" name="mes_example" data-i18n="[placeholder](Examples of chat dialog. Begin each example with START on a new line.)" placeholder="(Examples of chat dialog. Begin each example with &lt;START&gt; on a new line.)" form="form_create" rows="6"></textarea>
                 <div class="extension_token_counter">
@@ -5522,7 +5564,8 @@
             <div class="character_world range-block flexFlowColumn flex-container">
                 <div class="range-block-title">
                     <h3>
-                        <span data-i18n="Select a World Info file for"> Select a World Info file for <span class="character_name"></span></span>:
+                        <span data-i18n="Select a World Info file for">Select a World Info file for</span>
+                        <span class="character_name"></span>:
                     </h3>
                 </div>
                 <h4 data-i18n="Primary Lorebook">Primary Lorebook</h4>
@@ -5823,7 +5866,7 @@
                                 </div>
                                 <div class="flex2 flex-container flexFlowColumn flexNoGap" data-i18n="[title]Sticky entries will stay active for N messages after being triggered." title="Sticky entries will stay active for N messages after being triggered.">
                                     <div class="flex-container justifySpaceBetween marginBot5">
-                                        <small class="flex-container alignItemsBaseline" for="sticky" data-i18n="Sticky">
+                                        <small class="flex-container alignItemsBaseline" for="sticky">
                                             <span data-i18n="Sticky">
                                                 Sticky
                                             </span>
@@ -5836,7 +5879,7 @@
                                 </div>
                                 <div class="flex2 flex-container flexFlowColumn flexNoGap" data-i18n="[title]Entries with a cooldown can't be activated N messages after being triggered." title="Entries with a cooldown can't be activated N messages after being triggered.">
                                     <div class="flex-container justifySpaceBetween marginBot5">
-                                        <small class="flex-container alignItemsBaseline" for="cooldown" data-i18n="Cooldown">
+                                        <small class="flex-container alignItemsBaseline" for="cooldown">
                                             <span data-i18n="Cooldown">
                                                 Cooldown
                                             </span>
@@ -5849,7 +5892,7 @@
                                 </div>
                                 <div class="flex2 flex-container flexFlowColumn flexNoGap" data-i18n="[title]Entries with a delay can't be activated until there are N messages present in the chat." title="Entries with a delay can't be activated until there are N messages present in the chat.">
                                     <div class="flex-container justifySpaceBetween marginBot5">
-                                        <small class="flex-container alignItemsBaseline" for="delay" data-i18n="Delay">
+                                        <small class="flex-container alignItemsBaseline" for="delay">
                                             <span data-i18n="Delay">
                                                 Delay
                                             </span>

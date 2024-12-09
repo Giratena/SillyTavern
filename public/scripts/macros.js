@@ -1,5 +1,5 @@
 import { Handlebars, moment, seedrandom, droll } from '../lib.js';
-import { chat, chat_metadata, main_api, getMaxContextSize, getCurrentChatId, substituteParams } from '../script.js';
+import { chat, chat_metadata, main_api, getMaxContextSize, getCurrentChatId, substituteParams, eventSource, event_types } from '../script.js';
 import { timestampToMoment, isDigitsOnly, getStringHash, escapeRegex, uuidv4 } from './utils.js';
 import { textgenerationwebui_banned_in_macros } from './textgen-settings.js';
 import { getInstructMacros } from './instruct-mode.js';
@@ -520,4 +520,23 @@ export function evaluateMacros(content, env, postProcessFn) {
     }
 
     return content;
+}
+
+export function initMacros() {
+    function initLastGenerationType() {
+        let lastGenerationType = '';
+
+        MacrosParser.registerMacro('lastGenerationType', () => lastGenerationType);
+
+        eventSource.on(event_types.GENERATION_STARTED, (type, _params, isDryRun) => {
+            if (isDryRun) return;
+            lastGenerationType = type || 'normal';
+        });
+
+        eventSource.on(event_types.CHAT_CHANGED, () => {
+            lastGenerationType = '';
+        });
+    }
+
+    initLastGenerationType();
 }

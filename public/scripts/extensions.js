@@ -5,6 +5,7 @@ import { showLoader } from './loader.js';
 import { POPUP_RESULT, POPUP_TYPE, Popup, callGenericPopup } from './popup.js';
 import { renderTemplate, renderTemplateAsync } from './templates.js';
 import { isSubsetOf, setValueByPath } from './utils.js';
+import { getContext } from './st-context.js';
 export {
     getContext,
     getApiUrl,
@@ -174,7 +175,6 @@ const extension_settings = {
 let modules = [];
 let activeExtensions = new Set();
 
-const getContext = () => window['SillyTavern'].getContext();
 const getApiUrl = () => extension_settings.apiUrl;
 let connectedToApi = false;
 

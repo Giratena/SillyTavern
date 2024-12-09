@@ -379,8 +379,8 @@ export let selected_proxy = proxies[0];
 let openai_setting_names;
 let openai_settings;
 
-
-let promptManager = null;
+/** @type {import('./PromptManager.js').PromptManager} */
+export let promptManager = null;
 
 async function validateReverseProxy() {
     if (!oai_settings.reverse_proxy) {
@@ -1812,6 +1812,7 @@ async function sendOpenAIRequest(type, messages, signal) {
     const isPerplexity = oai_settings.chat_completion_source == chat_completion_sources.PERPLEXITY;
     const isGroq = oai_settings.chat_completion_source == chat_completion_sources.GROQ;
     const is01AI = oai_settings.chat_completion_source == chat_completion_sources.ZEROONEAI;
+    const isNano = oai_settings.chat_completion_source == chat_completion_sources.NANOGPT;
     const isTextCompletion = isOAI && textCompletionModels.includes(oai_settings.openai_model);
     const isQuiet = type === 'quiet';
     const isImpersonate = type === 'impersonate';
@@ -1971,7 +1972,7 @@ async function sendOpenAIRequest(type, messages, signal) {
         delete generate_data.stop;
     }
 
-    if ((isOAI || isOpenRouter || isMistral || isCustom || isCohere) && oai_settings.seed >= 0) {
+    if ((isOAI || isOpenRouter || isMistral || isCustom || isCohere || isNano) && oai_settings.seed >= 0) {
         generate_data['seed'] = oai_settings.seed;
     }
 
@@ -4076,7 +4077,7 @@ async function onModelChange() {
             $('#openai_max_context').attr('max', max_2mil);
         } else if (value.includes('gemini-exp-1114') || value.includes('gemini-exp-1121')) {
             $('#openai_max_context').attr('max', max_32k);
-        } else if (value.includes('gemini-1.5-pro')) {
+        } else if (value.includes('gemini-1.5-pro') || value.includes('gemini-exp-1206')) {
             $('#openai_max_context').attr('max', max_2mil);
         } else if (value.includes('gemini-1.5-flash')) {
             $('#openai_max_context').attr('max', max_1mil);
@@ -4760,6 +4761,7 @@ export function isImageInliningSupported() {
         'gemini-1.5-flash-8b-exp-0924',
         'gemini-exp-1114',
         'gemini-exp-1121',
+        'gemini-exp-1206',
         'gemini-1.0-pro-vision-latest',
         'gemini-1.5-pro',
         'gemini-1.5-pro-latest',

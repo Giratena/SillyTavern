@@ -191,6 +191,44 @@ function importCAIChat(userName, characterName, jsonData) {
 }
 
 /**
+ * Imports a chat from Kobold Lite format.
+ * @param {string} _userName User name
+ * @param {string} _characterName Character name
+ * @param {object} data JSON data
+ * @returns {string} Chat data
+ */
+function importKoboldLiteChat(_userName, _characterName, data) {
+    const inputToken = '{{[INPUT]}}';
+    const outputToken = '{{[OUTPUT]}}';
+
+    /** @type {function(string): object} */
+    function processKoboldMessage(msg) {
+        const isUser = msg.includes(inputToken);
+        return {
+            name: isUser ? header.user_name : header.character_name,
+            is_user: isUser,
+            mes: msg.replaceAll(inputToken, '').replaceAll(outputToken, '').trim(),
+            send_date: Date.now(),
+        };
+    }
+
+    // Create the header
+    const header = {
+        user_name: String(data.savedsettings.chatname),
+        character_name: String(data.savedsettings.chatopponent).split('||$||')[0],
+    };
+    // Format messages
+    const formattedMessages = data.actions.map(processKoboldMessage);
+    // Add prompt if available
+    if (data.prompt) {
+        formattedMessages.unshift(processKoboldMessage(data.prompt));
+    }
+    // Combine header and messages
+    const chatData = [header, ...formattedMessages];
+    return chatData.map(obj => JSON.stringify(obj)).join('\n');
+}
+
+/**
  * Flattens `msg` and `swipes` data from Chub Chat format.
  * Only changes enough to make it compatible with the standard chat serialization format.
  * @param {string} userName User name
@@ -413,7 +451,7 @@ router.post('/import', urlencodedParser, function (request, response) {
     const format = request.body.file_type;
     const avatarUrl = (request.body.avatar_url).replace('.png', '');
     const characterName = request.body.character_name;
-    const userName = request.body.user_name || 'You';
+    const userName = request.body.user_name || 'User';
 
     if (!request.file) {
         return response.sendStatus(400);
@@ -426,33 +464,38 @@ router.post('/import', urlencodedParser, function (request, response) {
         if (format === 'json') {
             fs.unlinkSync(pathToUpload);
             const jsonData = JSON.parse(data);
-            if (jsonData.histories !== undefined) {
-                // CAI Tools format
-                const chats = importCAIChat(userName, characterName, jsonData);
-                for (const chat of chats) {
-                    const fileName = `${characterName} - ${humanizedISO8601DateTime()} imported.jsonl`;
-                    const filePath = path.join(request.user.directories.chats, avatarUrl, fileName);
-                    writeFileAtomicSync(filePath, chat, 'utf8');
-                }
-                return response.send({ res: true });
-            } else if (Array.isArray(jsonData.data_visible)) {
-                // oobabooga's format
-                const chat = importOobaChat(userName, characterName, jsonData);
-                const fileName = `${characterName} - ${humanizedISO8601DateTime()} imported.jsonl`;
-                const filePath = path.join(request.user.directories.chats, avatarUrl, fileName);
-                writeFileAtomicSync(filePath, chat, 'utf8');
-                return response.send({ res: true });
-            } else if (Array.isArray(jsonData.messages)) {
-                // Agnai format
-                const chat = importAgnaiChat(userName, characterName, jsonData);
-                const fileName = `${characterName} - ${humanizedISO8601DateTime()} imported.jsonl`;
-                const filePath = path.join(request.user.directories.chats, avatarUrl, fileName);
-                writeFileAtomicSync(filePath, chat, 'utf8');
-                return response.send({ res: true });
-            } else {
+
+            /** @type {function(string, string, object): string|string[]} */
+            let importFunc;
+
+            if (jsonData.savedsettings !== undefined) { // Kobold Lite format
+                importFunc = importKoboldLiteChat;
+            } else if (jsonData.histories !== undefined) { // CAI Tools format
+                importFunc = importCAIChat;
+            } else if (Array.isArray(jsonData.data_visible)) { // oobabooga's format
+                importFunc = importOobaChat;
+            } else if (Array.isArray(jsonData.messages)) { // Agnai's format
+                importFunc = importAgnaiChat;
+            } else { // Unknown format
                 console.log('Incorrect chat format .json');
                 return response.send({ error: true });
             }
+
+            const handleChat = (chat) => {
+                const fileName = `${characterName} - ${humanizedISO8601DateTime()} imported.jsonl`;
+                const filePath = path.join(request.user.directories.chats, avatarUrl, fileName);
+                writeFileAtomicSync(filePath, chat, 'utf8');
+            };
+
+            const chat = importFunc(userName, characterName, jsonData);
+
+            if (Array.isArray(chat)) {
+                chat.forEach(handleChat);
+            } else {
+                handleChat(chat);
+            }
+
+            return response.send({ res: true });
         }
 
         if (format === 'jsonl') {
@@ -561,10 +604,14 @@ router.post('/search', jsonParser, function (request, response) {
 
             let targetGroup;
             for (const groupFile of groupFiles) {
-                const groupData = JSON.parse(fs.readFileSync(path.join(groupDir, groupFile), 'utf8'));
-                if (groupData.id === group_id) {
-                    targetGroup = groupData;
-                    break;
+                try {
+                    const groupData = JSON.parse(fs.readFileSync(path.join(groupDir, groupFile), 'utf8'));
+                    if (groupData.id === group_id) {
+                        targetGroup = groupData;
+                        break;
+                    }
+                } catch (error) {
+                    console.error(groupFile, 'group file is corrupted:', error);
                 }
             }
 

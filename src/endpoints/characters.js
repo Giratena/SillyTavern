@@ -14,7 +14,7 @@ import jimp from 'jimp';
 
 import { AVATAR_WIDTH, AVATAR_HEIGHT } from '../constants.js';
 import { jsonParser, urlencodedParser } from '../express-common.js';
-import { deepMerge, humanizedISO8601DateTime, tryParse, extractFileFromZipBuffer } from '../util.js';
+import { deepMerge, humanizedISO8601DateTime, tryParse, extractFileFromZipBuffer, MemoryLimitedMap, getConfigValue } from '../util.js';
 import { TavernCardValidator } from '../validator/TavernCardValidator.js';
 import { parse, write } from '../character-card-parser.js';
 import { readWorldInfoFile } from './worldinfo.js';
@@ -23,7 +23,9 @@ import { importRisuSprites } from './sprites.js';
 const defaultAvatarPath = './public/img/ai4.png';
 
 // KV-store for parsed character data
-const characterDataCache = new Map();
+const cacheCapacity = Number(getConfigValue('cardsCacheCapacity', 100)); // MB
+// With 100 MB limit it would take roughly 3000 characters to reach this limit
+const characterDataCache = new MemoryLimitedMap(1024 * 1024 * cacheCapacity);
 // Some Android devices require tighter memory management
 const isAndroid = process.platform === 'android';
 
@@ -58,6 +60,9 @@ async function writeCharacterData(inputFile, data, outputFile, request, crop = u
     try {
         // Reset the cache
         for (const key of characterDataCache.keys()) {
+            if (Buffer.isBuffer(inputFile)) {
+                break;
+            }
             if (key.startsWith(inputFile)) {
                 characterDataCache.delete(key);
                 break;
@@ -153,7 +158,8 @@ async function tryReadImage(imgPath, crop) {
         return image;
     }
     // If it's an unsupported type of image (APNG) - just read the file as buffer
-    catch {
+    catch (error) {
+        console.log(`Failed to read image: ${imgPath}`, error);
         return fs.readFileSync(imgPath);
     }
 }
