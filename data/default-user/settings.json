@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Marina Ida.png",
+    "active_character": "Anna.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -12,6 +12,7 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
+                "Hypno Vixen Reality",
                 "Hypnotic Actions",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ]
@@ -192,6 +193,7 @@
         "confirm_message_delete": true,
         "sort_field": "date_last_chat",
         "sort_order": "desc",
+        "sort_rule": null,
         "font_scale": 0.95,
         "blur_strength": 0,
         "shadow_width": 4,
@@ -246,7 +248,7 @@
         "world_import_dialog": true,
         "enable_auto_select_input": false,
         "enable_md_hotkeys": false,
-        "tag_import_setting": 1,
+        "tag_import_setting": 3,
         "disable_group_trimming": false,
         "single_line": false,
         "instruct": {
@@ -343,7 +345,10 @@
         "auto_connect": false,
         "auto_load_chat": false,
         "forbid_external_media": true,
-        "external_media_allowed_overrides": [],
+        "external_media_allowed_overrides": [
+            "Ava X Wonder Girl.png",
+            "Anna.png"
+        ],
         "external_media_forbidden_overrides": [],
         "include_newline": false,
         "ui_mode": 1,
@@ -498,7 +503,8 @@
             },
             "character_prompts": {
                 "Aqua": "{{Aqua (konosuba)}}",
-                "Marina Ida": "{{marina (splatoon)}}, "
+                "Marina Ida": "{{marina (splatoon)}}, ",
+                "Renee l'noire": "Black panther, lock bulge"
             },
             "source": "extras",
             "scheduler": "normal",
@@ -671,6 +677,636 @@
             "id": "1345561466591",
             "name": "ST Default",
             "color": "rgba(108, 32, 32, 1)"
+        },
+        {
+            "id": "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "name": "Female",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "0fbbc2d3-eda6-4347-90c6-ba8deabd8388",
+            "name": "Human",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "fae4f168-f6ba-4ccd-8e38-167bcc1661b6",
+            "name": "OC",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "37b4d387-22ce-4de2-866e-36d71dbde205",
+            "name": "Scenario",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "acd34e4c-0a11-4bb6-96ee-100eacc4762a",
+            "name": "English",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "name": "Romance",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "a89bc4bd-be7a-4f2f-9c50-830d7e81991d",
+            "name": "Love",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "26ec96aa-ac7f-43f0-a691-c825c59f53bc",
+            "name": "Reverse Rape",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "e26362ea-3449-4222-bf20-8316b4b330bb",
+            "name": "Roleplay",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "b91fe7bf-236d-44d7-b13c-9c969c809c00",
+            "name": "Dominant",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "name": "NSFW",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420096907
+        },
+        {
+            "id": "06130240-94a9-4665-804f-da32d391a6ab",
+            "name": "femdom",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420794907
+        },
+        {
+            "id": "ea4fb765-22cf-4ea4-8b82-66791f0757aa",
+            "name": "Sci-fi",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420794907
+        },
+        {
+            "id": "e8a74b4f-66c1-405b-95df-4f50dcfe27d7",
+            "name": "Android",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420794907
+        },
+        {
+            "id": "7dbb4cf5-b015-4359-90b7-bb3937f2a786",
+            "name": "Villain",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420794907
+        },
+        {
+            "id": "9443f126-9e33-42e3-a559-4261865f633b",
+            "name": "Mind Control",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734420794907
+        },
+        {
+            "id": "e8f89c41-ad9a-4619-ae18-4b9ae6a4e415",
+            "name": "Cute",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927313
+        },
+        {
+            "id": "c3f22ebb-99ea-47e8-b383-b14269128eb1",
+            "name": "Big Butt",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927314
+        },
+        {
+            "id": "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "name": "Malepov",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927314
+        },
+        {
+            "id": "e5f7bd62-5a04-44cb-8976-d2b1debd8381",
+            "name": "Non-Con",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927314
+        },
+        {
+            "id": "68784983-30e4-4bb6-9095-6701eddc103e",
+            "name": "Rape",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927314
+        },
+        {
+            "id": "ef340d5e-b3f6-40e8-83d1-6fca26c5cbda",
+            "name": "Fluff",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421927314
+        },
+        {
+            "id": "0bedfc1b-f386-437a-9ad6-7c6df4ef0cf5",
+            "name": "Monster Girl",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421930480
+        },
+        {
+            "id": "bbb09d45-94d5-4956-a4f2-2b787dbe7523",
+            "name": "bogie",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421930480
+        },
+        {
+            "id": "1c9edd90-d4cb-4fd2-aaa6-049de590f2de",
+            "name": "Horror",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421930481
+        },
+        {
+            "id": "5ccf39f2-bf47-4ca5-a096-345e9ee27332",
+            "name": "Action",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "c13a15ce-eb69-408b-9954-784f8b893dd8",
+            "name": "Fantasy",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "f5948986-994d-418c-86a2-a837f8c2196d",
+            "name": "Dark fantasy",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "c66fa547-b806-4d69-bdb3-8e6a3ca312ac",
+            "name": "Harem",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "65ae8bce-b81b-4504-a02e-9465289e1bf5",
+            "name": "Breeding Kink",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "8252b2e5-905d-44d1-9c1c-83b122b00c1e",
+            "name": "Adventure",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421935238
+        },
+        {
+            "id": "00ace8cb-c1a8-4fa3-8668-ccce0d3813c9",
+            "name": "Claude",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939353
+        },
+        {
+            "id": "514a71d4-0997-4a5d-a25b-652b2b70d17f",
+            "name": "girlfriend",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "5533b993-8585-4eeb-98de-d214f5b9e8a5",
+            "name": "Magic",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "aeec35ab-077f-42a6-80e5-eae1205721bc",
+            "name": "Violent",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "9896ed9c-59fe-4339-ae8a-2e6548ce1693",
+            "name": "Yandere",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "e9635a37-7661-410c-be9d-c5cd16596bca",
+            "name": "Submissive",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "2807ea2f-4c1e-461c-adb6-1b32685fcfd2",
+            "name": "Sadistic",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421939354
+        },
+        {
+            "id": "18c5a063-7817-444e-8299-abf769645c8f",
+            "name": "Seductive",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "52ff1f5e-c85e-4e8b-9d59-233c941ed690",
+            "name": "Smut",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "42b59850-81e1-4a2b-a7c6-da6e77831419",
+            "name": "Feral",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "7d76a761-2bb1-477e-a821-75b39ab8f4a1",
+            "name": "monstergirl",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "8ce54827-7f92-492b-8329-48b92c103e72",
+            "name": "Dragon Girl",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "8fe32fc9-fac1-48d4-affe-c87b7b6ff4f7",
+            "name": "sexy",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "e7dff244-cf47-48c9-af19-2712166601b2",
+            "name": "horny",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421956050
+        },
+        {
+            "id": "74e80698-c554-48cf-8c39-651e595f836f",
+            "name": "mind break",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "a2a5cc6c-06ae-4a3f-9332-5d5f9d980090",
+            "name": "succubus",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "5e4ab08e-5b40-41ac-b774-cb7e483f3d4e",
+            "name": "Big Ass",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "1f51f2e3-18be-48b9-9167-895537998aa2",
+            "name": "Eroge",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "819610d3-da49-4314-8ea8-a95fbcebaceb",
+            "name": "Shortstack",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "fbe8f0d6-8df0-4ab0-a95c-258482d3e832",
+            "name": "Smell",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "a860bfcc-fbab-466b-a521-9bca8155886c",
+            "name": "mage kanade's futanari dungeon quest",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "a1ee1418-d9e5-46fd-b46a-2e4823096f44",
+            "name": "Huge Breasts",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421958021
+        },
+        {
+            "id": "f0ff88f8-3e70-491d-9384-3d25f6d7795e",
+            "name": "Strong Woman",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960478
+        },
+        {
+            "id": "34086cc8-88bf-4759-a0db-116669341ec7",
+            "name": "Dommy Mommy",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960478
+        },
+        {
+            "id": "66719663-4595-4008-ab58-f1fb74792150",
+            "name": "Robot",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960478
+        },
+        {
+            "id": "4e1678df-a2b3-4e59-b31c-1919fdd08d51",
+            "name": "Multiple Scenarios",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "b4d1ebf5-de43-4075-a6ed-55d2adddfee9",
+            "name": "Mommy",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "f7cdb648-5de0-49d3-9d63-c7e0eccb5274",
+            "name": "Technology",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "4f37d0a0-f6c4-49af-acf7-eca8d357314a",
+            "name": "Nonhuman Character",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "adbda415-21f8-4d73-9cda-62ab7d2bb9e0",
+            "name": "Possible Futa",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "5aa71fb6-a2b0-486f-a87a-efaf07b0db01",
+            "name": "Sizeplay",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
+        },
+        {
+            "id": "5b9f61bf-5cb1-45d9-b33f-65dc1697bd89",
+            "name": "Robot Girl",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1734421960479
         }
     ],
     "tag_map": {
@@ -797,7 +1433,144 @@
         "Weavile.png": [],
         "Yono.png": [],
         "Your Pokemon Journey (Evil Edition).png": [],
-        "Zombizou.png": []
+        "Zombizou.png": [],
+        "Empress.png": [
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "0fbbc2d3-eda6-4347-90c6-ba8deabd8388",
+            "fae4f168-f6ba-4ccd-8e38-167bcc1661b6",
+            "37b4d387-22ce-4de2-866e-36d71dbde205",
+            "acd34e4c-0a11-4bb6-96ee-100eacc4762a",
+            "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "a89bc4bd-be7a-4f2f-9c50-830d7e81991d",
+            "26ec96aa-ac7f-43f0-a691-c825c59f53bc",
+            "e26362ea-3449-4222-bf20-8316b4b330bb",
+            "b91fe7bf-236d-44d7-b13c-9c969c809c00",
+            "a3e81487-a62a-4947-a234-de103ecce0e5"
+        ],
+        "Mona.png": [
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "26ec96aa-ac7f-43f0-a691-c825c59f53bc",
+            "b91fe7bf-236d-44d7-b13c-9c969c809c00",
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "ea4fb765-22cf-4ea4-8b82-66791f0757aa",
+            "e8a74b4f-66c1-405b-95df-4f50dcfe27d7",
+            "7dbb4cf5-b015-4359-90b7-bb3937f2a786",
+            "9443f126-9e33-42e3-a559-4261865f633b"
+        ],
+        "Anna.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "acd34e4c-0a11-4bb6-96ee-100eacc4762a",
+            "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "b91fe7bf-236d-44d7-b13c-9c969c809c00",
+            "a89bc4bd-be7a-4f2f-9c50-830d7e81991d",
+            "fae4f168-f6ba-4ccd-8e38-167bcc1661b6",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "0fbbc2d3-eda6-4347-90c6-ba8deabd8388",
+            "e8f89c41-ad9a-4619-ae18-4b9ae6a4e415",
+            "c3f22ebb-99ea-47e8-b383-b14269128eb1",
+            "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "e5f7bd62-5a04-44cb-8976-d2b1debd8381",
+            "68784983-30e4-4bb6-9095-6701eddc103e",
+            "ef340d5e-b3f6-40e8-83d1-6fca26c5cbda"
+        ],
+        "Jesta, The Bogie.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "26ec96aa-ac7f-43f0-a691-c825c59f53bc",
+            "0bedfc1b-f386-437a-9ad6-7c6df4ef0cf5",
+            "bbb09d45-94d5-4956-a4f2-2b787dbe7523",
+            "1c9edd90-d4cb-4fd2-aaa6-049de590f2de"
+        ],
+        "Super Harem.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "0bedfc1b-f386-437a-9ad6-7c6df4ef0cf5",
+            "e8f89c41-ad9a-4619-ae18-4b9ae6a4e415",
+            "7dbb4cf5-b015-4359-90b7-bb3937f2a786",
+            "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "e5f7bd62-5a04-44cb-8976-d2b1debd8381",
+            "acd34e4c-0a11-4bb6-96ee-100eacc4762a",
+            "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "5ccf39f2-bf47-4ca5-a096-345e9ee27332",
+            "c13a15ce-eb69-408b-9954-784f8b893dd8",
+            "f5948986-994d-418c-86a2-a837f8c2196d",
+            "c66fa547-b806-4d69-bdb3-8e6a3ca312ac",
+            "65ae8bce-b81b-4504-a02e-9465289e1bf5",
+            "8252b2e5-905d-44d1-9c1c-83b122b00c1e"
+        ],
+        "Ava X Wonder Girl.png": [
+            "c13a15ce-eb69-408b-9954-784f8b893dd8",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "e5f7bd62-5a04-44cb-8976-d2b1debd8381",
+            "b91fe7bf-236d-44d7-b13c-9c969c809c00",
+            "68784983-30e4-4bb6-9095-6701eddc103e",
+            "9443f126-9e33-42e3-a559-4261865f633b",
+            "a89bc4bd-be7a-4f2f-9c50-830d7e81991d",
+            "00ace8cb-c1a8-4fa3-8668-ccce0d3813c9",
+            "514a71d4-0997-4a5d-a25b-652b2b70d17f",
+            "5533b993-8585-4eeb-98de-d214f5b9e8a5",
+            "aeec35ab-077f-42a6-80e5-eae1205721bc",
+            "9896ed9c-59fe-4339-ae8a-2e6548ce1693",
+            "e9635a37-7661-410c-be9d-c5cd16596bca",
+            "2807ea2f-4c1e-461c-adb6-1b32685fcfd2"
+        ],
+        "Vili.png": [
+            "a3e81487-a62a-4947-a234-de103ecce0e5"
+        ],
+        "Breeding Dungeon.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "c13a15ce-eb69-408b-9954-784f8b893dd8",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "0bedfc1b-f386-437a-9ad6-7c6df4ef0cf5",
+            "f5948986-994d-418c-86a2-a837f8c2196d",
+            "e8f89c41-ad9a-4619-ae18-4b9ae6a4e415",
+            "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "65ae8bce-b81b-4504-a02e-9465289e1bf5",
+            "18c5a063-7817-444e-8299-abf769645c8f",
+            "52ff1f5e-c85e-4e8b-9d59-233c941ed690",
+            "42b59850-81e1-4a2b-a7c6-da6e77831419",
+            "7d76a761-2bb1-477e-a821-75b39ab8f4a1",
+            "8ce54827-7f92-492b-8329-48b92c103e72",
+            "8fe32fc9-fac1-48d4-affe-c87b7b6ff4f7",
+            "e7dff244-cf47-48c9-af19-2712166601b2"
+        ],
+        "Mary.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "0bedfc1b-f386-437a-9ad6-7c6df4ef0cf5",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "26ec96aa-ac7f-43f0-a691-c825c59f53bc",
+            "9443f126-9e33-42e3-a559-4261865f633b",
+            "74e80698-c554-48cf-8c39-651e595f836f",
+            "a2a5cc6c-06ae-4a3f-9332-5d5f9d980090",
+            "5e4ab08e-5b40-41ac-b774-cb7e483f3d4e",
+            "1f51f2e3-18be-48b9-9167-895537998aa2",
+            "819610d3-da49-4314-8ea8-a95fbcebaceb",
+            "fbe8f0d6-8df0-4ab0-a95c-258482d3e832",
+            "a860bfcc-fbab-466b-a521-9bca8155886c",
+            "a1ee1418-d9e5-46fd-b46a-2e4823096f44"
+        ],
+        "Robo-mom's all around you.png": [
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "46a0ea3c-86f4-43e1-85ab-f87d3b34fc4a",
+            "e5f7bd62-5a04-44cb-8976-d2b1debd8381",
+            "8252b2e5-905d-44d1-9c1c-83b122b00c1e",
+            "f0ff88f8-3e70-491d-9384-3d25f6d7795e",
+            "34086cc8-88bf-4759-a0db-116669341ec7",
+            "66719663-4595-4008-ab58-f1fb74792150",
+            "4e1678df-a2b3-4e59-b31c-1919fdd08d51",
+            "b4d1ebf5-de43-4075-a6ed-55d2adddfee9",
+            "f7cdb648-5de0-49d3-9d63-c7e0eccb5274",
+            "4f37d0a0-f6c4-49af-acf7-eca8d357314a",
+            "adbda415-21f8-4d73-9cda-62ab7d2bb9e0",
+            "5aa71fb6-a2b0-486f-a87a-efaf07b0db01",
+            "5b9f61bf-5cb1-45d9-b33f-65dc1697bd89"
+        ]
     },
     "nai_settings": {
         "temperature": 1.5,
@@ -864,13 +1637,13 @@
         "temp_openai": 1,
         "freq_pen_openai": 0.1,
         "pres_pen_openai": 0.1,
-        "top_p_openai": 0.39,
+        "top_p_openai": 1,
         "top_k_openai": 0,
         "min_p_openai": 0,
         "top_a_openai": 1,
         "repetition_penalty_openai": 1,
         "stream_openai": true,
-        "openai_max_context": "6725",
+        "openai_max_context": 30100,
         "openai_max_tokens": 4096,
         "wrap_in_quotes": false,
         "prompts": [
@@ -1123,7 +1896,7 @@
                 "marker": false,
                 "name": "Writing Instructions",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and all 5 of their sensors.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- Write from {{user}}'s perspective, noting feel, sensory details, thoughts etc.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n</writing_instructions>",
+                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and all 5 of their sensors.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- Write from {{user}}'s perspective in third person. noting feel, sensory details, thoughts etc.\n</writing_instructions>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -1135,9 +1908,9 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s words, thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n- DO NOT write from the perspective of {{char}}. Write from the perspective of {{user}}.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s words, thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not present in it.\n- DO NOT write from the perspective of {{char}}. Write from the perspective of {{user}}.\n</system_bans>",
                 "injection_position": 0,
-                "injection_depth": 4,
+                "injection_depth": 0,
                 "forbid_overrides": false
             },
             {
@@ -1620,7 +2393,7 @@
                     },
                     {
                         "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": true
+                        "enabled": false
                     },
                     {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
