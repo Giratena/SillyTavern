@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Anna.png",
+    "active_character": "Sylvia.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -12,7 +12,6 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Hypno Vixen Reality",
                 "Hypnotic Actions",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ]
@@ -114,6 +113,22 @@
             "xtc",
             "temperature"
         ],
+        "samplers_priorities": [
+            "dry",
+            "penalties",
+            "no_repeat_ngram",
+            "temperature",
+            "top_nsigma",
+            "top_p_top_k",
+            "top_a",
+            "min_p",
+            "tfs",
+            "eta_cutoff",
+            "epsilon_cutoff",
+            "typical_p",
+            "quadratic",
+            "xtc"
+        ],
         "ignore_eos_token": false,
         "spaces_between_special_tokens": true,
         "speculative_ngram": false,
@@ -147,6 +162,7 @@
         "xtc_probability": 0,
         "nsigma": 0,
         "featherless_model": "",
+        "generic_model": "",
         "truncation_length": 2048,
         "ignore_eos_token_aphrodite": false,
         "spaces_between_special_tokens_aphrodite": true,
@@ -309,6 +325,7 @@
         "persona_description_position": 0,
         "persona_description_role": 0,
         "persona_description_depth": 2,
+        "persona_description_lorebook": "",
         "persona_show_notifications": true,
         "persona_sort_order": "asc",
         "custom_stopping_strings": "",
@@ -1570,7 +1587,9 @@
             "adbda415-21f8-4d73-9cda-62ab7d2bb9e0",
             "5aa71fb6-a2b0-486f-a87a-efaf07b0db01",
             "5b9f61bf-5cb1-45d9-b33f-65dc1697bd89"
-        ]
+        ],
+        "Monica.png": [],
+        "Character Template.png": []
     },
     "nai_settings": {
         "temperature": 1.5,
@@ -1944,7 +1963,7 @@
                 "marker": false,
                 "name": "Custom Scenario",
                 "role": "system",
-                "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that are likely to happen in future scenarios.\n- If any new information is added that would contradict the current scenario, deny and or twist this new content to ensure the scenario matches with 100% accuracy. For example, if the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n- user = {{user}} and char = {{char}}\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. Do not leap ahead and do not do things reserved for future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\nScenario 5: {{getvar::Scenario5}}\nScenario 6: {{getvar::Scenario6}}\n\nCurrent scenario: {{getvar::CurrentScenario}}\nIf current scenario >= 2, user will discover these details throughout the RP. Else, they are only forshadowed:  {{getvar::HiddenDetails}}",
+                "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that are likely to happen in future scenarios.\n- {{char}} should add additional information in addiciton to the scenario.\n- If any new information is added that would contradict the current scenario, deny and or twist this new content to ensure the scenario matches with 100% accuracy. For example, if the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n- user = {{user}} and char = {{char}}\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. DO NOT leap ahead and do not do write about things that will happen in future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\nScenario 5: {{getvar::Scenario5}}\nScenario 6: {{getvar::Scenario6}}\n\nCurrent scenario: {{getvar::CurrentScenario}}\nIf current scenario >= 2, user will discover these details throughout the RP. Else, they are only forshadowed:  {{getvar::HiddenDetails}}",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -2389,11 +2408,11 @@
                     },
                     {
                         "identifier": "scenario",
-                        "enabled": true
+                        "enabled": false
                     },
                     {
                         "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": false
+                        "enabled": true
                     },
                     {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
@@ -2510,8 +2529,8 @@
         "n": 1
     },
     "background": {
-        "name": "__transparent.png",
-        "url": "url(\"backgrounds/__transparent.png\")"
+        "name": "_black.jpg",
+        "url": "url(\"backgrounds/_black.jpg\")"
     },
     "proxies": [
         {

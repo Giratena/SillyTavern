@@ -87,3 +87,4 @@ perUserBasicAuth: false
 chatBackupThrottleInterval: 10000
 promptPlaceholder: "[Start a new chat]"
 cardsCacheCapacity: 100
+maxTotalChatBackups: -1
