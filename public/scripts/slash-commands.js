@@ -84,6 +84,25 @@ export const parser = new SlashCommandParser();
 const registerSlashCommand = SlashCommandParser.addCommand.bind(SlashCommandParser);
 const getSlashCommandsHelp = parser.getHelpString.bind(parser);
 
+/**
+ * Converts a SlashCommandClosure to a filter function that returns a boolean.
+ * @param {SlashCommandClosure} closure
+ * @returns {() => Promise<boolean>}
+ */
+function closureToFilter(closure) {
+    return async () => {
+        try {
+            const localClosure = closure.getCopy();
+            localClosure.onProgress = () => { };
+            const result = await localClosure.execute();
+            return isTrueBoolean(result.pipe);
+        } catch (e) {
+            console.error('Error executing filter closure', e);
+            return false;
+        }
+    };
+}
+
 export function initDefaultSlashCommands() {
     SlashCommandParser.addCommandObject(SlashCommand.fromProps({
         name: '?',
@@ -1611,6 +1630,13 @@ export function initDefaultSlashCommands() {
             new SlashCommandNamedArgument(
                 'ephemeral', 'remove injection after generation', [ARGUMENT_TYPE.BOOLEAN], false, false, 'false',
             ),
+            SlashCommandNamedArgument.fromProps({
+                name: 'filter',
+                description: 'if a filter is defined, an injection will only be performed if the closure returns true',
+                typeList: [ARGUMENT_TYPE.CLOSURE],
+                isRequired: false,
+                acceptsMultiple: false,
+            }),
         ],
         unnamedArgumentList: [
             new SlashCommandArgument(
@@ -1901,6 +1927,11 @@ const NARRATOR_NAME_DEFAULT = 'System';
 export const COMMENT_NAME_DEFAULT = 'Note';
 const SCRIPT_PROMPT_KEY = 'script_inject_';
 
+/**
+ * Adds a new script injection to the chat.
+ * @param {import('./slash-commands/SlashCommand.js').NamedArguments} args Named arguments
+ * @param {import('./slash-commands/SlashCommand.js').UnnamedArguments} value Unnamed argument
+ */
 function injectCallback(args, value) {
     const positions = {
         'before': extension_prompt_types.BEFORE_PROMPT,
@@ -1914,8 +1945,8 @@ function injectCallback(args, value) {
         'assistant': extension_prompt_roles.ASSISTANT,
     };
 
-    const id = args?.id;
-    const ephemeral = isTrueBoolean(args?.ephemeral);
+    const id = String(args?.id);
+    const ephemeral = isTrueBoolean(String(args?.ephemeral));
 
     if (!id) {
         console.warn('WARN: No ID provided for /inject command');
@@ -1931,8 +1962,14 @@ function injectCallback(args, value) {
     const depth = isNaN(depthValue) ? defaultDepth : depthValue;
     const roleValue = typeof args?.role === 'string' ? args.role.toLowerCase().trim() : Number(args?.role ?? extension_prompt_roles.SYSTEM);
     const role = roles[roleValue] ?? roles[extension_prompt_roles.SYSTEM];
-    const scan = isTrueBoolean(args?.scan);
+    const scan = isTrueBoolean(String(args?.scan));
+    const filter = args?.filter instanceof SlashCommandClosure ? args.filter.rawText : null;
+    const filterFunction = args?.filter instanceof SlashCommandClosure ? closureToFilter(args.filter) : null;
     value = value || '';
+
+    if (args?.filter && !String(filter ?? '').trim()) {
+        throw new Error('Failed to parse the filter argument. Make sure it is a valid non-empty closure.');
+    }
 
     const prefixedId = `${SCRIPT_PROMPT_KEY}${id}`;
 
@@ -1941,13 +1978,13 @@ function injectCallback(args, value) {
     }
 
     if (value) {
-        const inject = { value, position, depth, scan, role };
+        const inject = { value, position, depth, scan, role, filter };
         chat_metadata.script_injects[id] = inject;
     } else {
         delete chat_metadata.script_injects[id];
     }
 
-    setExtensionPrompt(prefixedId, value, position, depth, scan, role);
+    setExtensionPrompt(prefixedId, String(value), position, depth, scan, role, filterFunction);
     saveMetadataDebounced();
 
     if (ephemeral) {
@@ -1958,7 +1995,7 @@ function injectCallback(args, value) {
             }
             console.log('Removing ephemeral script injection', id);
             delete chat_metadata.script_injects[id];
-            setExtensionPrompt(prefixedId, '', position, depth, scan, role);
+            setExtensionPrompt(prefixedId, '', position, depth, scan, role, filterFunction);
             saveMetadataDebounced();
             deleted = true;
         };
@@ -2053,9 +2090,28 @@ export function processChatSlashCommands() {
     }
 
     for (const [id, inject] of Object.entries(context.chatMetadata.script_injects)) {
+        /**
+         * Rehydrates a filter closure from a string.
+         * @returns {SlashCommandClosure | null}
+         */
+        function reviveFilterClosure() {
+            if (!inject.filter) {
+                return null;
+            }
+
+            try {
+                return new SlashCommandParser().parse(inject.filter, true);
+            } catch (error) {
+                console.warn('Failed to revive filter closure for script injection', id, error);
+                return null;
+            }
+        }
+
         const prefixedId = `${SCRIPT_PROMPT_KEY}${id}`;
+        const filterClosure = reviveFilterClosure();
+        const filter = filterClosure ? closureToFilter(filterClosure) : null;
         console.log('Adding script injection', id);
-        setExtensionPrompt(prefixedId, inject.value, inject.position, inject.depth, inject.scan, inject.role);
+        setExtensionPrompt(prefixedId, inject.value, inject.position, inject.depth, inject.scan, inject.role, filter);
     }
 }
 
@@ -3687,6 +3743,7 @@ function setBackgroundCallback(_, bg) {
 function getModelOptions(quiet) {
     const nullResult = { control: null, options: null };
     const modelSelectMap = [
+        { id: 'generic_model_textgenerationwebui', api: 'textgenerationwebui', type: textgen_types.GENERIC },
         { id: 'custom_model_textgenerationwebui', api: 'textgenerationwebui', type: textgen_types.OOBA },
         { id: 'model_togetherai_select', api: 'textgenerationwebui', type: textgen_types.TOGETHERAI },
         { id: 'openrouter_model', api: 'textgenerationwebui', type: textgen_types.OPENROUTER },

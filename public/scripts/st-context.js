@@ -63,7 +63,7 @@ import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from '
 import { SlashCommandParser } from './slash-commands/SlashCommandParser.js';
 import { tag_map, tags } from './tags.js';
 import { textgenerationwebui_settings } from './textgen-settings.js';
-import { getTokenCount, getTokenCountAsync, getTokenizerModel } from './tokenizers.js';
+import { tokenizers, getTextTokens, getTokenCount, getTokenCountAsync, getTokenizerModel } from './tokenizers.js';
 import { ToolManager } from './tool-calling.js';
 import { timestampToMoment } from './utils.js';
 
@@ -95,6 +95,8 @@ export function getContext() {
         sendStreamingRequest,
         sendGenerationRequest,
         stopGeneration,
+        tokenizers,
+        getTextTokens,
         /** @deprecated Use getTokenCountAsync instead */
         getTokenCount,
         getTokenCountAsync,

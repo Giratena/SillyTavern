@@ -261,6 +261,7 @@ let power_user = {
     persona_description_position: persona_description_positions.IN_PROMPT,
     persona_description_role: 0,
     persona_description_depth: 2,
+    persona_description_lorebook: '',
     persona_show_notifications: true,
     persona_sort_order: 'asc',
 

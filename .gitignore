@@ -32,3 +32,5 @@ data/default-user/group chats
 data/default-user/sysprompt
 data/default-user/sysprompt
 /certs
+.aider*
+.env

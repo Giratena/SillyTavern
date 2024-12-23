@@ -234,7 +234,7 @@ import {
 import { getBackgrounds, initBackgrounds, loadBackgroundSettings, background_settings } from './scripts/backgrounds.js';
 import { hideLoader, showLoader } from './scripts/loader.js';
 import { BulkEditOverlay, CharacterContextMenu } from './scripts/BulkEditOverlay.js';
-import { loadFeatherlessModels, loadMancerModels, loadOllamaModels, loadTogetherAIModels, loadInfermaticAIModels, loadOpenRouterModels, loadVllmModels, loadAphroditeModels, loadDreamGenModels, initTextGenModels, loadTabbyModels } from './scripts/textgen-models.js';
+import { loadFeatherlessModels, loadMancerModels, loadOllamaModels, loadTogetherAIModels, loadInfermaticAIModels, loadOpenRouterModels, loadVllmModels, loadAphroditeModels, loadDreamGenModels, initTextGenModels, loadTabbyModels, loadGenericModels } from './scripts/textgen-models.js';
 import { appendFileContent, hasPendingFileAttachment, populateFileAttachment, decodeStyleTags, encodeStyleTags, isExternalMediaAllowed, getCurrentEntityId, preserveNeutralChat, restoreNeutralChat } from './scripts/chats.js';
 import { getPresetManager, initPresetManager } from './scripts/preset-manager.js';
 import { evaluateMacros, getLastMessageId, initMacros } from './scripts/macros.js';
@@ -1221,6 +1221,9 @@ async function getStatusTextgen() {
         } else if (textgen_settings.type === textgen_types.TABBY) {
             loadTabbyModels(data?.data);
             setOnlineStatus(textgen_settings.tabby_model || data?.result);
+        } else if (textgen_settings.type === textgen_types.GENERIC) {
+            loadGenericModels(data?.data);
+            setOnlineStatus(textgen_settings.generic_model || 'Connected');
         } else {
             setOnlineStatus(data?.result);
         }
@@ -2873,23 +2876,54 @@ function addPersonaDescriptionExtensionPrompt() {
     }
 }
 
-function getAllExtensionPrompts() {
-    const value = Object
-        .values(extension_prompts)
-        .filter(x => x.value)
-        .map(x => x.value.trim())
-        .join('\n');
+/**
+ * Returns all extension prompts combined.
+ * @returns {Promise<string>} Combined extension prompts
+ */
+async function getAllExtensionPrompts() {
+    const values = [];
 
-    return value.length ? substituteParams(value) : '';
+    for (const prompt of Object.values(extension_prompts)) {
+        const value = prompt?.value?.trim();
+
+        if (!value) {
+            continue;
+        }
+
+        const hasFilter = typeof prompt.filter === 'function';
+        if (hasFilter && !await prompt.filter()) {
+            continue;
+        }
+
+        values.push(value);
+    }
+
+    return substituteParams(values.join('\n'));
 }
 
-// Wrapper to fetch extension prompts by module name
-export function getExtensionPromptByName(moduleName) {
-    if (moduleName) {
-        return substituteParams(extension_prompts[moduleName]?.value);
-    } else {
-        return;
+/**
+ * Wrapper to fetch extension prompts by module name
+ * @param {string} moduleName Module name
+ * @returns {Promise<string>} Extension prompt
+ */
+export async function getExtensionPromptByName(moduleName) {
+    if (!moduleName) {
+        return '';
     }
+
+    const prompt = extension_prompts[moduleName];
+
+    if (!prompt) {
+        return '';
+    }
+
+    const hasFilter = typeof prompt.filter === 'function';
+
+    if (hasFilter && !await prompt.filter()) {
+        return '';
+    }
+
+    return substituteParams(prompt.value);
 }
 
 /**
@@ -2900,27 +2934,36 @@ export function getExtensionPromptByName(moduleName) {
  * @param {string} [separator] Separator for joining multiple prompts
  * @param {number} [role] Role of the prompt
  * @param {boolean} [wrap] Wrap start and end with a separator
- * @returns {string} Extension prompt
+ * @returns {Promise<string>} Extension prompt
  */
-export function getExtensionPrompt(position = extension_prompt_types.IN_PROMPT, depth = undefined, separator = '\n', role = undefined, wrap = true) {
-    let extension_prompt = Object.keys(extension_prompts)
+export async function getExtensionPrompt(position = extension_prompt_types.IN_PROMPT, depth = undefined, separator = '\n', role = undefined, wrap = true) {
+    const filterByFunction = async (prompt) => {
+        const hasFilter = typeof prompt.filter === 'function';
+        if (hasFilter && !await prompt.filter()) {
+            return false;
+        }
+        return true;
+    };
+    const promptPromises = Object.keys(extension_prompts)
         .sort()
         .map((x) => extension_prompts[x])
         .filter(x => x.position == position && x.value)
         .filter(x => depth === undefined || x.depth === undefined || x.depth === depth)
         .filter(x => role === undefined || x.role === undefined || x.role === role)
-        .map(x => x.value.trim())
-        .join(separator);
-    if (wrap && extension_prompt.length && !extension_prompt.startsWith(separator)) {
-        extension_prompt = separator + extension_prompt;
+        .filter(filterByFunction);
+    const prompts = await Promise.all(promptPromises);
+
+    let values = prompts.map(x => x.value.trim()).join(separator);
+    if (wrap && values.length && !values.startsWith(separator)) {
+        values = separator + values;
     }
-    if (wrap && extension_prompt.length && !extension_prompt.endsWith(separator)) {
-        extension_prompt = extension_prompt + separator;
+    if (wrap && values.length && !values.endsWith(separator)) {
+        values = values + separator;
     }
-    if (extension_prompt.length) {
-        extension_prompt = substituteParams(extension_prompt);
+    if (values.length) {
+        values = substituteParams(values);
     }
-    return extension_prompt;
+    return values;
 }
 
 export function baseChatReplace(value, name1, name2) {
@@ -3834,7 +3877,7 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
     // Inject all Depth prompts. Chat Completion does it separately
     let injectedIndices = [];
     if (main_api !== 'openai') {
-        injectedIndices = doChatInject(coreChat, isContinue);
+        injectedIndices = await doChatInject(coreChat, isContinue);
     }
 
     // Insert character jailbreak as the last user message (if exists, allowed, preferred, and not using Chat Completion)
@@ -3907,8 +3950,8 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
     }
 
     // Call combined AN into Generate
-    const beforeScenarioAnchor = getExtensionPrompt(extension_prompt_types.BEFORE_PROMPT).trimStart();
-    const afterScenarioAnchor = getExtensionPrompt(extension_prompt_types.IN_PROMPT);
+    const beforeScenarioAnchor = (await getExtensionPrompt(extension_prompt_types.BEFORE_PROMPT)).trimStart();
+    const afterScenarioAnchor = await getExtensionPrompt(extension_prompt_types.IN_PROMPT);
 
     const storyStringParams = {
         description: description,
@@ -4471,7 +4514,7 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
             ...thisPromptBits[currentArrayEntry],
             rawPrompt: generate_data.prompt || generate_data.input,
             mesId: getNextMessageId(type),
-            allAnchors: getAllExtensionPrompts(),
+            allAnchors: await getAllExtensionPrompts(),
             chatInjects: injectedIndices?.map(index => arrMes[arrMes.length - index - 1])?.join('') || '',
             summarizeString: (extension_prompts['1_memory']?.value || ''),
             authorsNoteString: (extension_prompts['2_floating_prompt']?.value || ''),
@@ -4740,9 +4783,9 @@ export function stopGeneration() {
  * Injects extension prompts into chat messages.
  * @param {object[]} messages Array of chat messages
  * @param {boolean} isContinue Whether the generation is a continuation. If true, the extension prompts of depth 0 are injected at position 1.
- * @returns {number[]} Array of indices where the extension prompts were injected
+ * @returns {Promise<number[]>} Array of indices where the extension prompts were injected
  */
-function doChatInject(messages, isContinue) {
+async function doChatInject(messages, isContinue) {
     const injectedIndices = [];
     let totalInsertedMessages = 0;
     messages.reverse();
@@ -4760,7 +4803,7 @@ function doChatInject(messages, isContinue) {
         const wrap = false;
 
         for (const role of roles) {
-            const extensionPrompt = String(getExtensionPrompt(extension_prompt_types.IN_CHAT, i, separator, role, wrap)).trimStart();
+            const extensionPrompt = String(await getExtensionPrompt(extension_prompt_types.IN_CHAT, i, separator, role, wrap)).trimStart();
             const isNarrator = role === extension_prompt_roles.SYSTEM;
             const isUser = role === extension_prompt_roles.USER;
             const name = names[role];
@@ -7453,14 +7496,16 @@ function select_rm_characters() {
  * @param {number} depth Insertion depth. 0 represets the last message in context. Expected values up to MAX_INJECTION_DEPTH.
  * @param {number} role Extension prompt role. Defaults to SYSTEM.
  * @param {boolean} scan Should the prompt be included in the world info scan.
+ * @param {(function(): Promise<boolean>|boolean)} filter Filter function to determine if the prompt should be injected.
  */
-export function setExtensionPrompt(key, value, position, depth, scan = false, role = extension_prompt_roles.SYSTEM) {
+export function setExtensionPrompt(key, value, position, depth, scan = false, role = extension_prompt_roles.SYSTEM, filter = null) {
     extension_prompts[key] = {
         value: String(value),
         position: Number(position),
         depth: Number(depth),
         scan: !!scan,
         role: Number(role ?? extension_prompt_roles.SYSTEM),
+        filter: filter,
     };
 }
 
@@ -10000,6 +10045,7 @@ jQuery(async function () {
             { id: 'api_key_llamacpp', secret: SECRET_KEYS.LLAMACPP },
             { id: 'api_key_featherless', secret: SECRET_KEYS.FEATHERLESS },
             { id: 'api_key_huggingface', secret: SECRET_KEYS.HUGGINGFACE },
+            { id: 'api_key_generic', secret: SECRET_KEYS.GENERIC },
         ];
 
         for (const key of keys) {

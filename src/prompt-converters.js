@@ -337,6 +337,7 @@ export function convertGooglePrompt(messages, model, useSysPrompt = false, charN
     const PNG_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
     const visionSupportedModels = [
+        'gemini-2.0-flash-exp',
         'gemini-1.5-flash',
         'gemini-1.5-flash-latest',
         'gemini-1.5-flash-001',

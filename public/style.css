@@ -2788,6 +2788,10 @@ select option:not(:checked) {
     width: max-content;
 }
 
+#persona-management-block .menu_button {
+    filter: grayscale(0.5);
+}
+
 input[type=search]::-webkit-search-cancel-button {
     -webkit-appearance: none;
     height: 1em;
