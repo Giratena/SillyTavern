@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Vili.png",
+    "active_character": "Blowjob Heroines.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -1325,6 +1325,76 @@
             "color": "",
             "color2": "",
             "create_date": 1734421960479
+        },
+        {
+            "id": "3174ed15-f631-4e58-b4f0-337a2478d69d",
+            "name": "xmen",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162500877
+        },
+        {
+            "id": "990f157f-f9f3-4e9c-beeb-395eeaf45dd2",
+            "name": "himmymania",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162500877
+        },
+        {
+            "id": "e1d7f073-2a85-4c60-baee-272db3101fb1",
+            "name": "Marvel",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162500877
+        },
+        {
+            "id": "95a10826-7cd7-419d-aa9d-27adb9ae1478",
+            "name": "Incest",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162503406
+        },
+        {
+            "id": "8d0f493a-2b05-49df-97af-89438c5c80cb",
+            "name": "Mother",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162503406
+        },
+        {
+            "id": "2db3b31f-cb12-4eac-a3f7-6e4bea6412ae",
+            "name": "Milf",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162503406
+        },
+        {
+            "id": "b7276cff-c0f0-45c4-9647-cde85716750a",
+            "name": "Wholesome",
+            "folder_type": "NONE",
+            "filter_state": "UNDEFINED",
+            "sort_order": null,
+            "color": "",
+            "color2": "",
+            "create_date": 1735162503406
         }
     ],
     "tag_map": {
@@ -1590,7 +1660,27 @@
             "5b9f61bf-5cb1-45d9-b33f-65dc1697bd89"
         ],
         "Monica.png": [],
-        "Character Template.png": []
+        "Psylocke.png": [
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "3174ed15-f631-4e58-b4f0-337a2478d69d",
+            "990f157f-f9f3-4e9c-beeb-395eeaf45dd2",
+            "e1d7f073-2a85-4c60-baee-272db3101fb1"
+        ],
+        "Getting Groomed Simulator (Reworked).png": [
+            "a3e81487-a62a-4947-a234-de103ecce0e5",
+            "858493a7-0834-480c-a8f8-31feb34f4f67",
+            "270634a7-c6f1-4e5d-8030-26181ef4d6b0",
+            "a89bc4bd-be7a-4f2f-9c50-830d7e81991d",
+            "06130240-94a9-4665-804f-da32d391a6ab",
+            "95a10826-7cd7-419d-aa9d-27adb9ae1478",
+            "8d0f493a-2b05-49df-97af-89438c5c80cb",
+            "2db3b31f-cb12-4eac-a3f7-6e4bea6412ae",
+            "b7276cff-c0f0-45c4-9647-cde85716750a"
+        ],
+        "Character Template_1.png": [],
+        "Blowjob Heroines.png": []
     },
     "nai_settings": {
         "temperature": 1.5,
