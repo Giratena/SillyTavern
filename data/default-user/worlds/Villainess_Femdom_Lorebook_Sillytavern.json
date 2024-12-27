@@ -542,7 +542,7 @@
             "addMemo": true,
             "order": 100,
             "position": 1,
-            "disable": false,
+            "disable": true,
             "excludeRecursion": false,
             "probability": 100,
             "useProbability": true,
