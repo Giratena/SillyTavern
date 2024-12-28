@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Blowjob Heroines.png",
+    "active_character": "Shantae.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -12,7 +12,7 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Villainess_Femdom_Lorebook_Sillytavern"
+                "Survival"
             ]
         },
         "world_info_depth": 2,
@@ -523,7 +523,8 @@
                 "Marina Ida": "{{marina (splatoon)}}, ",
                 "Renee l'noire": "Black panther, lock bulge",
                 "Raven": "{{raven (dc)}}, ",
-                "Anaconda": "{{office background}}"
+                "Anaconda": "{{office background}}",
+                "Shantae": " shantae (series), "
             },
             "source": "extras",
             "scheduler": "normal",
@@ -684,7 +685,7 @@
             "config": {
                 "setList": [
                     {
-                        "set": "Scenario",
+                        "set": "Villainesses",
                         "isVisible": true
                     }
                 ]
@@ -2019,7 +2020,7 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s words, thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not present in it.\n- DO NOT end your reply with dialogue from {{user}}.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT refer to user as \"you\".\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT reply any more or less than 2-4 paragraphs\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not present in it.\n- DO NOT end your reply with dialogue from {{user}}.\n</system_bans>",
                 "injection_position": 0,
                 "injection_depth": 0,
                 "forbid_overrides": false
