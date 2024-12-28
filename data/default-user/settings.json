@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Shantae.png",
+    "active_character": "Renee l'noire.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -377,7 +377,7 @@
             "forceHidden": [],
             "forceShown": []
         },
-        "wi_key_input_plaintext": true
+        "wi_key_input_plaintext": false
     },
     "extension_settings": {
         "apiUrl": "http://localhost:5100",
