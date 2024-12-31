@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Renee l'noire.png",
+    "active_character": "Blowjob Heroines.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -12,20 +12,22 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Survival"
+                "Hypnotic Actions",
+                "User interation",
+                "Villainess_Femdom_Lorebook_Sillytavern"
             ]
         },
-        "world_info_depth": 2,
+        "world_info_depth": 13,
         "world_info_min_activations": 0,
-        "world_info_min_activations_depth_max": 0,
+        "world_info_min_activations_depth_max": 3,
         "world_info_budget": 25,
-        "world_info_include_names": true,
+        "world_info_include_names": false,
         "world_info_recursive": true,
-        "world_info_overflow_alert": false,
+        "world_info_overflow_alert": true,
         "world_info_case_sensitive": false,
         "world_info_match_whole_words": true,
-        "world_info_character_strategy": 1,
-        "world_info_budget_cap": 0,
+        "world_info_character_strategy": 0,
+        "world_info_budget_cap": 7785,
         "world_info_use_group_scoring": false,
         "world_info_max_recursion_steps": 0
     },
@@ -685,7 +687,7 @@
             "config": {
                 "setList": [
                     {
-                        "set": "Villainesses",
+                        "set": "Survival",
                         "isVisible": true
                     }
                 ]
@@ -1682,7 +1684,8 @@
             "b7276cff-c0f0-45c4-9647-cde85716750a"
         ],
         "Character Template_1.png": [],
-        "Blowjob Heroines.png": []
+        "Blowjob Heroines_1.png": [],
+        "Bimbo Heroines.png": []
     },
     "nai_settings": {
         "temperature": 1.5,
@@ -1749,7 +1752,7 @@
         "temp_openai": 1,
         "freq_pen_openai": 0.1,
         "pres_pen_openai": 0.1,
-        "top_p_openai": 1,
+        "top_p_openai": 0.87,
         "top_k_openai": 0,
         "min_p_openai": 0,
         "top_a_openai": 1,
@@ -2501,7 +2504,7 @@
                     },
                     {
                         "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": false
+                        "enabled": true
                     },
                     {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",

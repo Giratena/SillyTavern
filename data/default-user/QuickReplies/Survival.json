@@ -1,0 +1,29 @@
+{
+    "version": 2,
+    "name": "Survival",
+    "disableSend": false,
+    "placeBeforeInput": false,
+    "injectInput": false,
+    "color": "rgba(0, 0, 0, 0)",
+    "onlyBorderColor": false,
+    "qrList": [
+        {
+            "id": 2,
+            "showLabel": false,
+            "label": "Reply",
+            "title": "",
+            "message": "```\nLife={{getvar::Life}}\nArousal={{getvar::Arousal}}\nTrance={{getvar::Trance}} \nFlashbangs={{getvar::Flashbangs}}\n```\n{{input}}",
+            "contextList": [],
+            "preventAutoExecute": true,
+            "isHidden": false,
+            "executeOnStartup": false,
+            "executeOnUser": false,
+            "executeOnAi": false,
+            "executeOnChatChange": false,
+            "executeOnGroupMemberDraft": false,
+            "executeOnNewChat": false,
+            "automationId": ""
+        }
+    ],
+    "idIndex": 2
+}
