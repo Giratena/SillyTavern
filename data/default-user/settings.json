@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.9",
     "username": "Gira",
-    "active_character": "Blowjob Heroines.png",
+    "active_character": "Bimbo Heroines.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -12,8 +12,6 @@
     "world_info_settings": {
         "world_info": {
             "globalSelect": [
-                "Hypnotic Actions",
-                "User interation",
                 "Villainess_Femdom_Lorebook_Sillytavern"
             ]
         },
@@ -2499,12 +2497,16 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "dialogueExamples",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "scenario",
                         "enabled": true
                     },
                     {
                         "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": true
+                        "enabled": false
                     },
                     {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
@@ -2524,10 +2526,6 @@
                     },
                     {
                         "identifier": "a19b419e-43d5-4aab-ba60-4203acedaf74",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "dialogueExamples",
                         "enabled": true
                     },
                     {
