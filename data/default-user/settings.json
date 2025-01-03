@@ -1,6 +1,6 @@
 {
     "firstRun": false,
-    "currentVersion": "1.12.9",
+    "currentVersion": "1.12.10",
     "username": "Gira",
     "active_character": "Bimbo Heroines.png",
     "api_server": "http://127.0.0.1:5000/api",
@@ -104,6 +104,7 @@
             "no_repeat_ngram"
         ],
         "samplers": [
+            "dry",
             "top_k",
             "tfs_z",
             "typical_p",
@@ -588,14 +589,16 @@
             "command_visible": false,
             "interactive_visible": false,
             "stability_style_preset": "anime",
-            "bfl_upsampling": false
+            "bfl_upsampling": false,
+            "tool_visible": false
         },
         "chromadb": {},
         "translate": {
             "target_language": "en",
             "internal_language": "en",
             "provider": "google",
-            "auto_mode": "none"
+            "auto_mode": "none",
+            "deepl_endpoint": "free"
         },
         "objective": {
             "customPrompts": {
@@ -2555,19 +2558,23 @@
             "Anti-bond": [
                 {
                     "text": " bond",
-                    "value": -50
+                    "value": -50,
+                    "id": "5a402fe1-2640-4c38-aa2f-558e85848f84"
                 },
                 {
                     "text": " future",
-                    "value": -50
+                    "value": -50,
+                    "id": "819fe246-8148-4331-ba09-39faa6425f03"
                 },
                 {
                     "text": " bonding",
-                    "value": -50
+                    "value": -50,
+                    "id": "11ec84bf-5ae1-4ce8-8f85-4b1157752c33"
                 },
                 {
                     "text": " connection",
-                    "value": -25
+                    "value": -25,
+                    "id": "4185601d-f736-49b3-af96-6f7b22456116"
                 }
             ]
         },
@@ -2586,6 +2593,7 @@
         "nanogpt_model": "gpt-4o-mini",
         "zerooneai_model": "yi-large",
         "blockentropy_model": "be-70b-base-llama3.1",
+        "deepseek_model": "deepseek-chat",
         "custom_model": "",
         "custom_url": "",
         "custom_include_body": "",
@@ -2598,6 +2606,7 @@
         "openrouter_sort_models": "alphabetically",
         "openrouter_providers": [],
         "openrouter_allow_fallbacks": true,
+        "openrouter_middleout": "on",
         "jailbreak_system": false,
         "reverse_proxy": "",
         "chat_completion_source": "openai",
@@ -2619,12 +2628,14 @@
         "names_behavior": 1,
         "continue_postfix": " ",
         "custom_prompt_post_processing": "",
+        "show_thoughts": false,
         "seed": -1,
         "n": 1
     },
     "background": {
         "name": "_black.jpg",
-        "url": "url(\"backgrounds/_black.jpg\")"
+        "url": "url(\"backgrounds/_black.jpg\")",
+        "fitting": "classic"
     },
     "proxies": [
         {
