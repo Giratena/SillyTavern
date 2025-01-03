@@ -10,6 +10,7 @@ import {
     SVGInject,
     Popper,
     initLibraryShims,
+    slideToggle,
     default as libs,
 } from './lib.js';
 
@@ -549,6 +550,7 @@ let optionsPopper = Popper.createPopper(document.getElementById('options_button'
 let exportPopper = Popper.createPopper(document.getElementById('export_button'), document.getElementById('export_format_popup'), {
     placement: 'left',
 });
+let isExportPopupOpen = false;
 
 // Saved here for performance reasons
 const messageTemplate = $('#message_template .mes');
@@ -847,11 +849,9 @@ export let is_send_press = false; //Send generation
 
 let this_del_mes = -1;
 
-//message editing and chat scroll position persistence
+//message editing
 var this_edit_mes_chname = '';
 var this_edit_mes_id;
-var scroll_holder = 0;
-var is_use_scroll_holder = false;
 
 //settings
 export let settings;
@@ -892,6 +892,13 @@ export function getRequestHeaders() {
     return {
         'Content-Type': 'application/json',
         'X-CSRF-Token': token,
+    };
+}
+
+export function getSlideToggleOptions() {
+    return {
+        miliseconds: animation_duration * 1.5,
+        transitionFunction: animation_duration > 0 ? 'ease-in-out' : 'step-start',
     };
 }
 
@@ -1173,7 +1180,7 @@ async function getStatusTextgen() {
         return resultCheckStatus();
     }
 
-    if (textgen_settings.type == textgen_types.OOBA && textgen_settings.bypass_status_check) {
+    if ([textgen_types.GENERIC, textgen_types.OOBA].includes(textgen_settings.type) && textgen_settings.bypass_status_check) {
         setOnlineStatus('Status check bypassed');
         return resultCheckStatus();
     }
@@ -1223,7 +1230,7 @@ async function getStatusTextgen() {
             setOnlineStatus(textgen_settings.tabby_model || data?.result);
         } else if (textgen_settings.type === textgen_types.GENERIC) {
             loadGenericModels(data?.data);
-            setOnlineStatus(textgen_settings.generic_model || 'Connected');
+            setOnlineStatus(textgen_settings.generic_model || data?.result || 'Connected');
         } else {
             setOnlineStatus(data?.result);
         }
@@ -3785,6 +3792,23 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         }
     }
 
+    // Fetches the combined prompt for both negative and positive prompts
+    const cfgGuidanceScale = getGuidanceScale();
+    const useCfgPrompt = cfgGuidanceScale && cfgGuidanceScale.value !== 1;
+
+    // Adjust max context based on CFG prompt to prevent overfitting
+    if (useCfgPrompt) {
+        const negativePrompt = getCfgPrompt(cfgGuidanceScale, true, true)?.value || '';
+        const positivePrompt = getCfgPrompt(cfgGuidanceScale, false, true)?.value || '';
+        if (negativePrompt || positivePrompt) {
+            const previousMaxContext = this_max_context;
+            const [negativePromptTokenCount, positivePromptTokenCount] = await Promise.all([getTokenCountAsync(negativePrompt), getTokenCountAsync(positivePrompt)]);
+            const decrement = Math.max(negativePromptTokenCount, positivePromptTokenCount);
+            this_max_context -= decrement;
+            console.log(`Max context reduced by ${decrement} tokens of CFG prompt (${previousMaxContext} -> ${this_max_context})`);
+        }
+    }
+
     console.log(`Core/all messages: ${coreChat.length}/${chat.length}`);
 
     // kingbri MARK: - Make sure the prompt bias isn't the same as the user bias
@@ -4292,10 +4316,6 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         setPromptString();
     }
 
-    // Fetches the combined prompt for both negative and positive prompts
-    const cfgGuidanceScale = getGuidanceScale();
-    const useCfgPrompt = cfgGuidanceScale && cfgGuidanceScale.value !== 1;
-
     // For prompt bit itemization
     let mesSendString = '';
 
@@ -4579,9 +4599,12 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
                 const shouldDeleteMessage = type !== 'swipe' && ['', '...'].includes(lastMessage?.mes) && ['', '...'].includes(streamingProcessor?.result);
                 hasToolCalls && shouldDeleteMessage && await deleteLastMessage();
                 const invocationResult = await ToolManager.invokeFunctionTools(streamingProcessor.toolCalls);
+                const shouldStopGeneration = (!invocationResult.invocations.length && shouldDeleteMessage) || invocationResult.stealthCalls.length;
                 if (hasToolCalls) {
-                    if (!invocationResult.invocations.length && shouldDeleteMessage) {
-                        ToolManager.showToolCallError(invocationResult.errors);
+                    if (shouldStopGeneration) {
+                        if (Array.isArray(invocationResult.errors) && invocationResult.errors.length) {
+                            ToolManager.showToolCallError(invocationResult.errors);
+                        }
                         unblockGeneration(type);
                         generatedPromptCache = '';
                         streamingProcessor = null;
@@ -4681,9 +4704,12 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
             const shouldDeleteMessage = type !== 'swipe' && ['', '...'].includes(getMessage);
             hasToolCalls && shouldDeleteMessage && await deleteLastMessage();
             const invocationResult = await ToolManager.invokeFunctionTools(data);
+            const shouldStopGeneration = (!invocationResult.invocations.length && shouldDeleteMessage) || invocationResult.stealthCalls.length;
             if (hasToolCalls) {
-                if (!invocationResult.invocations.length && shouldDeleteMessage) {
-                    ToolManager.showToolCallError(invocationResult.errors);
+                if (shouldStopGeneration) {
+                    if (Array.isArray(invocationResult.errors) && invocationResult.errors.length) {
+                        ToolManager.showToolCallError(invocationResult.errors);
+                    }
                     unblockGeneration(type);
                     generatedPromptCache = '';
                     return;
@@ -9203,40 +9229,48 @@ function doDrawerOpenClick() {
  * @returns {void}
  */
 function doNavbarIconClick() {
-    var icon = $(this).find('.drawer-icon');
-    var drawer = $(this).parent().find('.drawer-content');
+    const icon = $(this).find('.drawer-icon');
+    const drawer = $(this).parent().find('.drawer-content');
     if (drawer.hasClass('resizing')) { return; }
-    var drawerWasOpenAlready = $(this).parent().find('.drawer-content').hasClass('openDrawer');
-    let targetDrawerID = $(this).parent().find('.drawer-content').attr('id');
+    const drawerWasOpenAlready = $(this).parent().find('.drawer-content').hasClass('openDrawer');
+    const targetDrawerID = $(this).parent().find('.drawer-content').attr('id');
     const pinnedDrawerClicked = drawer.hasClass('pinnedOpen');
 
     if (!drawerWasOpenAlready) { //to open the drawer
-        $('.openDrawer').not('.pinnedOpen').addClass('resizing').slideToggle(200, 'swing', async function () {
-            await delay(50); $(this).closest('.drawer-content').removeClass('resizing');
+        $('.openDrawer').not('.pinnedOpen').addClass('resizing').each((_, el) => {
+            slideToggle(el, {
+                ...getSlideToggleOptions(),
+                onAnimationEnd: function (el) {
+                    el.closest('.drawer-content').classList.remove('resizing');
+                },
+            });
         });
-        $('.openIcon').toggleClass('closedIcon openIcon');
+        $('.openIcon').not('.drawerPinnedOpen').toggleClass('closedIcon openIcon');
         $('.openDrawer').not('.pinnedOpen').toggleClass('closedDrawer openDrawer');
         icon.toggleClass('openIcon closedIcon');
         drawer.toggleClass('openDrawer closedDrawer');
 
         //console.log(targetDrawerID);
         if (targetDrawerID === 'right-nav-panel') {
-            $(this).closest('.drawer').find('.drawer-content').addClass('resizing').slideToggle({
-                duration: 200,
-                easing: 'swing',
-                start: function () {
-                    jQuery(this).css('display', 'flex'); //flex needed to make charlist scroll
-                },
-                complete: async function () {
-                    favsToHotswap();
-                    await delay(50);
-                    $(this).closest('.drawer-content').removeClass('resizing');
-                    $('#rm_print_characters_block').trigger('scroll');
-                },
+            $(this).closest('.drawer').find('.drawer-content').addClass('resizing').each((_, el) => {
+                slideToggle(el, {
+                    ...getSlideToggleOptions(),
+                    elementDisplayStyle: 'flex',
+                    onAnimationEnd: function (el) {
+                        el.closest('.drawer-content').classList.remove('resizing');
+                        favsToHotswap();
+                        $('#rm_print_characters_block').trigger('scroll');
+                    },
+                });
             });
         } else {
-            $(this).closest('.drawer').find('.drawer-content').addClass('resizing').slideToggle(200, 'swing', async function () {
-                await delay(50); $(this).closest('.drawer-content').removeClass('resizing');
+            $(this).closest('.drawer').find('.drawer-content').addClass('resizing').each((_, el) => {
+                slideToggle(el, {
+                    ...getSlideToggleOptions(),
+                    onAnimationEnd: function (el) {
+                        el.closest('.drawer-content').classList.remove('resizing');
+                    },
+                });
             });
         }
 
@@ -9252,13 +9286,23 @@ function doNavbarIconClick() {
         icon.toggleClass('closedIcon openIcon');
 
         if (pinnedDrawerClicked) {
-            $(drawer).addClass('resizing').slideToggle(200, 'swing', async function () {
-                await delay(50); $(this).removeClass('resizing');
+            $(drawer).addClass('resizing').each((_, el) => {
+                slideToggle(el, {
+                    ...getSlideToggleOptions(),
+                    onAnimationEnd: function (el) {
+                        el.classList.remove('resizing');
+                    },
+                });
             });
         }
         else {
-            $('.openDrawer').not('.pinnedOpen').addClass('resizing').slideToggle(200, 'swing', async function () {
-                await delay(50); $(this).closest('.drawer-content').removeClass('resizing');
+            $('.openDrawer').not('.pinnedOpen').addClass('resizing').each((_, el) => {
+                slideToggle(el, {
+                    ...getSlideToggleOptions(),
+                    onAnimationEnd: function (el) {
+                        el.closest('.drawer-content').classList.remove('resizing');
+                    },
+                });
             });
         }
 
@@ -9314,6 +9358,11 @@ function addDebugFunctions() {
     registerDebugFunction('toggleEventTracing', 'Toggle event tracing', 'Useful to see what triggered a certain event.', () => {
         localStorage.setItem('eventTracing', localStorage.getItem('eventTracing') === 'true' ? 'false' : 'true');
         toastr.info('Event tracing is now ' + (localStorage.getItem('eventTracing') === 'true' ? 'enabled' : 'disabled'));
+    });
+
+    registerDebugFunction('toggleRegenerateWarning', 'Toggle Ctrl+Enter regeneration confirmation', 'Toggle the warning when regenerating a message with a Ctrl+Enter hotkey.', () => {
+        localStorage.setItem('RegenerateWithCtrlEnter', localStorage.getItem('RegenerateWithCtrlEnter') === 'true' ? 'false' : 'true');
+        toastr.info('Regenerate warning is now ' + (localStorage.getItem('RegenerateWithCtrlEnter') === 'true' ? 'disabled' : 'enabled'));
     });
 
     registerDebugFunction('copySetup', 'Copy ST setup to clipboard [WIP]', 'Useful data when reporting bugs', async () => {
@@ -9694,25 +9743,29 @@ jQuery(async function () {
         chooseBogusFolder($(this), tagId);
     });
 
-    /**
-     * Sets the scroll height of the edit textarea to fit the content.
-     * @param {HTMLTextAreaElement} e Textarea element to auto-fit
-     */
-    function autoFitEditTextArea(e) {
-        scroll_holder = chatElement[0].scrollTop;
-        e.style.height = '0px';
-        const newHeight = e.scrollHeight + 4;
-        e.style.height = `${newHeight}px`;
-        is_use_scroll_holder = true;
-    }
-    const autoFitEditTextAreaDebounced = debounce(autoFitEditTextArea, debounce_timeout.short);
-    document.addEventListener('input', e => {
-        if (e.target instanceof HTMLTextAreaElement && e.target.classList.contains('edit_textarea')) {
-            const scrollbarShown = e.target.clientWidth < e.target.offsetWidth && e.target.offsetHeight >= window.innerHeight * 0.75;
-            const immediately = (e.target.scrollHeight > e.target.offsetHeight && !scrollbarShown) || e.target.value === '';
-            immediately ? autoFitEditTextArea(e.target) : autoFitEditTextAreaDebounced(e.target);
+    const cssAutofit = CSS.supports('field-sizing', 'content');
+    if (!cssAutofit) {
+        /**
+         * Sets the scroll height of the edit textarea to fit the content.
+         * @param {HTMLTextAreaElement} e Textarea element to auto-fit
+         */
+        function autoFitEditTextArea(e) {
+            const scrollTop = chatElement.scrollTop();
+            e.style.height = '0px';
+            const newHeight = e.scrollHeight + 4;
+            e.style.height = `${newHeight}px`;
+            chatElement.scrollTop(scrollTop);
         }
-    });
+        const autoFitEditTextAreaDebounced = debounce(autoFitEditTextArea, debounce_timeout.short);
+        document.addEventListener('input', e => {
+            if (e.target instanceof HTMLTextAreaElement && e.target.classList.contains('edit_textarea')) {
+                const scrollbarShown = e.target.clientWidth < e.target.offsetWidth && e.target.offsetHeight >= window.innerHeight * 0.75;
+                const immediately = (e.target.scrollHeight > e.target.offsetHeight && !scrollbarShown) || e.target.value === '';
+                immediately ? autoFitEditTextArea(e.target) : autoFitEditTextAreaDebounced(e.target);
+            }
+        });
+    }
+
     const chatElementScroll = document.getElementById('chat');
     const chatScrollHandler = function () {
         if (power_user.waifuMode) {
@@ -9734,12 +9787,6 @@ jQuery(async function () {
     };
     chatElementScroll.addEventListener('wheel', chatScrollHandler, { passive: true });
     chatElementScroll.addEventListener('touchmove', chatScrollHandler, { passive: true });
-    chatElementScroll.addEventListener('scroll', function () {
-        if (is_use_scroll_holder) {
-            this.scrollTop = scroll_holder;
-            is_use_scroll_holder = false;
-        }
-    }, { passive: true });
 
     $(document).on('click', '.mes', function () {
         //when a 'delete message' parent div is clicked
@@ -10080,20 +10127,21 @@ jQuery(async function () {
         await getStatusNovel();
     });
 
-    var button = $('#options_button');
-    var menu = $('#options');
+    const button = $('#options_button');
+    const menu = $('#options');
+    let isOptionsMenuVisible = false;
 
     function showMenu() {
         showBookmarksButtons();
-        // menu.stop()
         menu.fadeIn(animation_duration);
         optionsPopper.update();
+        isOptionsMenuVisible = true;
     }
 
     function hideMenu() {
-        // menu.stop();
         menu.fadeOut(animation_duration);
         optionsPopper.update();
+        isOptionsMenuVisible = false;
     }
 
     function isMouseOverButtonOrMenu() {
@@ -10101,26 +10149,15 @@ jQuery(async function () {
     }
 
     button.on('click', function () {
-        if (menu.is(':visible')) {
+        if (isOptionsMenuVisible) {
             hideMenu();
         } else {
             showMenu();
         }
     });
-    button.on('blur', function () {
-        //delay to prevent menu hiding when mouse leaves button into menu
-        setTimeout(() => {
-            if (!isMouseOverButtonOrMenu()) { hideMenu(); }
-        }, 100);
-    });
-    menu.on('blur', function () {
-        //delay to prevent menu hide when mouseleaves menu into button
-        setTimeout(() => {
-            if (!isMouseOverButtonOrMenu()) { hideMenu(); }
-        }, 100);
-    });
     $(document).on('click', function () {
-        if (!isMouseOverButtonOrMenu() && menu.is(':visible')) { hideMenu(); }
+        if (!isOptionsMenuVisible) return;
+        if (!isMouseOverButtonOrMenu()) { hideMenu(); }
     });
 
     /* $('#set_chat_scenario').on('click', setScenarioOverride); */
@@ -10488,14 +10525,16 @@ jQuery(async function () {
                 .closest('.mes_block')
                 .find('.mes_text')
                 .append(
-                    '<textarea id=\'curEditTextarea\' class=\'edit_textarea mdHotkeys\' style=\'max-width:auto;\'></textarea>',
+                    '<textarea id=\'curEditTextarea\' class=\'edit_textarea mdHotkeys\'></textarea>',
                 );
             $('#curEditTextarea').val(text);
             let edit_textarea = $(this)
                 .closest('.mes_block')
                 .find('.edit_textarea');
-            edit_textarea.height(0);
-            edit_textarea.height(edit_textarea[0].scrollHeight);
+            if (!cssAutofit) {
+                edit_textarea.height(0);
+                edit_textarea.height(edit_textarea[0].scrollHeight);
+            }
             edit_textarea.focus();
             edit_textarea[0].setSelectionRange(     //this sets the cursor at the end of the text
                 String(edit_textarea.val()).length,
@@ -10516,22 +10555,28 @@ jQuery(async function () {
     });
 
     $(document).on('click', '.extraMesButtonsHint', function (e) {
-        const elmnt = e.target;
-        $(elmnt).transition({
+        const $hint = $(e.target);
+        const $buttons = $hint.siblings('.extraMesButtons');
+
+        $hint.transition({
             opacity: 0,
             duration: animation_duration,
-            easing: 'ease-in-out',
+            easing: animation_easing,
+            complete: function () {
+                $hint.hide();
+                $buttons
+                    .addClass('visible')
+                    .css({
+                        opacity: 0,
+                        display: 'flex',
+                    })
+                    .transition({
+                        opacity: 1,
+                        duration: animation_duration,
+                        easing: animation_easing,
+                    });
+            },
         });
-        setTimeout(function () {
-            $(elmnt).hide();
-            $(elmnt).siblings('.extraMesButtons').css('opcacity', '0');
-            $(elmnt).siblings('.extraMesButtons').css('display', 'flex');
-            $(elmnt).siblings('.extraMesButtons').transition({
-                opacity: 1,
-                duration: animation_duration,
-                easing: 'ease-in-out',
-            });
-        }, animation_duration);
     });
 
     $(document).on('click', function (e) {
@@ -10542,23 +10587,36 @@ jQuery(async function () {
 
         // Check if the click was outside the relevant elements
         if (!$(e.target).closest('.extraMesButtons, .extraMesButtonsHint').length) {
+            const $visibleButtons = $('.extraMesButtons.visible');
+
+            if (!$visibleButtons.length) {
+                return;
+            }
+
+            const $hiddenHints = $('.extraMesButtonsHint:hidden');
+
             // Transition out the .extraMesButtons first
-            $('.extraMesButtons:visible').transition({
+            $visibleButtons.transition({
                 opacity: 0,
                 duration: animation_duration,
-                easing: 'ease-in-out',
+                easing: animation_easing,
                 complete: function () {
-                    $(this).hide(); // Hide the .extraMesButtons after the transition
+                    // Hide the .extraMesButtons after the transition
+                    $(this)
+                        .hide()
+                        .removeClass('visible');
 
                     // Transition the .extraMesButtonsHint back in
-                    $('.extraMesButtonsHint:not(:visible)').show().transition({
-                        opacity: .3,
-                        duration: animation_duration,
-                        easing: 'ease-in-out',
-                        complete: function () {
-                            $(this).css('opacity', '');
-                        },
-                    });
+                    $hiddenHints
+                        .show()
+                        .transition({
+                            opacity: 0.3,
+                            duration: animation_duration,
+                            easing: animation_easing,
+                            complete: function () {
+                                $(this).css('opacity', '');
+                            },
+                        });
                 },
             });
         }
@@ -10742,8 +10800,9 @@ jQuery(async function () {
         }
     });
 
-    $('#export_button').on('click', function (e) {
-        $('#export_format_popup').toggle();
+    $('#export_button').on('click', function () {
+        isExportPopupOpen = !isExportPopupOpen;
+        $('#export_format_popup').toggle(isExportPopupOpen);
         exportPopper.update();
     });
 
@@ -10753,6 +10812,10 @@ jQuery(async function () {
         if (!format) {
             return;
         }
+
+        $('#export_format_popup').hide();
+        isExportPopupOpen = false;
+        exportPopper.update();
 
         // Save before exporting
         await createOrEditCharacter();
@@ -10775,9 +10838,6 @@ jQuery(async function () {
             URL.revokeObjectURL(a.href);
             document.body.removeChild(a);
         }
-
-
-        $('#export_format_popup').hide();
     });
     //**************************CHAT IMPORT EXPORT*************************//
     $('#chat_import_button').click(function () {
@@ -10849,15 +10909,18 @@ jQuery(async function () {
     });
 
     $(document).on('click', '.drawer-opener', doDrawerOpenClick);
+
     $('.drawer-toggle').on('click', doNavbarIconClick);
 
     $('html').on('touchstart mousedown', function (e) {
         var clickTarget = $(e.target);
 
-        if ($('#export_format_popup').is(':visible')
+        if (isExportPopupOpen
             && clickTarget.closest('#export_button').length == 0
             && clickTarget.closest('#export_format_popup').length == 0) {
             $('#export_format_popup').hide();
+            isExportPopupOpen = false;
+            exportPopper.update();
         }
 
         const forbiddenTargets = [
@@ -10882,12 +10945,16 @@ jQuery(async function () {
             if ($('.openDrawer').length !== 0) {
                 if (targetParentHasOpenDrawer === 0) {
                     //console.log($('.openDrawer').not('.pinnedOpen').length);
-                    $('.openDrawer').not('.pinnedOpen').addClass('resizing').slideToggle(200, 'swing', function () {
-                        $(this).closest('.drawer-content').removeClass('resizing');
+                    $('.openDrawer').not('.pinnedOpen').addClass('resizing').each((_, el) => {
+                        slideToggle(el, {
+                            ...getSlideToggleOptions(),
+                            onAnimationEnd: (el) => {
+                                el.closest('.drawer-content').classList.remove('resizing');
+                            },
+                        });
                     });
                     $('.openIcon').not('.drawerPinnedOpen').toggleClass('closedIcon openIcon');
                     $('.openDrawer').not('.pinnedOpen').toggleClass('closedDrawer openDrawer');
-
                 }
             }
         }
@@ -11053,14 +11120,6 @@ jQuery(async function () {
             case 'renameCharButton':
                 renameCharacter();
                 break;
-            /*case 'dupe_button':
-                DupeChar();
-                break;
-            case 'export_button':
-                $('#export_format_popup').toggle();
-                exportPopper.update();
-                break;
-            */
             case 'import_character_info':
                 await importEmbeddedWorldInfo();
                 saveCharacterDebounced();

@@ -651,6 +651,19 @@
                                         <input type="number" id="n_openai" name="n_openai" class="text_pole" min="1" value="1">
                                     </div>
                                 </div>
+                                <div data-source="openrouter" class="range-block">
+                                    <div class="range-block-title" title="Allow compressing requests by removing messages from the middle of the prompt.">
+                                        <span data-i18n="Middle-out Transform">Middle-out Transform</span>
+                                        <a href="https://openrouter.ai/docs/transforms" target="_blank" rel="noreferrer noopener"  class="note-link-span fa-solid fa-circle-question"></a>
+                                    </div>
+                                    <div class="wide100p">
+                                        <select id="openrouter_middleout" class="text_pole">
+                                            <option value="auto" data-i18n="Auto">Auto</option>
+                                            <option value="on" data-i18n="Allow">Allow</option>
+                                            <option value="off" data-i18n="Forbid">Forbid</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div data-source="openrouter">
                                     Max prompt cost: <span id="openrouter_max_prompt_cost">Unknown</span>
                                 </div>
@@ -669,7 +682,7 @@
                                         </span>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,claude,windowai,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt">
+                                <div class="range-block" data-source="openai,claude,windowai,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt,deepseek">
                                     <div class="range-block-title" data-i18n="Temperature">
                                         Temperature
                                     </div>
@@ -682,7 +695,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt,deepseek">
                                     <div class="range-block-title" data-i18n="Frequency Penalty">
                                         Frequency Penalty
                                     </div>
@@ -695,7 +708,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt">
+                                <div class="range-block" data-source="openai,openrouter,custom,cohere,perplexity,groq,mistralai,nanogpt,deepseek">
                                     <div class="range-block-title" data-i18n="Presence Penalty">
                                         Presence Penalty
                                     </div>
@@ -721,7 +734,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="range-block" data-source="openai,claude,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt">
+                                <div class="range-block" data-source="openai,claude,openrouter,ai21,scale,makersuite,mistralai,custom,cohere,perplexity,groq,01ai,nanogpt,deepseek">
                                     <div class="range-block-title" data-i18n="Top P">
                                         Top P
                                     </div>
@@ -1736,6 +1749,7 @@
                                             <div data-name="tfs_z" draggable="true"><span>Tail Free Sampling</span><small></small></div>
                                             <div data-name="min_p" draggable="true"><span>Min P</span><small></small></div>
                                             <div data-name="xtc" draggable="true"><span>Exclude Top Choices</span><small></small></div>
+                                            <div data-name="dry" draggable="true"><span>DRY</span><small></small></div>
                                         </div>
                                         <div id="llamacpp_samplers_default_order" class="menu_button menu_button_icon">
                                             <span data-i18n="Load default order">Load default order</span>
@@ -1951,13 +1965,27 @@
                                         <label for="use_makersuite_sysprompt" class="checkbox_label widthFreeExpand">
                                             <input id="use_makersuite_sysprompt" type="checkbox" />
                                             <span>
-                                                <span data-i18n="Use system prompt">Use system prompt</span><br>
-                                                <small data-i18n="(Gemini 1.5 Pro/Flash only)">(Gemini 1.5 Pro/Flash only)</small>
+                                                <span data-i18n="Use system prompt">Use system prompt</span>
+                                                <i class="opacity50p fa-solid fa-circle-info" title="Gemini 1.5/2.0 Pro/Flash"></i>
                                             </span>
                                         </label>
                                         <div class="toggle-description justifyLeft marginBot5">
                                             <span data-i18n="Merges_all_system_messages_desc_1">
                                                 Merges all system messages up until the first message with a non-system role, and sends them in a</span> <code>system_instruction</code> <span data-i18n="Merges_all_system_messages_desc_2">field.
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="range-block" data-source="makersuite">
+                                        <label for="openai_show_thoughts" class="checkbox_label widthFreeExpand">
+                                            <input id="openai_show_thoughts" type="checkbox" />
+                                            <span>
+                                                <span data-i18n="Show model thoughts">Show model thoughts</span>
+                                                <i class="opacity50p fa-solid fa-circle-info" title="Gemini 2.0 Thinking"></i>
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description justifyLeft marginBot5">
+                                            <span data-i18n="Display the model's internal thoughts in the response.">
+                                                Display the model's internal thoughts in the response.
                                             </span>
                                         </div>
                                     </div>
@@ -2052,7 +2080,7 @@
                             <option value="textgenerationwebui" data-i18n="Text Completion">Text Completion</option>
                             <option value="openai" data-i18n="Chat Completion">Chat Completion</option>
                             <option value="novel" data-i18n="NovelAI">NovelAI</option>
-                            <option value="koboldhorde" data-i18n="KoboldAI Horde">KoboldAI Horde</option>
+                            <option value="koboldhorde" data-i18n="AI Horde">AI Horde</option>
                             <option value="kobold" data-i18n="KoboldAI">KoboldAI Classic</option>
                         </select>
                     </div>
@@ -2061,8 +2089,8 @@
                             <div id="kobold_horde_block">
                                 <ul>
                                     <li>
-                                        <a target="_blank" href="https://aihorde.net/" data-i18n="KoboldAI Horde Website">
-                                            KoboldAI Horde Website
+                                        <a target="_blank" href="https://aihorde.net/" data-i18n="AI Horde Website">
+                                            AI Horde Website
                                         </a>
                                     </li>
                                     <li>
@@ -2616,7 +2644,7 @@
                                 </div>
                             </div>
                             <div class="flex-container flexFlowColumn marginTopBot5">
-                                <label data-tg-type="ooba" class="checkbox_label" for="bypass_status_check_textgenerationwebui">
+                                <label data-tg-type="ooba, generic" class="checkbox_label" for="bypass_status_check_textgenerationwebui">
                                     <input type="checkbox" id="bypass_status_check_textgenerationwebui" />
                                     <span data-i18n="Bypass status check">Bypass status check</span>
                                 </label>
@@ -2651,6 +2679,7 @@
                                 <option value="blockentropy">Block Entropy</option>
                                 <option value="claude">Claude</option>
                                 <option value="cohere">Cohere</option>
+                                <option value="deepseek">DeepSeek</option>
                                 <option value="groq">Groq</option>
                                 <option value="makersuite">Google AI Studio</option>
                                 <option value="mistralai">MistralAI</option>
@@ -3025,34 +3054,31 @@
                                     <optgroup label="Primary">
                                         <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                                         <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                                        <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
-                                        <option value="gemini-pro">Gemini Pro (1.0)</option>
-                                        <option value="gemini-pro-vision">Gemini Pro Vision (1.0)</option>
+                                        <option value="gemini-1.0-pro">Gemini 1.0 Pro (Deprecated)</option>
+                                        <option value="gemini-pro">Gemini Pro (1.0) (Deprecated)</option>
                                         <option value="gemini-ultra">Gemini Ultra (1.0)</option>
                                         <option value="gemini-1.0-ultra-latest">Gemini 1.0 Ultra</option>
-                                        <option value="text-bison-001">PaLM 2 (Legacy)</option>
-                                        <option value="chat-bison-001">PaLM 2 Chat (Legacy)</option>
                                     </optgroup>
                                     <optgroup label="Subversions">
-                                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experiment</option>
+                                        <option value="gemini-2.0-flash-thinking-exp-1219">Gemini 2.0 Flash Thinking Experimental</option>
+                                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</option>
                                         <option value="gemini-exp-1114">Gemini Experimental 2024-11-14</option>
                                         <option value="gemini-exp-1121">Gemini Experimental 2024-11-21</option>
                                         <option value="gemini-exp-1206">Gemini Experimental 2024-12-06</option>
-                                        <option value="gemini-1.5-pro-exp-0801">Gemini 1.5 Pro Experiment 2024-08-01</option>
-                                        <option value="gemini-1.5-pro-exp-0827">Gemini 1.5 Pro Experiment 2024-08-27</option>
+                                        <option value="gemini-1.5-pro-exp-0801">Gemini 1.5 Pro Experimental 2024-08-01</option>
+                                        <option value="gemini-1.5-pro-exp-0827">Gemini 1.5 Pro Experimental 2024-08-27</option>
                                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro [latest]</option>
                                         <option value="gemini-1.5-pro-001">Gemini 1.5 Pro [001]</option>
                                         <option value="gemini-1.5-pro-002">Gemini 1.5 Pro [002]</option>
                                         <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
-                                        <option value="gemini-1.5-flash-exp-0827">Gemini 1.5 Flash Experiment 2024-08-27</option>
-                                        <option value="gemini-1.5-flash-8b-exp-0827">Gemini 1.5 Flash 8B Experiment 2024-08-27</option>
-                                        <option value="gemini-1.5-flash-8b-exp-0924">Gemini 1.5 Flash 8B Experiment 2024-09-24</option>
+                                        <option value="gemini-1.5-flash-exp-0827">Gemini 1.5 Flash Experimental 2024-08-27</option>
+                                        <option value="gemini-1.5-flash-8b-exp-0827">Gemini 1.5 Flash 8B Experimental 2024-08-27</option>
+                                        <option value="gemini-1.5-flash-8b-exp-0924">Gemini 1.5 Flash 8B Experimental 2024-09-24</option>
                                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash [latest]</option>
                                         <option value="gemini-1.5-flash-001">Gemini 1.5 Flash [001]</option>
                                         <option value="gemini-1.5-flash-002">Gemini 1.5 Flash [002]</option>
-                                        <option value="gemini-1.0-pro-latest">Gemini 1.0 Pro [latest]</option>
-                                        <option value="gemini-1.0-pro-001">Gemini 1.0 Pro (Tuning) [001]</option>
-                                        <option value="gemini-1.0-pro-vision-latest">Gemini 1.0 Pro Vision [latest]</option>
+                                        <option value="gemini-1.0-pro-latest">Gemini 1.0 Pro [latest] (Deprecated)</option>
+                                        <option value="gemini-1.0-pro-001">Gemini 1.0 Pro (Tuning) [001] (Deprecated)</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -3167,6 +3193,23 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="deepseek_form" data-source="deepseek">
+                            <h4 data-i18n="DeepSeek API Key">DeepSeek API Key</h4>
+                            <div class="flex-container">
+                                <input id="api_key_deepseek" name="api_key_deepseek" class="text_pole flex1" value="" type="text" autocomplete="off">
+                                <div title="Clear your API key" data-i18n="[title]Clear your API key" class="menu_button fa-solid fa-circle-xmark clear-api-key" data-key="api_key_deepseek"></div>
+                            </div>
+                            <div data-for="api_key_deepseek" class="neutral_warning" data-i18n="For privacy reasons, your API key will be hidden after you reload the page.">
+                                For privacy reasons, your API key will be hidden after you reload the page.
+                            </div>
+                            <div>
+                                <h4 data-i18n="DeepSeek Model">DeepSeek Model</h4>
+                                <select id="model_deepseek_select">
+                                    <option value="deepseek-chat">deepseek-chat</option>
+                                    <option value="deepseek-coder">deepseek-coder</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="perplexity_form" data-source="perplexity">
                             <h4 data-i18n="Perplexity API Key">Perplexity API Key</h4>
                             <div class="flex-container">
@@ -3220,16 +3263,17 @@
                                 <h4 data-i18n="Cohere Model">Cohere Model</h4>
                                 <select id="model_cohere_select">
                                     <optgroup label="Stable">
-                                        <option value="c4ai-aya-expanse-32b">c4ai-aya-expanse-32b</option>
-                                        <option value="c4ai-aya-expanse-8b">c4ai-aya-expanse-8b</option>
-                                        <option value="c4ai-aya-23-35b">c4ai-aya-23-35b</option>
                                         <option value="c4ai-aya-23-8b">c4ai-aya-23-8b</option>
+                                        <option value="c4ai-aya-23">c4ai-aya-23</option>
+                                        <option value="c4ai-aya-expanse-8b">c4ai-aya-expanse-8b</option>
+                                        <option value="c4ai-aya-expanse-32b">c4ai-aya-expanse-32b</option>
                                         <option value="command-light">command-light</option>
                                         <option value="command">command</option>
                                         <option value="command-r">command-r</option>
                                         <option value="command-r-plus">command-r-plus</option>
                                         <option value="command-r-08-2024">command-r-08-2024</option>
                                         <option value="command-r-plus-08-2024">command-r-plus-08-2024</option>
+                                        <option value="command-r7b-12-2024">command-r7b-12-2024</option>
                                     </optgroup>
                                     <optgroup label="Nightly">
                                         <option value="command-light-nightly">command-light-nightly</option>
@@ -3285,8 +3329,9 @@
                             <h4 data-i18n="Prompt Post-Processing">Prompt Post-Processing</h4>
                             <select id="custom_prompt_post_processing" class="text_pole" title="Applies additional processing to the prompt before sending it to the API." data-i18n="[title]Applies additional processing to the prompt before sending it to the API.">
                                 <option data-i18n="prompt_post_processing_none" value="">None</option>
-                                <option value="merge">Merge consecutive roles</option>
-                                <option value="strict">Strict (user first, alternating roles)</option>
+                                <option data-i18n="prompt_post_processing_merge" value="merge">Merge consecutive roles</option>
+                                <option data-i18n="prompt_post_processing_semi" value="semi">Semi-strict (alternating roles)</option>
+                                <option data-i18n="prompt_post_processing_strict" value="strict">Strict (user first, alternating roles)</option>
                             </select>
                         </form>
                         <div id="01ai_form" data-source="01ai">
@@ -3736,6 +3781,7 @@
                                     <option value="17">Mistral Nemo</option>
                                     <option value="8">Yi</option>
                                     <option value="11">Claude 1/2</option>
+                                    <option value="18">DeepSeek V3</option>
                                     <option value="6">API (WebUI / koboldcpp)</option>
                                 </select>
                             </div>
@@ -4702,6 +4748,13 @@
                             Background Image
                         </h3>
                         <input id="bg-filter" data-i18n="[placeholder]Filter" placeholder="Filter" class="text_pole flex1" type="search" />
+                        <select id="background_fitting" class="text_pole" data-i18n="[title]Background Fitting" title="Background Fitting">
+                            <option value="classic" data-i18n="Classic">Classic</option>
+                            <option value="cover" data-i18n="Cover">Cover</option>
+                            <option value="contain" data-i18n="Contain">Contain</option>
+                            <option value="stretch" data-i18n="Stretch">Stretch</option>
+                            <option value="center" data-i18n="Center">Center</option>
+                        </select>
                         <div id="auto_background" class="menu_button menu_button_icon" data-i18n="[title]Automatically select a background based on the chat context" title="Automatically select a background based on the chat context.">
                             <i class="fa-solid fa-wand-magic"></i>
                             <span data-i18n="Auto-select">Auto-select</span>
@@ -6012,6 +6065,7 @@
         </div>
         <div id="openai_logit_bias_template" class="template_element">
             <div class="openai_logit_bias_form">
+                <span class="drag-handle">☰</span>
                 <input class="openai_logit_bias_text text_pole" data-i18n="[placeholder]Text or token ids" placeholder="Text or [token ids]" />
                 <input class="openai_logit_bias_value text_pole" type="number" min="-100" value="0" max="100" />
                 <i class="menu_button fa-solid fa-xmark openai_logit_bias_remove"></i>
@@ -6019,6 +6073,7 @@
         </div>
         <div id="logit_bias_template" class="template_element">
             <div class="logit_bias_form">
+                <span class="drag-handle">☰</span>
                 <input class="logit_bias_text text_pole" data-i18n="[placeholder]Type here..." placeholder="type here..." />
                 <input class="logit_bias_value text_pole" type="number" min="-100" value="0" max="100" step="0.01" />
                 <i class="menu_button fa-solid fa-xmark logit_bias_remove"></i>
@@ -6058,7 +6113,9 @@
                                 <label for="completion_prompt_manager_popup_entry_form_role">
                                     <span data-i18n="Role">Role</span>
                                 </label>
-                                <div class="text_muted" data-i18n="To whom this message will be attributed.">To whom this message will be attributed.</div>
+                                <div class="text_muted">
+                                    <span data-i18n="To whom this message will be attributed.">To whom this message will be attributed.</span>
+                                </div>
                                 <select id="completion_prompt_manager_popup_entry_form_role" class="text_pole" name="role">
                                     <option data-i18n="System" value="system">System</option>
                                     <option data-i18n="User" value="user">User</option>

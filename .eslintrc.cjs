@@ -91,6 +91,8 @@ module.exports = {
         'space-infix-ops': 'error',
         'no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true }],
         'no-cond-assign': 'error',
+        'no-unneeded-ternary': 'error',
+        'no-irregular-whitespace': ['error', { skipStrings: true, skipTemplates: true }],
 
         // These rules should eventually be enabled.
         'no-async-promise-executor': 'off',

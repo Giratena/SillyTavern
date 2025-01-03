@@ -47,7 +47,7 @@ import {
 } from '../script.js';
 import { SlashCommandParser } from './slash-commands/SlashCommandParser.js';
 import { SlashCommandParserError } from './slash-commands/SlashCommandParserError.js';
-import { getMessageTimeStamp } from './RossAscends-mods.js';
+import { getMessageTimeStamp, isMobile } from './RossAscends-mods.js';
 import { hideChatMessageRange } from './chats.js';
 import { getContext, saveMetadataDebounced } from './extensions.js';
 import { getRegexedString, regex_placement } from './extensions/regex/engine.js';
@@ -1918,6 +1918,52 @@ export function initDefaultSlashCommands() {
         ],
         helpString: 'Converts the provided string to lowercase.',
     }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'substr',
+        aliases: ['substring'],
+        callback: (arg, text) => typeof text === 'string' ? text.slice(...[Number(arg.start), arg.end && Number(arg.end)]) : '',
+        returns: 'substring',
+        namedArgumentList: [
+            new SlashCommandNamedArgument(
+                'start', 'start index', [ARGUMENT_TYPE.NUMBER], false, false,
+            ),
+            new SlashCommandNamedArgument(
+                'end', 'end index', [ARGUMENT_TYPE.NUMBER], false, false,
+            ),
+        ],
+        unnamedArgumentList: [
+            new SlashCommandArgument(
+                'string', [ARGUMENT_TYPE.STRING], true, false,
+            ),
+        ],
+        helpString: `
+            <div>
+                Extracts text from the provided string.
+            </div>
+            <div>
+                If <code>start</code> is omitted, it's treated as 0.<br />
+                If <code>start</code> < 0, the index is counted from the end of the string.<br />
+                If <code>start</code> >= the string's length, an empty string is returned.<br />
+                If <code>end</code> is omitted, or if <code>end</code> >= the string's length, extracts to the end of the string.<br />
+                If <code>end</code> < 0, the index is counted from the end of the string.<br />
+                If <code>end</code> <= <code>start</code> after normalizing negative values, an empty string is returned.
+            </div>
+            <div>
+                <strong>Example:</strong>
+                <pre>/let x The morning is upon us.     ||                                     </pre>
+                <pre>/substr start=-3 {{var::x}}         | /echo  |/# us.                    ||</pre>
+                <pre>/substr start=-3 end=-1 {{var::x}}  | /echo  |/# us                     ||</pre>
+                <pre>/substr end=-1 {{var::x}}           | /echo  |/# The morning is upon us ||</pre>
+                <pre>/substr start=4 end=-1 {{var::x}}   | /echo  |/# morning is upon us     ||</pre>
+            </div>
+        `,
+    }));
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'is-mobile',
+        callback: () => String(isMobile()),
+        returns: ARGUMENT_TYPE.BOOLEAN,
+        helpString: 'Returns true if the current device is a mobile device, false otherwise. Equivalent to <code>{{isMobile}}</code> macro.',
+    }));
 
     registerVariableCommands();
 }
@@ -3769,6 +3815,7 @@ function getModelOptions(quiet) {
         { id: 'model_nanogpt_select', api: 'openai', type: chat_completion_sources.NANOGPT },
         { id: 'model_01ai_select', api: 'openai', type: chat_completion_sources.ZEROONEAI },
         { id: 'model_blockentropy_select', api: 'openai', type: chat_completion_sources.BLOCKENTROPY },
+        { id: 'model_deepseek_select', api: 'openai', type: chat_completion_sources.DEEPSEEK },
         { id: 'model_novel_select', api: 'novel', type: null },
         { id: 'horde_model', api: 'koboldhorde', type: null },
     ];

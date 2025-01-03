@@ -475,9 +475,9 @@ export function formatInstructModeExamples(mesExamplesArray, name1, name2) {
         }
 
         for (const example of blockExamples) {
-            // If group names were already included, we don't want to add an additional prefix
-            // If force group/persona names is set, we should override the include names for the user placeholder
-            const includeThisName = (includeNames && !includeGroupNames) || (power_user.instruct.names_behavior === names_behavior_types.FORCE && example.name == 'example_user');
+            // If group names were included, we don't want to add any additional prefix as it already was applied.
+            // Otherwise, if force group/persona names is set, we should override the include names for the user placeholder
+            const includeThisName = !includeGroupNames && (includeNames || (power_user.instruct.names_behavior === names_behavior_types.FORCE && example.name == 'example_user'));
 
             const prefix = example.name == 'example_user' ? inputPrefix : outputPrefix;
             const suffix = example.name == 'example_user' ? inputSuffix : outputSuffix;
