@@ -61,6 +61,7 @@ const API_DEEPSEEK = 'https://api.deepseek.com/beta';
  * @returns
  */
 function postProcessPrompt(messages, type, names) {
+    const addAssistantPrefix = x => x.length && (x[x.length - 1].role !== 'assistant' || (x[x.length - 1].prefix = true)) ? x : x;
     switch (type) {
         case 'merge':
         case 'claude':
@@ -70,7 +71,9 @@ function postProcessPrompt(messages, type, names) {
         case 'strict':
             return mergeMessages(messages, names, true, true);
         case 'deepseek':
-            return (x => x.length && (x[x.length - 1].role !== 'assistant' || (x[x.length - 1].prefix = true)) ? x : x)(mergeMessages(messages, names, true, false));
+            return addAssistantPrefix(mergeMessages(messages, names, true, false));
+        case 'deepseek-reasoner':
+            return addAssistantPrefix(mergeMessages(messages, names, true, true));
         default:
             return messages;
     }
@@ -308,14 +311,20 @@ async function sendMakerSuiteRequest(request, response) {
         ) && request.body.use_makersuite_sysprompt;
 
         const prompt = convertGooglePrompt(request.body.messages, model, should_use_system_prompt, getPromptNames(request));
+        let safetySettings = GEMINI_SAFETY;
+
+        if (model.includes('gemini-2.0-flash-exp')) {
+            safetySettings = GEMINI_SAFETY.map(setting => ({ ...setting, threshold: 'OFF' }));
+        }
+
         let body = {
             contents: prompt.contents,
-            safetySettings: GEMINI_SAFETY,
+            safetySettings: safetySettings,
             generationConfig: generationConfig,
         };
 
         if (should_use_system_prompt) {
-            body.system_instruction = prompt.system_instruction;
+            body.systemInstruction = prompt.system_instruction;
         }
 
         return body;
@@ -959,7 +968,8 @@ router.post('/generate', jsonParser, function (request, response) {
             bodyParams['logprobs'] = true;
         }
 
-        request.body.messages = postProcessPrompt(request.body.messages, 'deepseek', getPromptNames(request));
+        const postProcessType = String(request.body.model).endsWith('-reasoner') ? 'deepseek-reasoner' : 'deepseek';
+        request.body.messages = postProcessPrompt(request.body.messages, postProcessType, getPromptNames(request));
     } else {
         console.log('This chat completion source is not supported yet.');
         return response.status(400).send({ error: true });

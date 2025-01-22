@@ -2030,6 +2030,16 @@ async function sendOpenAIRequest(type, messages, signal) {
     // https://api-docs.deepseek.com/api/create-chat-completion
     if (isDeepSeek) {
         generate_data.top_p = generate_data.top_p || Number.EPSILON;
+
+        if (generate_data.model.endsWith('-reasoner')) {
+            delete generate_data.top_p;
+            delete generate_data.temperature;
+            delete generate_data.frequency_penalty;
+            delete generate_data.presence_penalty;
+            delete generate_data.top_logprobs;
+            delete generate_data.logprobs;
+            delete generate_data.logit_bias;
+        }
     }
 
     if ((isOAI || isOpenRouter || isMistral || isCustom || isCohere || isNano) && oai_settings.seed >= 0) {
@@ -2085,6 +2095,7 @@ async function sendOpenAIRequest(type, messages, signal) {
             let text = '';
             const swipes = [];
             const toolCalls = [];
+            const state = {};
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) return;
@@ -2095,9 +2106,9 @@ async function sendOpenAIRequest(type, messages, signal) {
 
                 if (Array.isArray(parsed?.choices) && parsed?.choices?.[0]?.index > 0) {
                     const swipeIndex = parsed.choices[0].index - 1;
-                    swipes[swipeIndex] = (swipes[swipeIndex] || '') + getStreamingReply(parsed);
+                    swipes[swipeIndex] = (swipes[swipeIndex] || '') + getStreamingReply(parsed, state);
                 } else {
-                    text += getStreamingReply(parsed);
+                    text += getStreamingReply(parsed, state);
                 }
 
                 ToolManager.parseToolCalls(toolCalls, parsed);
@@ -2129,14 +2140,27 @@ async function sendOpenAIRequest(type, messages, signal) {
     }
 }
 
-function getStreamingReply(data) {
+/**
+ * Extracts the reply from the response data from a chat completions-like source
+ * @param {object} data Response data from the chat completions-like source
+ * @param {object} state Additional state to keep track of
+ * @returns {string} The reply extracted from the response data
+ */
+function getStreamingReply(data, state) {
     if (oai_settings.chat_completion_source === chat_completion_sources.CLAUDE) {
         return data?.delta?.text || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE) {
         return data?.candidates?.[0]?.content?.parts?.filter(x => oai_settings.show_thoughts || !x.thought)?.map(x => x.text)?.filter(x => x)?.join('\n\n') || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.COHERE) {
         return data?.delta?.message?.content?.text || data?.delta?.message?.tool_plan || '';
-    } else {
+    } else if (oai_settings.chat_completion_source === chat_completion_sources.DEEPSEEK) {
+        const hadThoughts = state.hadThoughts;
+        const thoughts = data.choices?.filter(x => oai_settings.show_thoughts || !x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '';
+        const content = data.choices?.[0]?.delta?.content || '';
+        state.hadThoughts = !!thoughts;
+        const separator = hadThoughts && !thoughts ? '\n\n' : '';
+        return [thoughts, separator, content].filter(x => x).join('\n\n');
+    } else  {
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     }
 }
@@ -3335,7 +3359,7 @@ async function getStatusOpen() {
         chat_completion_sources.GROQ,
     ];
     if (noValidateSources.includes(oai_settings.chat_completion_source)) {
-        let status = 'Unable to verify key; press "Test Message" to validate.';
+        let status = t`Key saved; press \"Test Message\" to verify.`;
         setOnlineStatus(status);
         return resultCheckStatus();
     }
@@ -3813,7 +3837,7 @@ function onLogitBiasPresetExportClick() {
 }
 
 async function onDeletePresetClick() {
-    const confirm = await callPopup('Delete the preset? This action is irreversible and your current settings will be overwritten.', 'confirm');
+    const confirm = await callPopup(t`Delete the preset? This action is irreversible and your current settings will be overwritten.`, 'confirm');
 
     if (!confirm) {
         return;
@@ -3971,6 +3995,8 @@ function onSettingsPresetChange() {
         settings: oai_settings,
         savePreset: saveOpenAIPreset,
     }).finally(r => {
+        $('.model_custom_select').empty();
+
         for (const [key, [selector, setting, isCheckbox]] of Object.entries(settingsToUpdate)) {
             if (preset[key] !== undefined) {
                 if (isCheckbox) {
@@ -4486,7 +4512,7 @@ async function onModelChange() {
     if (oai_settings.chat_completion_source === chat_completion_sources.DEEPSEEK) {
         if (oai_settings.max_context_unlocked) {
             $('#openai_max_context').attr('max', unlocked_max);
-        } else if (oai_settings.deepseek_model == 'deepseek-chat') {
+        } else if (['deepseek-reasoner', 'deepseek-chat'].includes(oai_settings.deepseek_model)) {
             $('#openai_max_context').attr('max', max_64k);
         } else if (oai_settings.deepseek_model == 'deepseek-coder') {
             $('#openai_max_context').attr('max', max_16k);
@@ -5489,8 +5515,8 @@ export function initOpenAI() {
 
     if (!isMobile()) {
         $('#model_openrouter_select').select2({
-            placeholder: 'Select a model',
-            searchInputPlaceholder: 'Search models...',
+            placeholder: t`Select a model`,
+            searchInputPlaceholder: t`Search models...`,
             searchInputCssClass: 'text_pole',
             width: '100%',
             templateResult: getOpenRouterModelTemplate,
