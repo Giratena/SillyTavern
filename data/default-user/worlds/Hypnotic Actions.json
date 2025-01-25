@@ -172,7 +172,7 @@
             "group": "",
             "displayIndex": 3,
             "preventRecursion": true,
-            "scanDepth": null,
+            "scanDepth": 2,
             "caseSensitive": null,
             "matchWholeWords": null,
             "automationId": "",

@@ -22,31 +22,20 @@ basicAuthUser:
   username: user
   password: password
 autorun: true
-enableExtensions: true
 listen: true
-disableThumbnails: false
 allowKeysExposure: false
 securityOverride: false
 skipContentCheck: false
 enableCorsProxy: false
-thumbnailsQuality: 95
-disableChatBackup: false
 requestOverrides: []
 extras:
-  disableAutoDownload: false
-  classificationModel: Cohee/distilbert-base-uncased-go-emotions-onnx
-  captioningModel: Xenova/vit-gpt2-image-captioning
-  embeddingModel: Xenova/all-mpnet-base-v2
   promptExpansionModel: Cohee/fooocus_expansion-onnx
-  speechToTextModel: Xenova/whisper-small
-  textToSpeechModel: Xenova/speecht5_tts
 openai:
   randomizeUserId: false
   captionSystemPrompt: ""
 deepl:
   formality: default
 enableServerPlugins: false
-avatarThumbnailsPng: false
 dataRoot: ./data
 enableForwardedWhitelist: true
 enableUserAccounts: false
@@ -72,8 +61,6 @@ requestProxy:
     - 127.0.0.1
 sessionTimeout: 86400
 avoidLocalhost: false
-numberOfBackups: 50
-enableExtensionsAutoUpdate: true
 enableDownloadableTokenizers: true
 mistral:
   enablePrefix: false
@@ -84,7 +71,33 @@ claude:
   cachingAtDepth: -1
 autheliaAuth: false
 perUserBasicAuth: false
-chatBackupThrottleInterval: 10000
 promptPlaceholder: "[Start a new chat]"
 cardsCacheCapacity: 100
-maxTotalChatBackups: -1
+thumbnails:
+  enabled: true
+  quality: 95
+  format: jpg
+  dimensions:
+    bg:
+      - 160
+      - 90
+    avatar:
+      - 96
+      - 144
+backups:
+  chat:
+    enabled: true
+    maxTotalBackups: -1
+    throttleInterval: 10000
+  common:
+    numberOfBackups: 50
+extensions:
+  enabled: true
+  autoUpdate: true
+  models:
+    autoDownload: true
+    classification: Cohee/distilbert-base-uncased-go-emotions-onnx
+    captioning: Xenova/vit-gpt2-image-captioning
+    embedding: Xenova/all-mpnet-base-v2
+    speechToText: Xenova/whisper-small
+    textToSpeech: Xenova/speecht5_tts

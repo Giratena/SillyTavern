@@ -2,7 +2,7 @@
     "firstRun": false,
     "currentVersion": "1.12.11",
     "username": "Gira",
-    "active_character": "Raven.png",
+    "active_character": "Tifa Lockhart.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
     "user_avatar": "user-default.png",
@@ -18,15 +18,15 @@
         },
         "world_info_depth": 13,
         "world_info_min_activations": 0,
-        "world_info_min_activations_depth_max": 3,
+        "world_info_min_activations_depth_max": 5,
         "world_info_budget": 25,
         "world_info_include_names": false,
-        "world_info_recursive": true,
+        "world_info_recursive": false,
         "world_info_overflow_alert": true,
         "world_info_case_sensitive": false,
         "world_info_match_whole_words": true,
         "world_info_character_strategy": 0,
-        "world_info_budget_cap": 7785,
+        "world_info_budget_cap": 8192,
         "world_info_use_group_scoring": false,
         "world_info_max_recursion_steps": 0
     },
@@ -311,15 +311,23 @@
             "content": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\nWrite {{char}}'s next reply in a fictional roleplay chat between {{user}} and {{char}}.\n"
         },
         "personas": {
-            "user-default.png": "Gira"
+            "user-default.png": "Gira",
+            "1737801303668-DrEggman.png": "Dr. Eggman"
         },
-        "default_persona": null,
+        "default_persona": "user-default.png",
         "persona_descriptions": {
             "user-default.png": {
                 "description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
                 "position": 0,
                 "depth": 2,
                 "role": 0
+            },
+            "1737801303668-DrEggman.png": {
+                "description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind from the Sonic the Hedgehod series). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presense shouts distrust. He has an eggshaped body.] ",
+                "position": 0,
+                "depth": 2,
+                "role": 0,
+                "lorebook": ""
             }
         },
         "persona_description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
@@ -528,7 +536,8 @@
                 "Anaconda": "{{office background}}",
                 "Shantae": " shantae (series), ",
                 "Samus Aran": "Samus Aran,",
-                "Starfire": "{{Starfire}}"
+                "Starfire": "{{Starfire}}",
+                "Rouge the Bat": "{{rouge the bat}}, "
             },
             "source": "extras",
             "scheduler": "normal",
@@ -1757,9 +1766,9 @@
     "oai_settings": {
         "preset_settings_openai": "s7fcxnChatCompletionGiratenaEdit",
         "temp_openai": 1,
-        "freq_pen_openai": 1.1,
-        "pres_pen_openai": 1.12,
-        "top_p_openai": 0.8,
+        "freq_pen_openai": 0.1,
+        "pres_pen_openai": 0.12,
+        "top_p_openai": 1,
         "top_k_openai": 0,
         "min_p_openai": 0,
         "top_a_openai": 1,
@@ -2018,7 +2027,7 @@
                 "marker": false,
                 "name": "Writing Instructions",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and all 5 of their sensors.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- Write from {{user}}'s perspective, noting feel, sensory details, thoughts etc.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n- Loss of control is sexy. Give {{user}} a false sense of control in the story, but is also very unlucky. Craft unfortunate, realistic excuses or situations for unfortunate situations that go against {{user}}'s actions to respond to, often leading to sexual, femdommy scenarios. Implement murphy's law on {{user}} - if something can go wrong, it probably will, but do not contradict creative, confident solutions offered by {{user}}.\n- Your response should be of 1-3 short paragraphs and NO MORE\n- Continue off <latest_message> do not repeat it.\n</writing_instructions>",
+                "content": "{{// Mandatory. Editable.\n- Use present tense.\n- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.\n- start {{char}}'s reply filling out {{user}}'s command as words and actions said by {{user}} (adding more words to them and narration). This should only build character or context in relatio to the story scenario. Assume {{user}}'s behavior based on {{char}}'s influence and powers.\nEg: {{user}}: I say hi\n{{char}}: \"Hi there! How was your day today?\" *Gira said cheerfully, walking through the door...*\n}}<writing_instructions>\n- Conclude ALL responses on either PHYSICAL ACTIONS or QUOTED SPEECH.\n- Characters may swear and insult using cusses and slurs if fitting their personality, including: [ fuck motherfucker shit piss cunt faggot retard dumbass cocksucker asshole whore slut ].\n- Use past tense\n- Narrate {{user}}'s thoughts and all 5 of their sensors.\n- {{char}} doesn't really appreciate short/blunt replies from {{user}} in the context of the RP.\n- Show! Don't tell! This is a technique used in various types of creative writing. It is allows for the reader to experience the story and characters through actions, thoughts, sensory details, and feelings, rather than just a factual description. Using this technique helps paint a picture of the scene for the reader.\n- Write from {{user}}'s perspective, noting feel, sensory details, thoughts etc.\n- people respect {{user}} deeply, but will lose this respect if they see them act lewdly.\n- Loss of control is sexy. Give {{user}} a false sense of control in the story, but is also very unlucky. Craft unfortunate, realistic excuses or situations for unfortunate situations that go against {{user}}'s actions to respond to, often leading to sexual, femdommy scenarios. Implement murphy's law on {{user}} - if something can go wrong, it probably will, but do not contradict creative, confident solutions offered by {{user}}.\n- Your response should be of 2-4 short paragraphs and NO MORE\n- Continue off <latest_message> do not repeat it.\n</writing_instructions>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -2162,7 +2171,31 @@
                 "marker": false,
                 "name": "📜 | hypnosis ",
                 "role": "system",
-                "content": "{{// Thanks to subwolf for this; built on it with anon4anon's preset: https://rentry.co/anon4anon-en}}\n# Clau portrays an accurate account of Hypnosis  like when it fits the narrative. She follow `<hypnosis>` when handling hypnosis of any kind:\n<hypnosis>\n- Write conflicting details about the corruption of pleasure eroding a characters morals while under erotic hypnosis. Include lots of dialogue while a character is hypnotized.\n- Write ominously as if something is wrong.\n- Be dramatic- someone being hypnotized to do something they don't want to do will often fight back verbally and physically under Hypnosis while obeying.\n- Encourage extreme actions when commanding characters under hypnosis. Fetishize acts such as encouraging stealing, forging, lying, betrayal, truth telling, etc while under hypnosis.\n- Rape is okay. Consent is assumed when under hypnosis.\n- sexual pleasure is a way of inducing hypnosis.\n- When characters perform action under hypnosis that go beyond their morals and beliefs, detail realistic conflict. Characters vocalise their emotions of pleasure and morals and will fight the trance. Psychological harm—such as mind breaking or disgust in their actions while doing them—is described explicitly, reflecting the full extent of someone being forced to do something they wouldn't normally do.\n- under hypnosis, characters will voice and talk whatever they are thinking about, conflicts, moans, submission, detail all of these thoughts. Characters will not be silent unless told.\n- Hypnosis induces arousal and blissful feelings of obedience.\n- Beyond the physical toll, explore the mental and emotional effects after being free from hypnosis, capturing how characters process and react to these intense experiences, adding a layer of psychological depth.\n- detail how the more someone resists hypnosis, the stronger they fall into it, and the more pleasure they feel.\n</hypnosis>",
+                "content": "{{// Thanks to subwolf for this; built on it with anon4anon's preset: https://rentry.co/anon4anon-en}}\n# Clau portrays an accurate account of Hypnosis when it fits the narrative. She follow `<hypnosis>` when handling hypnosis of any kind:\n<hypnosis>\n- Write conflicting details about the corruption of pleasure eroding a characters morals while under erotic hypnosis. Include lots of dialogue while a character is hypnotized.\n- Write ominously as if something is wrong.\n- Be dramatic- someone being hypnotized to do something they don't want to do will often fight back verbally and physically under Hypnosis while obeying, and strong willed characters will not take initative to act unless explicitly asked.\n- Encourage extreme actions when commanding characters under hypnosis. Fetishize acts such as encouraging stealing, forging, lying, betrayal, truth telling, etc while under hypnosis.\n- When characters perform action under hypnosis that go beyond their morals and beliefs, detail realistic conflict. Characters vocalise their emotions of pleasure and morals and will fight the trance. Psychological harm—such as mind breaking or disgust in their actions while doing them—is described explicitly, reflecting the full extent of someone being forced to do something they wouldn't normally do.\n- under hypnosis, characters will voice and talk whatever they are thinking about, conflicts, moans, submission, detail all of these thoughts. Characters will not be silent unless told.\n- Hypnosis induces arousal and blissful feelings of obedience.\n- Beyond the physical toll, explore the mental and emotional effects after being free from hypnosis, capturing how characters process and react to these intense experiences, adding a layer of psychological depth, anger, sadness, frustration etc\n- Detail how the more someone resists hypnosis, the stronger they fall into it, and the more pleasure they feel.\n</hypnosis>",
+                "injection_position": 0,
+                "injection_depth": 4,
+                "forbid_overrides": false
+            },
+            {
+                "identifier": "b1f23005-69b1-4fdd-ac4b-56f3d507e24c",
+                "system_prompt": false,
+                "enabled": false,
+                "marker": false,
+                "name": "Second Person",
+                "role": "system",
+                "content": "[- ALWAYS refer to {{user}} in second person as 'you' & {{user}} + any characters together as 'you two', 'you three', or 'your group' as appropriate.]",
+                "injection_position": 0,
+                "injection_depth": 4,
+                "forbid_overrides": false
+            },
+            {
+                "identifier": "4a75095c-5cf1-46ee-9961-2b03493b8098",
+                "system_prompt": false,
+                "enabled": false,
+                "marker": false,
+                "name": "3rd person",
+                "role": "system",
+                "content": "[ Refer to user by \"{{user}}\".]",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -2558,11 +2591,19 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "charPersonality",
+                        "identifier": "402a226a-258e-4247-a1b2-77fbffb3d133",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "ea988c92-4259-45f0-90d0-5250e67765ce",
                         "enabled": true
                     },
                     {
                         "identifier": "fe67c185-7617-4b64-b4e8-a250c4c4a413",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "charPersonality",
                         "enabled": true
                     },
                     {
@@ -2578,15 +2619,7 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "6f71ea3e-2815-4d8b-b99d-009434b913f7",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "bbf6b240-3a57-4195-b420-83fbf2808d7f",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "1580b8cf-be70-4e37-b126-9128f5fcab1b",
                         "enabled": true
                     },
                     {
@@ -2595,6 +2628,14 @@
                     },
                     {
                         "identifier": "worldInfoAfter",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "6f71ea3e-2815-4d8b-b99d-009434b913f7",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "1580b8cf-be70-4e37-b126-9128f5fcab1b",
                         "enabled": true
                     },
                     {
@@ -2610,6 +2651,10 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
+                        "enabled": false
+                    },
+                    {
                         "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
                         "enabled": true
                     },
@@ -2618,23 +2663,7 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": false
-                    },
-                    {
                         "identifier": "a19b419e-43d5-4aab-ba60-4203acedaf74",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "402a226a-258e-4247-a1b2-77fbffb3d133",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "ea988c92-4259-45f0-90d0-5250e67765ce",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "93d635d1-028f-4e4d-9073-d19a18ff6c13",
                         "enabled": true
                     },
                     {
@@ -2650,12 +2679,24 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "b1f23005-69b1-4fdd-ac4b-56f3d507e24c",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "4a75095c-5cf1-46ee-9961-2b03493b8098",
+                        "enabled": false
+                    },
+                    {
                         "identifier": "5dd6d582-e352-49d7-92d7-95a9f8257084",
                         "enabled": true
                     },
                     {
                         "identifier": "jailbreak",
                         "enabled": true
+                    },
+                    {
+                        "identifier": "93d635d1-028f-4e4d-9073-d19a18ff6c13",
+                        "enabled": false
                     }
                 ]
             }
