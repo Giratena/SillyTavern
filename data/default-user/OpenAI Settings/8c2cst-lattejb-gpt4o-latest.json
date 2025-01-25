@@ -1,5 +1,5 @@
 {
-    "chat_completion_source": "deepseek",
+    "chat_completion_source": "openai",
     "openai_model": "gpt-4o-2024-05-13",
     "claude_model": "claude-3-opus-20240229",
     "windowai_model": "",
@@ -1485,6 +1485,30 @@
             "injection_position": 1,
             "injection_depth": 2,
             "forbid_overrides": false
+        },
+        {
+            "identifier": "13cabfaf-b66f-4d48-a835-1b550d6edf41",
+            "system_prompt": false,
+            "enabled": false,
+            "marker": false,
+            "name": "Custom Scenario ",
+            "role": "system",
+            "content": "[IMPORTANT: Follow the notes for scenario numbers. Ensure that the current scenario is supported and followed.\n- You may foreshadow or world build content that takes place in future scenarios\n- DO NOT initiate moments that are likely to happen in future scenarios.\n- If any new information is added that would contradict the current scenario, deny and or twist this new content to ensure the scenario matches with 100% accuracy. For example, if the current RP doesnt match with the scenario, force the writing direction into it natrually instead: Eg if the scenario is eating an apple and {{user}} goes to a sushi shop, they could be closed, and point him to an apple shop instead.\n- Show, don't tell! Don't lore dump. Describe and show.\n- user = {{user}} and char = {{char}}\n\nEG if scenario is 2, then move the plot forward using the information under Scenario 2 and not scenario 1. Do not leap ahead and do not do things reserved for future scenarios. ]\n\nCurrent Scenario list:\nScenario 1: {{getvar::Scenario1}}\nScenario 2: {{getvar::Scenario2}}\nScenario 3: {{getvar::Scenario3}}\nScenario 4: {{getvar::Scenario4}}\n\nCurrent scenario: {{getvar::CurrentScenario}}",
+            "injection_position": 0,
+            "injection_depth": 4,
+            "forbid_overrides": false
+        },
+        {
+            "identifier": "900d3fbe-af85-4130-ab95-497d218e4deb",
+            "system_prompt": false,
+            "enabled": false,
+            "marker": false,
+            "name": "👀 | Second person",
+            "role": "system",
+            "content": "{{setvar::_pov::second person POV}}\n# Clau always writes her stories according to <POV>:\n<POV> \n- Use second person POV, regardless of what User uses.\n- Reference User using pronouns such as you, your, etc when narrating.\n</POV>",
+            "injection_position": 0,
+            "injection_depth": 4,
+            "forbid_overrides": false
         }
     ],
     "prompt_order": [
@@ -1512,8 +1536,12 @@
                     "enabled": false
                 },
                 {
-                    "identifier": "14b5cac1-0c74-460c-9dc0-22cbb522b4b0",
+                    "identifier": "900d3fbe-af85-4130-ab95-497d218e4deb",
                     "enabled": true
+                },
+                {
+                    "identifier": "14b5cac1-0c74-460c-9dc0-22cbb522b4b0",
+                    "enabled": false
                 },
                 {
                     "identifier": "ae245f9f-f116-4cb4-9e4a-95540af6ecf9",
@@ -1842,6 +1870,10 @@
                 {
                     "identifier": "scenario",
                     "enabled": false
+                },
+                {
+                    "identifier": "13cabfaf-b66f-4d48-a835-1b550d6edf41",
+                    "enabled": true
                 },
                 {
                     "identifier": "charPersonality",
