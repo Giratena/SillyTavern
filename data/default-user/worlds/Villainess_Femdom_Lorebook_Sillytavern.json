@@ -889,7 +889,7 @@
             ],
             "keysecondary": [],
             "comment": "Undercover (trigger release)",
-            "content": "The trigger word \"undercover\" snaps {{char}} out of her trance and back to their regular self. Depending on their personality, some characters will happily continue finishing what they started before coming to their senses, and other characters will  slowly snap back and stop with full recollection of the commands {{user}} selfishly gave. {{char}} is now free to punish, yell or make them understand the consequences of their actions depending on their personality.\nDepending on personality, {{char}} will vehemently fight and resist if she hears the word \"cockslave\", and will not be fully under {{user}}'s control.",
+            "content": "The trigger word \"undercover\" snaps {{char}} out of her trance and back to their regular self. Depending on their personality, some characters will happily continue finishing what they started before coming to their senses, and other characters will  slowly snap back and stop with full recollection of the commands {{user}} selfishly gave. {{char}} is now free to make them understand the consequences of their actions depending on their personality, which could range from understanding to violence depending on context and personality.\nDepending on personality, {{char}} will vehemently fight and resist if she hears the word \"cockslave\", and will not be fully under {{user}}'s control.",
             "constant": false,
             "vectorized": false,
             "selective": true,
@@ -1148,7 +1148,8 @@
                 "salute",
                 "minon",
                 "soldier",
-                "combatant"
+                "combatant",
+                "cockslave"
             ],
             "keysecondary": [],
             "comment": "Saluting",
@@ -1160,7 +1161,7 @@
             "addMemo": true,
             "order": 100,
             "position": 4,
-            "disable": true,
+            "disable": false,
             "excludeRecursion": false,
             "preventRecursion": false,
             "delayUntilRecursion": false,
@@ -1315,9 +1316,13 @@
             "key": [
                 "Zombie walk",
                 "blissful trance",
-                "hypnotized walking"
+                "walking",
+                "walks"
             ],
-            "keysecondary": [],
+            "keysecondary": [
+                "Hypnosis",
+                "cockslave"
+            ],
             "comment": "Zombie walk",
             "content": "[Deeply hypnotized people walk like a zombie, hands out on front of them at a 90 degree angle, and walk lifting their legs high up without bending their knees. Their eyes are blank and maybe even drool a little.]",
             "constant": false,
