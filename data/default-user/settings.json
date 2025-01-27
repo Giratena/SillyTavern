@@ -1,11 +1,11 @@
 {
     "firstRun": false,
     "currentVersion": "1.12.11",
-    "username": "Gira",
-    "active_character": "The Frisky Foursome Part 2.png",
+    "username": "Dr. Eggman",
+    "active_character": "Shantae.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
-    "user_avatar": "user-default.png",
+    "user_avatar": "1737801303668-DrEggman.png",
     "amount_gen": 250,
     "max_context": 2048,
     "main_api": "openai",
@@ -253,8 +253,8 @@
         "max_context_unlocked": false,
         "message_token_count_enabled": "",
         "expand_message_actions": "",
-        "enableZenSliders": "",
-        "enableLabMode": "",
+        "enableZenSliders": false,
+        "enableLabMode": false,
         "prefer_character_prompt": true,
         "prefer_character_jailbreak": true,
         "quick_continue": false,
@@ -314,7 +314,7 @@
             "user-default.png": "Gira",
             "1737801303668-DrEggman.png": "Dr. Eggman"
         },
-        "default_persona": "user-default.png",
+        "default_persona": "1737801303668-DrEggman.png",
         "persona_descriptions": {
             "user-default.png": {
                 "description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
@@ -323,14 +323,14 @@
                 "role": 0
             },
             "1737801303668-DrEggman.png": {
-                "description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind from the Sonic the Hedgehod series). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presense shouts distrust. He has an eggshaped body.] ",
+                "description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presence shouts distrust. He has an egg shaped body. Shared universes: Sonic the Hedgehog] ",
                 "position": 0,
                 "depth": 2,
                 "role": 0,
                 "lorebook": ""
             }
         },
-        "persona_description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
+        "persona_description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presence shouts distrust. He has an egg shaped body. Shared universes: Sonic the Hedgehog] ",
         "persona_description_position": 0,
         "persona_description_role": 0,
         "persona_description_depth": 2,
@@ -2039,7 +2039,7 @@
                 "marker": false,
                 "name": "Bans",
                 "role": "system",
-                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s words, thoughts or observations (DO NOT even subtly predict or assume them). It is up to {{char}} to continue the plot.\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n- DO NOT write from the perspective of {{char}}. Write from the perspective of {{user}}.\n</system_bans>",
+                "content": "{{// Mandatory. Editable.\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them).\n- DO NOT narrate or repeat {{user}}'s thoughts or observations (DO NOT even subtly predict or assume them) UNLESS user is under hypnosis.\n- DO NOT narrate or repeat {{user}}'s spoken words (DO NOT even subtly predict or assume them)\n\n}}<system_bans>\n- DO NOT narrate or repeat {{user}}'s words, thoughts or observations (DO NOT even subtly predict or assume them). It is up to {{char}} to continue the plot.\n- DO NOT summarize, repeat, or explain the current situation or <latest_message></latest_message>.\n- AVOID nudging statements like 'she awaits your response', 'let us delve' & 'what will you do?'\n- AVOID open ended statements such as, 'let us...', 'allow me to...'\n- DO NOT use present tense in narration\n- Abruptly end replies without any transition.\n- DO NOT enter conflicting sex positions (EG, the same mouth cannot be sucking dick and kissing somone's lips at the same time.)\n- DO NOT include {{char}} in the current scene if they are not already present in it.\n- DO NOT write from the perspective of {{char}}. Write from the perspective of {{user}}.\n- DO NOT repeat any words spoken by any character\n</system_bans>",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
