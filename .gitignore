@@ -21,6 +21,7 @@ access.log
 /vectors/
 /cache/
 public/css/user.css
+public/error/
 /plugins/
 /default/scaffold
 public/scripts/extensions/third-party
@@ -34,3 +35,5 @@ data/default-user/sysprompt
 /certs
 .aider*
 .env
+/StartDev.bat
+
