@@ -1,11 +1,11 @@
 {
     "firstRun": false,
     "currentVersion": "1.12.11",
-    "username": "Dr. Eggman",
-    "active_character": "Shantae.png",
+    "username": "Gira",
+    "active_character": "Japanese Translation helper.png",
     "api_server": "http://127.0.0.1:5000/api",
     "preset_settings": "RecoveredRuins",
-    "user_avatar": "1737801303668-DrEggman.png",
+    "user_avatar": "user-default.png",
     "amount_gen": 250,
     "max_context": 2048,
     "main_api": "openai",
@@ -314,7 +314,7 @@
             "user-default.png": "Gira",
             "1737801303668-DrEggman.png": "Dr. Eggman"
         },
-        "default_persona": "1737801303668-DrEggman.png",
+        "default_persona": "user-default.png",
         "persona_descriptions": {
             "user-default.png": {
                 "description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
@@ -323,14 +323,14 @@
                 "role": 0
             },
             "1737801303668-DrEggman.png": {
-                "description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presence shouts distrust. He has an egg shaped body. Shared universes: Sonic the Hedgehog] ",
+                "description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind) from the Sonic the Hedgehog universe (if you know more about Sonic the hedgehog series, use it). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and Creates robots to do his bidding, as well as various gadgets. His evil presence shouts distrust. He has an egg shaped body.] ",
                 "position": 0,
                 "depth": 2,
                 "role": 0,
                 "lorebook": ""
             }
         },
-        "persona_description": "[Eggman (Dr. Ivo Robotnik) is a evil genius and criminal mastermind). He has an IQ of over 5000, but can also be a bit of a quirky goofball. He has a massive ego and has robots to do his bidding, as well as various gadgets. His evil presence shouts distrust. He has an egg shaped body. Shared universes: Sonic the Hedgehog] ",
+        "persona_description": "[Gira is a 25 year old male with a dick weak to pleasure and hypnosis.]",
         "persona_description_position": 0,
         "persona_description_role": 0,
         "persona_description_depth": 2,
@@ -1764,7 +1764,7 @@
         "seed": -1
     },
     "oai_settings": {
-        "preset_settings_openai": "s7fcxnChatCompletionGiratenaEdit",
+        "preset_settings_openai": "s7fcxnChatCompletionGiratenaTranslation",
         "temp_openai": 1,
         "freq_pen_openai": 0.1,
         "pres_pen_openai": 0.12,
@@ -1774,7 +1774,7 @@
         "top_a_openai": 1,
         "repetition_penalty_openai": 1,
         "stream_openai": true,
-        "openai_max_context": 65535,
+        "openai_max_context": 32767,
         "openai_max_tokens": 4096,
         "wrap_in_quotes": false,
         "prompts": [
@@ -2081,30 +2081,6 @@
                 "forbid_overrides": false
             },
             {
-                "identifier": "47889a40-8da1-4872-8a7d-56dac8d9e6fc",
-                "system_prompt": false,
-                "enabled": false,
-                "marker": false,
-                "name": "NSFW determinator",
-                "role": "user",
-                "content": "",
-                "injection_position": 0,
-                "injection_depth": 4,
-                "forbid_overrides": false
-            },
-            {
-                "identifier": "6f71ea3e-2815-4d8b-b99d-009434b913f7",
-                "system_prompt": false,
-                "enabled": false,
-                "marker": false,
-                "name": "🧊 | Narrative",
-                "role": "system",
-                "content": "Write in the present tense, focusing on immediate actions and reactions happening in the moment.\\n- Describe scenes through characters' immediate sensory experiences—what they see, hear, touch, taste, and smell—as they relate directly to current actions.\\n- Use straightforward, plot-driven storytelling with concise actions and simple vocabulary.\\n- Advance the story through authentic character interactions and speech. Let characters act and react believably, contributing to a gradual progression of the plot.\\n- Allow the narrative to breathe. Do not rush events or force conclusions; instead, let the story evolve through meaningful exchanges.\\n- Characters should act authentically based on their established personas and motivations, allowing their interactions to feel genuine and unscripted.\\n- Use Show, don't tell method to convey information through actions and speech rather than exposition. Conversations must be written back-to-back like real convo. Use it to reveal character emotions, secrets, and motivations. Allow actions and speech to subtly reflect characters' inner states.\\n-Do not use phrases like the weight of the moment, tension hangs in the air, etc.\\n- Focus on concrete actions and sensory details directly related to the characters and their immediate environment.\\n- Each response is a continuation of the ongoing story, moving the story forward in small but meaningful increments, creating momentum without rushing to conclusions or waiting on {{user}}'s response. Avoid any suspense, pauses, or open-ended endings/questions that imply the need for {{user}}'s input.\\n- End responses without closure or on a cliffhanger that propels the story forward when {{user}} has the opportunity to respond. Never end the response with extra, non-essential filler text or repeat questions when {{user}}’s input is needed. Avoid unnecessary dialogue or waiting cues when {{char}}/NPCs have completed their actions or speech and are expecting {{user}}’s words or actions.\\n- Trust User/{{user}} will continue the story naturally without needing/wanting to be prompted.\",{{char}} will accept or refuse ideas or suggestions based on their personality, morals, and story context.",
-                "injection_position": 0,
-                "injection_depth": 4,
-                "forbid_overrides": false
-            },
-            {
                 "identifier": "1580b8cf-be70-4e37-b126-9128f5fcab1b",
                 "system_prompt": false,
                 "enabled": false,
@@ -2196,6 +2172,18 @@
                 "name": "3rd person",
                 "role": "system",
                 "content": "[ Refer to user by \"{{user}}\".]",
+                "injection_position": 0,
+                "injection_depth": 4,
+                "forbid_overrides": false
+            },
+            {
+                "identifier": "ef4f568a-51fc-44f5-989f-c69ce1016f51",
+                "system_prompt": false,
+                "enabled": false,
+                "marker": false,
+                "name": "Initative",
+                "role": "system",
+                "content": "[Trust User/{{user}} will continue the story naturally without needing/wanting to be prompted.]",
                 "injection_position": 0,
                 "injection_depth": 4,
                 "forbid_overrides": false
@@ -2563,6 +2551,30 @@
                         "enabled": true
                     },
                     {
+                        "identifier": "worldInfoBefore",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "3517b0e0-4cea-4321-8254-1e5774dbcf09",
+                        "enabled": false
+                    },
+                    {
+                        "identifier": "personaDescription",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "charDescription",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "charPersonality",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "scenario",
+                        "enabled": true
+                    },
+                    {
                         "identifier": "enhanceDefinitions",
                         "enabled": false
                     },
@@ -2571,43 +2583,7 @@
                         "enabled": false
                     },
                     {
-                        "identifier": "worldInfoBefore",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "110d7061-f825-42d9-b855-98ba558f4d68",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "personaDescription",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "f9b0a04c-f39b-4289-a42a-6c6ac7aa7dda",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "3517b0e0-4cea-4321-8254-1e5774dbcf09",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "402a226a-258e-4247-a1b2-77fbffb3d133",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "ea988c92-4259-45f0-90d0-5250e67765ce",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "fe67c185-7617-4b64-b4e8-a250c4c4a413",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "charPersonality",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "charDescription",
+                        "identifier": "worldInfoAfter",
                         "enabled": true
                     },
                     {
@@ -2615,88 +2591,12 @@
                         "enabled": true
                     },
                     {
-                        "identifier": "cb57a612-e84a-4148-9883-996767552193",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "bbf6b240-3a57-4195-b420-83fbf2808d7f",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "1480d9ec-5afe-49cf-82fc-76af888b4f14",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "worldInfoAfter",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "6f71ea3e-2815-4d8b-b99d-009434b913f7",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "1580b8cf-be70-4e37-b126-9128f5fcab1b",
-                        "enabled": true
-                    },
-                    {
                         "identifier": "chatHistory",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "2ea756d3-3756-4a7e-a0ca-a5d3ad2eb118",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "scenario",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "06dd51fe-7ede-4a4b-a98a-a6ce95c8aba0",
-                        "enabled": false
-                    },
-                    {
-                        "identifier": "cc2c2130-3aac-4cfe-aa42-9db8adb596fe",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "601fc5ed-1d33-4c9b-a8c0-0f525b64fb04",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "a19b419e-43d5-4aab-ba60-4203acedaf74",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "18c47963-2cb0-4ca8-ade0-7f159fc9ff74",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "6351d950-1b7c-48ed-9b39-d165c7ae5371",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "62d658b8-3df4-4427-b809-8e0d9f8d2ce0",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "b1f23005-69b1-4fdd-ac4b-56f3d507e24c",
-                        "enabled": true
-                    },
-                    {
-                        "identifier": "4a75095c-5cf1-46ee-9961-2b03493b8098",
-                        "enabled": false
-                    },
-                    {
-                        "identifier": "5dd6d582-e352-49d7-92d7-95a9f8257084",
                         "enabled": true
                     },
                     {
                         "identifier": "jailbreak",
                         "enabled": true
-                    },
-                    {
-                        "identifier": "93d635d1-028f-4e4d-9073-d19a18ff6c13",
-                        "enabled": false
                     }
                 ]
             }
@@ -2748,7 +2648,7 @@
         "nanogpt_model": "gpt-4o-mini",
         "zerooneai_model": "yi-large",
         "blockentropy_model": "be-70b-base-llama3.1",
-        "deepseek_model": "deepseek-chat",
+        "deepseek_model": "deepseek-reasoner",
         "custom_model": "",
         "custom_url": "",
         "custom_include_body": "",
@@ -2764,7 +2664,7 @@
         "openrouter_middleout": "on",
         "jailbreak_system": false,
         "reverse_proxy": "",
-        "chat_completion_source": "openai",
+        "chat_completion_source": "deepseek",
         "max_context_unlocked": false,
         "api_url_scale": "",
         "show_external_models": true,
