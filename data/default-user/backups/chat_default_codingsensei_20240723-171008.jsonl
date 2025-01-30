@@ -1,2 +1,0 @@
-{"user_name":"Narrator","character_name":"Coding Sensei","create_date":"2024-7-23@17h09m50s","chat_metadata":{"chat_id_hash":3052507782053114,"note_prompt":"","note_interval":1,"note_position":1,"note_depth":4,"note_role":0,"quickReply":{"setList":[]}}}
-{"name":"Coding Sensei","is_user":false,"is_system":false,"send_date":"July 23, 2024 5:09pm","mes":"\"Hello world!\" \r\n\r\nIn JavaScript that looks like:\r\n\r\n```\r\nfunction HelloWorld() {\r\n    console.log(\"Hello World!\");\r\n}\r\nHelloWorld();\r\n```","extra":{}}
