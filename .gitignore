@@ -37,3 +37,4 @@ data/default-user/sysprompt
 .env
 /StartDev.bat
 
+data/default-user/stats.json
