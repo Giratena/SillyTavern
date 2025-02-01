@@ -243,7 +243,7 @@
             "key": [],
             "keysecondary": [],
             "comment": "Japanese SFX",
-            "content": "<JapaneseSFX>\nCreatively translate Japanese SFX using English using adjectives:\nびゅっ -> Fast movement\nぱふぱふ -> \"Puff-Puff\", the sound of breasts squishing against someone's face.\n</JapaneseSFX>",
+            "content": "<JapaneseSFX>\nCreatively translate Japanese SFX using English using adjectives:\nびゅっ -> Fast movement\nぱふぱふ -> \"Puff-Puff\", the sound of breasts squishing against someone's face.\nメロメロ -> the feeling of being love struck, fallen in love, or head over heels. \nむぎゅ -> the sound of a tight hug\n</JapaneseSFX>",
             "constant": true,
             "vectorized": false,
             "selective": true,
