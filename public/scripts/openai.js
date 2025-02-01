@@ -258,7 +258,7 @@ const default_settings = {
     ai21_model: 'jamba-1.5-large',
     mistralai_model: 'mistral-large-latest',
     cohere_model: 'command-r-plus',
-    perplexity_model: 'llama-3.1-70b-instruct',
+    perplexity_model: 'sonar-pro',
     groq_model: 'llama-3.1-70b-versatile',
     nanogpt_model: 'gpt-4o-mini',
     zerooneai_model: 'yi-large',
@@ -337,7 +337,7 @@ const oai_settings = {
     ai21_model: 'jamba-1.5-large',
     mistralai_model: 'mistral-large-latest',
     cohere_model: 'command-r-plus',
-    perplexity_model: 'llama-3.1-70b-instruct',
+    perplexity_model: 'sonar-pro',
     groq_model: 'llama-3.1-70b-versatile',
     nanogpt_model: 'gpt-4o-mini',
     zerooneai_model: 'yi-large',
@@ -1096,8 +1096,8 @@ async function preparePromptsForChatCompletion({ Scenario, charPersonality, name
         // Unordered prompts without marker
         { role: 'system', content: impersonationPrompt, identifier: 'impersonate' },
         { role: 'system', content: quietPrompt, identifier: 'quietPrompt' },
-        { role: 'system', content: bias, identifier: 'bias' },
         { role: 'system', content: groupNudge, identifier: 'groupNudge' },
+        { role: 'assistant', content: bias, identifier: 'bias' },
     ];
 
     // Tavern Extras - Summary
@@ -2095,7 +2095,7 @@ async function sendOpenAIRequest(type, messages, signal) {
             let text = '';
             const swipes = [];
             const toolCalls = [];
-            const state = {};
+            const state = { reasoning: '' };
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) return;
@@ -2113,7 +2113,7 @@ async function sendOpenAIRequest(type, messages, signal) {
 
                 ToolManager.parseToolCalls(toolCalls, parsed);
 
-                yield { text, swipes: swipes, logprobs: parseChatCompletionLogprobs(parsed), toolCalls: toolCalls };
+                yield { text, swipes: swipes, logprobs: parseChatCompletionLogprobs(parsed), toolCalls: toolCalls, state: state };
             }
         };
     }
@@ -2150,16 +2150,22 @@ function getStreamingReply(data, state) {
     if (oai_settings.chat_completion_source === chat_completion_sources.CLAUDE) {
         return data?.delta?.text || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.MAKERSUITE) {
-        return data?.candidates?.[0]?.content?.parts?.filter(x => oai_settings.show_thoughts || !x.thought)?.map(x => x.text)?.filter(x => x)?.join('\n\n') || '';
+        if (oai_settings.show_thoughts) {
+            state.reasoning += (data?.candidates?.[0]?.content?.parts?.filter(x =>  x.thought)?.map(x => x.text)?.[0] || '');
+        }
+        return data?.candidates?.[0]?.content?.parts?.filter(x => !x.thought)?.map(x => x.text)?.[0] || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.COHERE) {
         return data?.delta?.message?.content?.text || data?.delta?.message?.tool_plan || '';
     } else if (oai_settings.chat_completion_source === chat_completion_sources.DEEPSEEK) {
-        const hadThoughts = state.hadThoughts;
-        const thoughts = data.choices?.filter(x => oai_settings.show_thoughts || !x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '';
-        const content = data.choices?.[0]?.delta?.content || '';
-        state.hadThoughts = !!thoughts;
-        const separator = hadThoughts && !thoughts ? '\n\n' : '';
-        return [thoughts, separator, content].filter(x => x).join('\n\n');
+        if (oai_settings.show_thoughts) {
+            state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning_content)?.[0]?.delta?.reasoning_content || '');
+        }
+        return data.choices?.[0]?.delta?.content || '';
+    } else if (oai_settings.chat_completion_source === chat_completion_sources.OPENROUTER) {
+        if (oai_settings.show_thoughts) {
+            state.reasoning += (data.choices?.filter(x => x?.delta?.reasoning)?.[0]?.delta?.reasoning || '');
+        }
+        return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     } else  {
         return data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? '';
     }
@@ -4374,28 +4380,19 @@ async function onModelChange() {
         if (oai_settings.max_context_unlocked) {
             $('#openai_max_context').attr('max', unlocked_max);
         }
+        else if (['sonar', 'sonar-reasoning'].includes(oai_settings.perplexity_model)) {
+            $('#openai_max_context').attr('max', 127000);
+        }
+        else if (['sonar-pro'].includes(oai_settings.perplexity_model)) {
+            $('#openai_max_context').attr('max', 200000);
+        }
         else if (oai_settings.perplexity_model.includes('llama-3.1')) {
             const isOnline = oai_settings.perplexity_model.includes('online');
             const contextSize = isOnline ? 128 * 1024 - 4000 : 128 * 1024;
             $('#openai_max_context').attr('max', contextSize);
         }
-        else if (['llama-3-sonar-small-32k-chat', 'llama-3-sonar-large-32k-chat'].includes(oai_settings.perplexity_model)) {
-            $('#openai_max_context').attr('max', max_32k);
-        }
-        else if (['llama-3-sonar-small-32k-online', 'llama-3-sonar-large-32k-online'].includes(oai_settings.perplexity_model)) {
-            $('#openai_max_context').attr('max', 28000);
-        }
-        else if (['sonar-small-chat', 'sonar-medium-chat', 'codellama-70b-instruct', 'mistral-7b-instruct', 'mixtral-8x7b-instruct', 'mixtral-8x22b-instruct'].includes(oai_settings.perplexity_model)) {
-            $('#openai_max_context').attr('max', max_16k);
-        }
-        else if (['llama-3-8b-instruct', 'llama-3-70b-instruct'].includes(oai_settings.perplexity_model)) {
-            $('#openai_max_context').attr('max', max_8k);
-        }
-        else if (['sonar-small-online', 'sonar-medium-online'].includes(oai_settings.perplexity_model)) {
-            $('#openai_max_context').attr('max', 12000);
-        }
         else {
-            $('#openai_max_context').attr('max', max_4k);
+            $('#openai_max_context').attr('max', max_128k);
         }
         oai_settings.openai_max_context = Math.min(Number($('#openai_max_context').attr('max')), oai_settings.openai_max_context);
         $('#openai_max_context').val(oai_settings.openai_max_context).trigger('input');

@@ -95,6 +95,7 @@ import {
     resetMovableStyles,
     forceCharacterEditorTokenize,
     applyPowerUserSettings,
+    generatedTextFiltered,
 } from './scripts/power-user.js';
 
 import {
@@ -169,6 +170,7 @@ import {
     toggleDrawer,
     isElementInViewport,
     copyText,
+    escapeHtml,
 } from './scripts/utils.js';
 import { debounce_timeout } from './scripts/constants.js';
 
@@ -267,6 +269,7 @@ import { initSettingsSearch } from './scripts/setting-search.js';
 import { initBulkEdit } from './scripts/bulk-edit.js';
 import { deriveTemplatesFromChatTemplate } from './scripts/chat-templates.js';
 import { getContext } from './scripts/st-context.js';
+import { initReasoning, PromptReasoning } from './scripts/reasoning.js';
 
 // API OBJECT FOR EXTERNAL WIRING
 globalThis.SillyTavern = {
@@ -982,6 +985,7 @@ async function firstLoadInit() {
     initServerHistory();
     initSettingsSearch();
     initBulkEdit();
+    initReasoning();
     await initScrapers();
     doDailyExtensionUpdatesCheck();
     await hideLoader();
@@ -1991,14 +1995,15 @@ export async function sendTextareaMessage() {
  * @param {boolean} isUser If the message was sent by the user
  * @param {number} messageId Message index in chat array
  * @param {object} [sanitizerOverrides] DOMPurify sanitizer option overrides
+ * @param {boolean} [isReasoning] If the message is reasoning output
  * @returns {string} HTML string
  */
-export function messageFormatting(mes, ch_name, isSystem, isUser, messageId, sanitizerOverrides = {}) {
+export function messageFormatting(mes, ch_name, isSystem, isUser, messageId, sanitizerOverrides = {}, isReasoning = false) {
     if (!mes) {
         return '';
     }
 
-    if (Number(messageId) === 0 && !isSystem && !isUser) {
+    if (Number(messageId) === 0 && !isSystem && !isUser && !isReasoning) {
         const mesBeforeReplace = mes;
         const chatMessage = chat[messageId];
         mes = substituteParams(mes, undefined, ch_name);
@@ -2027,6 +2032,9 @@ export function messageFormatting(mes, ch_name, isSystem, isUser, messageId, san
     if (!isSystem) {
         function getRegexPlacement() {
             try {
+                if (isReasoning) {
+                    return regex_placement.REASONING;
+                }
                 if (isUser) {
                     return regex_placement.USER_INPUT;
                 } else if (chat[messageId]?.extra?.type === 'narrator') {
@@ -2059,6 +2067,17 @@ export function messageFormatting(mes, ch_name, isSystem, isUser, messageId, san
     if (!isSystem && power_user.encode_tags) {
         mes = mes.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     }
+
+    // Make sure reasoning strings are always shown, even if they include "<" or ">"
+    [power_user.reasoning.prefix, power_user.reasoning.suffix].forEach((reasoningString) => {
+        if (!reasoningString || !reasoningString.trim().length) {
+            return;
+        }
+        // Only replace the first occurrence of the reasoning string
+        if (mes.includes(reasoningString)) {
+            mes = mes.replace(reasoningString, escapeHtml(reasoningString));
+        }
+    });
 
     if (!isSystem) {
         // Save double quotes in tags as a special character to prevent them from being encoded
@@ -2200,6 +2219,7 @@ function getMessageFromTemplate({
     isUser,
     avatarImg,
     bias,
+    reasoning,
     isSystem,
     title,
     timerValue,
@@ -2224,6 +2244,7 @@ function getMessageFromTemplate({
     mes.find('.avatar img').attr('src', avatarImg);
     mes.find('.ch_name .name_text').text(characterName);
     mes.find('.mes_bias').html(bias);
+    mes.find('.mes_reasoning').html(reasoning);
     mes.find('.timestamp').text(timestamp).attr('title', `${extra?.api ? extra.api + ' - ' : ''}${extra?.model ?? ''}`);
     mes.find('.mesIDDisplay').text(`#${mesId}`);
     tokenCount && mes.find('.tokenCounterDisplay').text(`${tokenCount}t`);
@@ -2238,10 +2259,16 @@ function getMessageFromTemplate({
     return mes;
 }
 
+/**
+ * Re-renders a message block with updated content.
+ * @param {number} messageId Message ID
+ * @param {object} message Message object
+ */
 export function updateMessageBlock(messageId, message) {
     const messageElement = $(`#chat [mesid="${messageId}"]`);
     const text = message?.extra?.display_text ?? message.mes;
-    messageElement.find('.mes_text').html(messageFormatting(text, message.name, message.is_system, message.is_user, messageId));
+    messageElement.find('.mes_text').html(messageFormatting(text, message.name, message.is_system, message.is_user, messageId, {}, false));
+    messageElement.find('.mes_reasoning').html(messageFormatting(message.extra?.reasoning ?? '', '', false, false, messageId, {}, true));
     addCopyToCodeBlocks(messageElement);
     appendMediaToMessage(message, messageElement);
 }
@@ -2398,8 +2425,10 @@ export function addOneMessage(mes, { type = 'normal', insertAfter = null, scroll
         mes.is_user,
         chat.indexOf(mes),
         sanitizerOverrides,
+        false,
     );
-    const bias = messageFormatting(mes.extra?.bias ?? '', '', false, false, -1);
+    const bias = messageFormatting(mes.extra?.bias ?? '', '', false, false, -1, {}, false);
+    const reasoning = messageFormatting(mes.extra?.reasoning ?? '', '', false, false, chat.indexOf(mes), {}, true);
     let bookmarkLink = mes?.extra?.bookmark_link ?? '';
 
     let params = {
@@ -2409,6 +2438,7 @@ export function addOneMessage(mes, { type = 'normal', insertAfter = null, scroll
         isUser: mes.is_user,
         avatarImg: avatarImg,
         bias: bias,
+        reasoning: reasoning,
         isSystem: isSystem,
         title: title,
         bookmarkLink: bookmarkLink,
@@ -2468,6 +2498,7 @@ export function addOneMessage(mes, { type = 'normal', insertAfter = null, scroll
         const swipeMessage = chatElement.find(`[mesid="${chat.length - 1}"]`);
         swipeMessage.attr('swipeid', params.swipeId);
         swipeMessage.find('.mes_text').html(messageText).attr('title', title);
+        swipeMessage.find('.mes_reasoning').html(reasoning);
         swipeMessage.find('.timestamp').text(timestamp).attr('title', `${params.extra.api} - ${params.extra.model}`);
         appendMediaToMessage(mes, swipeMessage);
         if (power_user.timestamp_model_icon && params.extra?.api) {
@@ -3078,6 +3109,7 @@ class StreamingProcessor {
         this.messageTextDom = null;
         this.messageTimerDom = null;
         this.messageTokenCounterDom = null;
+        this.messageReasoningDom = null;
         /** @type {HTMLTextAreaElement} */
         this.sendTextarea = document.querySelector('#send_textarea');
         this.type = type;
@@ -3093,6 +3125,7 @@ class StreamingProcessor {
         /** @type {import('./scripts/logprobs.js').TokenLogprobs[]} */
         this.messageLogprobs = [];
         this.toolCalls = [];
+        this.reasoning = '';
     }
 
     #checkDomElements(messageId) {
@@ -3101,6 +3134,7 @@ class StreamingProcessor {
             this.messageTextDom = this.messageDom?.querySelector('.mes_text');
             this.messageTimerDom = this.messageDom?.querySelector('.mes_timer');
             this.messageTokenCounterDom = this.messageDom?.querySelector('.tokenCounterDisplay');
+            this.messageReasoningDom = this.messageDom?.querySelector('.mes_reasoning');
         }
     }
 
@@ -3137,7 +3171,7 @@ class StreamingProcessor {
             this.sendTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         }
         else {
-            await saveReply(this.type, text, true);
+            await saveReply(this.type, text, true, '', [], '');
             messageId = chat.length - 1;
             this.#checkDomElements(messageId);
             this.showMessageButtons(messageId);
@@ -3178,18 +3212,27 @@ class StreamingProcessor {
             this.#checkDomElements(messageId);
             this.#updateMessageBlockVisibility();
             const currentTime = new Date();
-            // Don't waste time calculating token count for streaming
-            const currentTokenCount = isFinal && power_user.message_token_count_enabled ? getTokenCount(processedText, 0) : 0;
-            const timePassed = formatGenerationTimer(this.timeStarted, currentTime, currentTokenCount);
             chat[messageId]['mes'] = processedText;
             chat[messageId]['gen_started'] = this.timeStarted;
             chat[messageId]['gen_finished'] = currentTime;
 
-            if (currentTokenCount) {
-                if (!chat[messageId]['extra']) {
-                    chat[messageId]['extra'] = {};
-                }
+            if (!chat[messageId]['extra']) {
+                chat[messageId]['extra'] = {};
+            }
 
+            if (this.reasoning) {
+                chat[messageId]['extra']['reasoning'] = power_user.trim_spaces ? this.reasoning.trim() : this.reasoning;
+                if (this.messageReasoningDom instanceof HTMLElement) {
+                    const formattedReasoning = messageFormatting(this.reasoning, '', false, false, messageId, {}, true);
+                    this.messageReasoningDom.innerHTML = formattedReasoning;
+                }
+            }
+
+            // Don't waste time calculating token count for streaming
+            const tokenCountText = (this.reasoning || '') + processedText;
+            const currentTokenCount = isFinal && power_user.message_token_count_enabled ? getTokenCount(tokenCountText, 0) : 0;
+
+            if (currentTokenCount) {
                 chat[messageId]['extra']['token_count'] = currentTokenCount;
                 if (this.messageTokenCounterDom instanceof HTMLElement) {
                     this.messageTokenCounterDom.textContent = `${currentTokenCount}t`;
@@ -3207,14 +3250,19 @@ class StreamingProcessor {
                 chat[messageId].is_system,
                 chat[messageId].is_user,
                 messageId,
+                {},
+                false,
             );
             if (this.messageTextDom instanceof HTMLElement) {
                 this.messageTextDom.innerHTML = formattedText;
             }
+
+            const timePassed = formatGenerationTimer(this.timeStarted, currentTime, currentTokenCount);
             if (this.messageTimerDom instanceof HTMLElement) {
                 this.messageTimerDom.textContent = timePassed.timerValue;
                 this.messageTimerDom.title = timePassed.timerTitle;
             }
+
             this.setFirstSwipe(messageId);
         }
 
@@ -3255,39 +3303,11 @@ class StreamingProcessor {
         unblockGeneration();
         generatedPromptCache = '';
 
-        //console.log("Generated text size:", text.length, text)
-
         const isAborted = this.abortController.signal.aborted;
-        if (power_user.auto_swipe && !isAborted) {
-            function containsBlacklistedWords(str, blacklist, threshold) {
-                const regex = new RegExp(`\\b(${blacklist.join('|')})\\b`, 'gi');
-                const matches = str.match(regex) || [];
-                return matches.length >= threshold;
-            }
-
-            const generatedTextFiltered = (text) => {
-                if (text) {
-                    if (power_user.auto_swipe_minimum_length) {
-                        if (text.length < power_user.auto_swipe_minimum_length && text.length !== 0) {
-                            console.log('Generated text size too small');
-                            return true;
-                        }
-                    }
-                    if (power_user.auto_swipe_blacklist_threshold) {
-                        if (containsBlacklistedWords(text, power_user.auto_swipe_blacklist, power_user.auto_swipe_blacklist_threshold)) {
-                            console.log('Generated text has blacklisted words');
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            };
-
-            if (generatedTextFiltered(text)) {
-                swipe_right();
-                return;
-            }
+        if (!isAborted && power_user.auto_swipe && generatedTextFiltered(text)) {
+            return swipe_right();
         }
+
         playMessageSound();
     }
 
@@ -3321,7 +3341,7 @@ class StreamingProcessor {
     }
 
     /**
-     * @returns {Generator<{ text: string, swipes: string[], logprobs: import('./scripts/logprobs.js').TokenLogprobs, toolCalls: any[] }, void, void>}
+     * @returns {Generator<{ text: string, swipes: string[], logprobs: import('./scripts/logprobs.js').TokenLogprobs, toolCalls: any[], state: any }, void, void>}
      */
     *nullStreamingGeneration() {
         throw new Error('Generation function for streaming is not hooked up');
@@ -3343,9 +3363,9 @@ class StreamingProcessor {
         try {
             const sw = new Stopwatch(1000 / power_user.streaming_fps);
             const timestamps = [];
-            for await (const { text, swipes, logprobs, toolCalls } of this.generator()) {
+            for await (const { text, swipes, logprobs, toolCalls, state } of this.generator()) {
                 timestamps.push(Date.now());
-                if (this.isStopped) {
+                if (this.isStopped || this.abortController.signal.aborted) {
                     return;
                 }
 
@@ -3355,6 +3375,7 @@ class StreamingProcessor {
                 if (logprobs) {
                     this.messageLogprobs.push(...(Array.isArray(logprobs) ? logprobs : [logprobs]));
                 }
+                this.reasoning = getRegexedString(state?.reasoning ?? '', regex_placement.REASONING);
                 await eventSource.emit(event_types.STREAM_TOKEN_RECEIVED, text);
                 await sw.tick(() => this.onProgressStreaming(this.messageId, this.continueMessage + text));
             }
@@ -3839,6 +3860,25 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
             index,
         };
     }));
+
+    const reasoning = new PromptReasoning();
+    for (let i = coreChat.length - 1; i >= 0; i--) {
+        if (reasoning.isLimitReached()) {
+            break;
+        }
+        const depth = coreChat.length - i - 1;
+        coreChat[i] = {
+            ...coreChat[i],
+            mes: reasoning.addToMessage(
+                coreChat[i].mes,
+                getRegexedString(
+                    String(coreChat[i].extra?.reasoning ?? ''),
+                    regex_placement.REASONING,
+                    { isPrompt: true, depth: depth },
+                ),
+            ),
+        };
+    }
 
     // Determine token limit
     let this_max_context = getMaxContextSize();
@@ -4742,11 +4782,17 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         //const getData = await response.json();
         let getMessage = extractMessageFromData(data);
         let title = extractTitleFromData(data);
+        let reasoning = extractReasoningFromData(data);
         kobold_horde_model = title;
 
         const swipes = extractMultiSwipes(data, type);
 
         messageChunk = cleanUpMessage(getMessage, isImpersonate, isContinue, false);
+        reasoning = getRegexedString(reasoning, regex_placement.REASONING);
+
+        if (power_user.trim_spaces) {
+            reasoning = reasoning.trim();
+        }
 
         if (isContinue) {
             getMessage = continue_mag + getMessage;
@@ -4768,10 +4814,10 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         else {
             // Without streaming we'll be having a full message on continuation. Treat it as a last chunk.
             if (originalType !== 'continue') {
-                ({ type, getMessage } = await saveReply(type, getMessage, false, title, swipes));
+                ({ type, getMessage } = await saveReply(type, getMessage, false, title, swipes, reasoning));
             }
             else {
-                ({ type, getMessage } = await saveReply('appendFinal', getMessage, false, title, swipes));
+                ({ type, getMessage } = await saveReply('appendFinal', getMessage, false, title, swipes, reasoning));
             }
 
             // This relies on `saveReply` having been called to add the message to the chat, so it must be last.
@@ -4805,32 +4851,9 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         }
 
         const isAborted = abortController && abortController.signal.aborted;
-        if (power_user.auto_swipe && !isAborted) {
-            console.debug('checking for autoswipeblacklist on non-streaming message');
-            function containsBlacklistedWords(getMessage, blacklist, threshold) {
-                console.debug('checking blacklisted words');
-                const regex = new RegExp(`\\b(${blacklist.join('|')})\\b`, 'gi');
-                const matches = getMessage.match(regex) || [];
-                return matches.length >= threshold;
-            }
-
-            const generatedTextFiltered = (getMessage) => {
-                if (power_user.auto_swipe_blacklist_threshold) {
-                    if (containsBlacklistedWords(getMessage, power_user.auto_swipe_blacklist, power_user.auto_swipe_blacklist_threshold)) {
-                        console.debug('Generated text has blacklisted words');
-                        return true;
-                    }
-                }
-
-                return false;
-            };
-            if (generatedTextFiltered(getMessage)) {
-                console.debug('swiping right automatically');
-                is_send_press = false;
-                swipe_right();
-                // TODO: do we want to resolve after an auto-swipe?
-                return;
-            }
+        if (!isAborted && power_user.auto_swipe && generatedTextFiltered(getMessage)) {
+            is_send_press = false;
+            return swipe_right();
         }
 
         console.debug('/api/chats/save called by /Generate');
@@ -5659,31 +5682,40 @@ function extractMessageFromData(data) {
         return data;
     }
 
-    function getTextContext() {
-        switch (main_api) {
-            case 'kobold':
-                return data.results[0].text;
-            case 'koboldhorde':
-                return data.text;
-            case 'textgenerationwebui':
-                return data.choices?.[0]?.text ?? data.content ?? data.response ?? '';
-            case 'novel':
-                return data.output;
-            case 'openai':
-                return data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? data?.text ?? data?.message?.content?.[0]?.text ?? data?.message?.tool_plan ?? '';
-            default:
-                return '';
+    switch (main_api) {
+        case 'kobold':
+            return data.results[0].text;
+        case 'koboldhorde':
+            return data.text;
+        case 'textgenerationwebui':
+            return data.choices?.[0]?.text ?? data.content ?? data.response ?? '';
+        case 'novel':
+            return data.output;
+        case 'openai':
+            return data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? data?.text ?? data?.message?.content?.[0]?.text ?? data?.message?.tool_plan ?? '';
+        default:
+            return '';
+    }
+}
+
+/**
+ * Extracts the reasoning from the response data.
+ * @param {object} data Response data
+ * @returns {string} Extracted reasoning
+ */
+function extractReasoningFromData(data) {
+    if (main_api === 'openai' && oai_settings.show_thoughts) {
+        switch (oai_settings.chat_completion_source) {
+            case chat_completion_sources.DEEPSEEK:
+                return data?.choices?.[0]?.message?.reasoning_content ?? '';
+            case chat_completion_sources.OPENROUTER:
+                return data?.choices?.[0]?.message?.reasoning ?? '';
+            case chat_completion_sources.MAKERSUITE:
+                return data?.responseContent?.parts?.filter(part => part.thought)?.map(part => part.text)?.join('\n\n') ?? '';
         }
     }
 
-    const content = getTextContext();
-
-    if (main_api === 'openai' && oai_settings.chat_completion_source === chat_completion_sources.DEEPSEEK && oai_settings.show_thoughts) {
-        const thoughts = data?.choices?.[0]?.message?.reasoning_content ?? '';
-        return [thoughts, content].filter(x => x).join('\n\n');
-    }
-
-    return content;
+    return '';
 }
 
 /**
@@ -5866,7 +5898,7 @@ export function cleanUpMessage(getMessage, isImpersonate, isContinue, displayInc
     return getMessage;
 }
 
-export async function saveReply(type, getMessage, fromStreaming, title, swipes) {
+export async function saveReply(type, getMessage, fromStreaming, title, swipes, reasoning) {
     if (type != 'append' && type != 'continue' && type != 'appendFinal' && chat.length && (chat[chat.length - 1]['swipe_id'] === undefined ||
         chat[chat.length - 1]['is_user'])) {
         type = 'normal';
@@ -5891,8 +5923,10 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
             chat[chat.length - 1]['send_date'] = getMessageTimeStamp();
             chat[chat.length - 1]['extra']['api'] = getGeneratingApi();
             chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
+            chat[chat.length - 1]['extra']['reasoning'] = reasoning;
             if (power_user.message_token_count_enabled) {
-                chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(chat[chat.length - 1]['mes'], 0);
+                const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
+                chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(tokenCountText, 0);
             }
             const chat_id = (chat.length - 1);
             await eventSource.emit(event_types.MESSAGE_RECEIVED, chat_id);
@@ -5911,8 +5945,10 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
         chat[chat.length - 1]['send_date'] = getMessageTimeStamp();
         chat[chat.length - 1]['extra']['api'] = getGeneratingApi();
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
+        chat[chat.length - 1]['extra']['reasoning'] += reasoning;
         if (power_user.message_token_count_enabled) {
-            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(chat[chat.length - 1]['mes'], 0);
+            const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
+            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(tokenCountText, 0);
         }
         const chat_id = (chat.length - 1);
         await eventSource.emit(event_types.MESSAGE_RECEIVED, chat_id);
@@ -5928,8 +5964,10 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
         chat[chat.length - 1]['send_date'] = getMessageTimeStamp();
         chat[chat.length - 1]['extra']['api'] = getGeneratingApi();
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
+        chat[chat.length - 1]['extra']['reasoning'] += reasoning;
         if (power_user.message_token_count_enabled) {
-            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(chat[chat.length - 1]['mes'], 0);
+            const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
+            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(tokenCountText, 0);
         }
         const chat_id = (chat.length - 1);
         await eventSource.emit(event_types.MESSAGE_RECEIVED, chat_id);
@@ -5945,6 +5983,7 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
         chat[chat.length - 1]['send_date'] = getMessageTimeStamp();
         chat[chat.length - 1]['extra']['api'] = getGeneratingApi();
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
+        chat[chat.length - 1]['extra']['reasoning'] = reasoning;
         if (power_user.trim_spaces) {
             getMessage = getMessage.trim();
         }
@@ -5954,7 +5993,8 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
         chat[chat.length - 1]['gen_finished'] = generationFinished;
 
         if (power_user.message_token_count_enabled) {
-            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(chat[chat.length - 1]['mes'], 0);
+            const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
+            chat[chat.length - 1]['extra']['token_count'] = await getTokenCountAsync(tokenCountText, 0);
         }
 
         if (selected_group) {
@@ -6017,6 +6057,19 @@ export async function saveReply(type, getMessage, fromStreaming, title, swipes) 
 
     statMesProcess(chat[chat.length - 1], type, characters, this_chid, oldMessage);
     return { type, getMessage };
+}
+
+export function syncCurrentSwipeInfoExtras() {
+    if (!chat.length) {
+        return;
+    }
+    const currentMessage = chat[chat.length - 1];
+    if (currentMessage && Array.isArray(currentMessage.swipe_info) && typeof currentMessage.swipe_id === 'number') {
+        const swipeInfo = currentMessage.swipe_info[currentMessage.swipe_id];
+        if (swipeInfo && typeof swipeInfo === 'object') {
+            swipeInfo.extra = structuredClone(currentMessage.extra);
+        }
+    }
 }
 
 function saveImageToMessage(img, mes) {
@@ -7122,9 +7175,11 @@ function messageEditAuto(div) {
         mes.is_system,
         mes.is_user,
         this_edit_mes_id,
+        {},
+        false,
     ));
     mesBlock.find('.mes_bias').empty();
-    mesBlock.find('.mes_bias').append(messageFormatting(bias, '', false, false, -1));
+    mesBlock.find('.mes_bias').append(messageFormatting(bias, '', false, false, -1, {}, false));
     saveChatDebounced();
 }
 
@@ -7146,10 +7201,12 @@ async function messageEditDone(div) {
             mes.is_system,
             mes.is_user,
             this_edit_mes_id,
+            {},
+            false,
         ),
     );
     mesBlock.find('.mes_bias').empty();
-    mesBlock.find('.mes_bias').append(messageFormatting(bias, '', false, false, -1));
+    mesBlock.find('.mes_bias').append(messageFormatting(bias, '', false, false, -1, {}, false));
     appendMediaToMessage(mes, div.closest('.mes'));
     addCopyToCodeBlocks(div.closest('.mes'));
 
@@ -7997,9 +8054,23 @@ function updateEditArrowClasses() {
     }
 }
 
-function closeMessageEditor() {
-    if (this_edit_mes_id) {
-        $(`#chat .mes[mesid="${this_edit_mes_id}"] .mes_edit_cancel`).click();
+/**
+ * Closes the message editor.
+ * @param {'message'|'reasoning'|'all'} what What to close. Default is 'all'.
+ */
+export function closeMessageEditor(what = 'all') {
+    if (what === 'message' || what === 'all') {
+        if (this_edit_mes_id) {
+            $(`#chat .mes[mesid="${this_edit_mes_id}"] .mes_edit_cancel`).click();
+        }
+    }
+    if (what === 'reasoning' || what === 'all') {
+        document.querySelectorAll('.reasoning_edit_textarea').forEach((el) => {
+            const cancelButton = el.closest('.mes')?.querySelector('.mes_reasoning_edit_cancel');
+            if (cancelButton instanceof HTMLElement) {
+                cancelButton.click();
+            }
+        });
     }
 }
 
@@ -8432,6 +8503,9 @@ function swipe_left() {      // when we swipe left..but no generation.
         streamingProcessor.onStopStreaming();
     }
 
+    // Make sure ad-hoc changes to extras are saved before swiping away
+    syncCurrentSwipeInfoExtras();
+
     const swipe_duration = 120;
     const swipe_range = '700px';
     chat[chat.length - 1]['swipe_id']--;
@@ -8483,7 +8557,8 @@ function swipe_left() {      // when we swipe left..but no generation.
                     }
 
                     const swipeMessage = $('#chat').find(`[mesid="${chat.length - 1}"]`);
-                    const tokenCount = await getTokenCountAsync(chat[chat.length - 1].mes, 0);
+                    const tokenCountText = (chat[chat.length - 1]?.extra?.reasoning || '') + chat[chat.length - 1].mes;
+                    const tokenCount = await getTokenCountAsync(tokenCountText, 0);
                     chat[chat.length - 1]['extra']['token_count'] = tokenCount;
                     swipeMessage.find('.tokenCounterDisplay').text(`${tokenCount}t`);
                 }
@@ -8566,6 +8641,9 @@ const swipe_right = () => {
         return unblockGeneration();
     }
 
+    // Make sure ad-hoc changes to extras are saved before swiping away
+    syncCurrentSwipeInfoExtras();
+
     const swipe_duration = 200;
     const swipe_range = 700;
     //console.log(swipe_range);
@@ -8647,6 +8725,7 @@ const swipe_right = () => {
                     // resets the timer
                     swipeMessage.find('.mes_timer').html('');
                     swipeMessage.find('.tokenCounterDisplay').text('');
+                    swipeMessage.find('.mes_reasoning').html('');
                 } else {
                     //console.log('showing previously generated swipe candidate, or "..."');
                     //console.log('onclick right swipe calling addOneMessage');
@@ -8657,7 +8736,8 @@ const swipe_right = () => {
                             chat[chat.length - 1].extra = {};
                         }
 
-                        const tokenCount = await getTokenCountAsync(chat[chat.length - 1].mes, 0);
+                        const tokenCountText = (chat[chat.length - 1]?.extra?.reasoning || '') + chat[chat.length - 1].mes;
+                        const tokenCount = await getTokenCountAsync(tokenCountText, 0);
                         chat[chat.length - 1]['extra']['token_count'] = tokenCount;
                         swipeMessage.find('.tokenCounterDisplay').text(`${tokenCount}t`);
                     }
@@ -9459,7 +9539,8 @@ function addDebugFunctions() {
                 message.extra = {};
             }
 
-            message.extra.token_count = await getTokenCountAsync(message.mes, 0);
+            const tokenCountText = (message?.extra?.reasoning || '') + message.mes;
+            message.extra.token_count = await getTokenCountAsync(tokenCountText, 0);
         }
 
         await saveChatConditional();
@@ -10768,6 +10849,8 @@ jQuery(async function () {
                 chat[this_edit_mes_id].is_system,
                 chat[this_edit_mes_id].is_user,
                 this_edit_mes_id,
+                {},
+                false,
             ));
         appendMediaToMessage(chat[this_edit_mes_id], $(this).closest('.mes'));
         addCopyToCodeBlocks($(this).closest('.mes'));
@@ -11228,14 +11311,15 @@ jQuery(async function () {
 
     $(document).keyup(function (e) {
         if (e.key === 'Escape') {
-            const isEditVisible = $('#curEditTextarea').is(':visible');
+            const isEditVisible = $('#curEditTextarea').is(':visible') || $('.reasoning_edit_textarea').length > 0;
             if (isEditVisible && power_user.auto_save_msg_edits === false) {
-                closeMessageEditor();
+                closeMessageEditor('all');
                 $('#send_textarea').focus();
                 return;
             }
             if (isEditVisible && power_user.auto_save_msg_edits === true) {
                 $(`#chat .mes[mesid="${this_edit_mes_id}"] .mes_edit_done`).click();
+                closeMessageEditor('reasoning');
                 $('#send_textarea').focus();
                 return;
             }

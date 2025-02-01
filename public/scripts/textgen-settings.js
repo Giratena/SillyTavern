@@ -501,7 +501,7 @@ export function loadTextGenSettings(data, loadedSettings) {
     for (const [type, selector] of Object.entries(SERVER_INPUTS)) {
         const control = $(selector);
         control.val(settings.server_urls[type] ?? '').on('input', function () {
-            settings.server_urls[type] = String($(this).val());
+            settings.server_urls[type] = String($(this).val()).trim();
             saveSettingsDebounced();
         });
     }
@@ -986,6 +986,7 @@ export async function generateTextGenWithStreaming(generate_data, signal) {
         let logprobs = null;
         const swipes = [];
         const toolCalls = [];
+        const state = {};
         while (true) {
             const { done, value } = await reader.read();
             if (done) return;
@@ -1004,7 +1005,7 @@ export async function generateTextGenWithStreaming(generate_data, signal) {
                 logprobs = parseTextgenLogprobs(newText, data.choices?.[0]?.logprobs || data?.completion_probabilities);
             }
 
-            yield { text, swipes, logprobs, toolCalls };
+            yield { text, swipes, logprobs, toolCalls, state };
         }
     };
 }
